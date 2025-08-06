@@ -10,6 +10,8 @@ This is a full-stack restaurant and hotel management application built with Reac
 - **File Upload Functionality**: Implemented image-only file upload for profile pictures and certificate pictures (Base64 encoding)
 - **Dynamic Page Routing**: Added hotel-management and restaurant-management pages with context-aware titles
 - **Mobile Responsive Design**: Full responsive design implementation for all Entity components
+- **Pricing Plans Modal**: Added subscription pricing modal with Basic/Standard/Premium tiers that shows after entity creation
+- **Orders Management System**: Comprehensive orders dashboard with tabs for Orders, Menu, Tables, Deals, and Discount management
 
 ## User Preferences
 

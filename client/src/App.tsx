@@ -8,6 +8,7 @@ import Signup from "@/pages/signup";
 import Dashboard from "@/pages/dashboard";
 import Entities from "@/pages/entities";
 import Restaurants from "@/pages/restaurants";
+import Orders from "@/pages/orders";
 import Analytics from "@/pages/analytics";
 import Users from "@/pages/users";
 import Feedbacks from "@/pages/feedbacks";
@@ -46,8 +47,8 @@ function Router() {
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/entities" component={() => <ProtectedRoute component={Entities} />} />
       <Route path="/restaurants" component={() => <ProtectedRoute component={Restaurants} />} />
-      <Route path="/hotel-management" component={() => <ProtectedRoute component={Restaurants} />} />
-      <Route path="/restaurant-management" component={() => <ProtectedRoute component={Restaurants} />} />
+      <Route path="/hotel-management" component={() => <ProtectedRoute component={Orders} />} />
+      <Route path="/restaurant-management" component={() => <ProtectedRoute component={Orders} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={Analytics} />} />
       <Route path="/users" component={() => <ProtectedRoute component={Users} />} />
       <Route path="/feedbacks" component={() => <ProtectedRoute component={Feedbacks} />} />
