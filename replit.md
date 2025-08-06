@@ -2,7 +2,14 @@
 
 ## Overview
 
-This is a full-stack restaurant management application built with React/TypeScript frontend and Express.js backend. The system provides comprehensive functionality for managing restaurants, users, analytics, and reporting through an intuitive dashboard interface. It's designed to handle multiple restaurants with role-based access control for managers, waiters, and chefs.
+This is a full-stack restaurant and hotel management application built with React/TypeScript frontend and Express.js backend. The system provides comprehensive Entity management functionality for both hotels and restaurants, including user management, analytics, and reporting through an intuitive dashboard interface. It's designed to handle multiple entities with role-based access control for managers, waiters, and chefs.
+
+## Recent Changes (August 2025)
+
+- **Entity System Implementation**: Replaced restaurant-only system with unified Entity management supporting both hotels and restaurants
+- **File Upload Functionality**: Implemented image-only file upload for profile pictures and certificate pictures (Base64 encoding)
+- **Dynamic Page Routing**: Added hotel-management and restaurant-management pages with context-aware titles
+- **Mobile Responsive Design**: Full responsive design implementation for all Entity components
 
 ## User Preferences
 

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Upload, X } from "lucide-react";
 import { insertEntitySchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -28,9 +29,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
 const formSchema = insertEntitySchema.extend({
-  profilePicture: z.string().url("Please enter a valid image URL"),
+  profilePicture: z.string().min(1, "Profile picture is required"),
   certificateUrl: z.string().url("Please enter a valid certificate URL").optional().or(z.literal("")),
-  certificatePicture: z.string().url("Please enter a valid certificate image URL").optional().or(z.literal("")),
+  certificatePicture: z.string().min(1, "Certificate picture is required").optional().or(z.literal("")),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -42,6 +43,10 @@ interface AddEntityModalProps {
 
 export default function AddEntityModal({ open, onOpenChange }: AddEntityModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string>("");
+  const [certificatePicturePreview, setCertificatePicturePreview] = useState<string>("");
+  const profileFileRef = useRef<HTMLInputElement>(null);
+  const certificateFileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -72,6 +77,8 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
         description: "Entity created successfully",
       });
       form.reset();
+      setProfilePicturePreview("");
+      setCertificatePicturePreview("");
       onOpenChange(false);
     },
     onError: (error: any) => {
@@ -82,6 +89,46 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
       });
     },
   });
+
+  const handleFileUpload = (file: File, type: 'profile' | 'certificate') => {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file only",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      if (type === 'profile') {
+        setProfilePicturePreview(base64String);
+        form.setValue('profilePicture', base64String);
+      } else {
+        setCertificatePicturePreview(base64String);
+        form.setValue('certificatePicture', base64String);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = (type: 'profile' | 'certificate') => {
+    if (type === 'profile') {
+      setProfilePicturePreview("");
+      form.setValue('profilePicture', "");
+      if (profileFileRef.current) {
+        profileFileRef.current.value = "";
+      }
+    } else {
+      setCertificatePicturePreview("");
+      form.setValue('certificatePicture', "");
+      if (certificateFileRef.current) {
+        certificateFileRef.current.value = "";
+      }
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -194,13 +241,52 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
               name="profilePicture"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Entity Profile Picture URL *</FormLabel>
+                  <FormLabel>Entity Profile Picture *</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="https://example.com/image.jpg" 
-                      {...field} 
-                      data-testid="input-profile-picture"
-                    />
+                    <div className="space-y-3">
+                      {profilePicturePreview ? (
+                        <div className="relative">
+                          <img
+                            src={profilePicturePreview}
+                            alt="Profile preview"
+                            className="w-full h-40 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={() => handleRemoveFile('profile')}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div
+                          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+                          onClick={() => profileFileRef.current?.click()}
+                        >
+                          <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-600">
+                            Click to upload profile picture
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            PNG, JPG, GIF up to 10MB
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        ref={profileFileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, 'profile');
+                        }}
+                        data-testid="input-profile-picture"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -231,13 +317,52 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
                 name="certificatePicture"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Certificate Picture URL (Optional)</FormLabel>
+                    <FormLabel>Certificate Picture (Optional)</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="https://example.com/cert-image.jpg" 
-                        {...field} 
-                        data-testid="input-certificate-picture"
-                      />
+                      <div className="space-y-3">
+                        {certificatePicturePreview ? (
+                          <div className="relative">
+                            <img
+                              src={certificatePicturePreview}
+                              alt="Certificate preview"
+                              className="w-full h-32 object-cover rounded-lg border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={() => handleRemoveFile('certificate')}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors"
+                            onClick={() => certificateFileRef.current?.click()}
+                          >
+                            <Upload className="w-6 h-6 mx-auto text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-600">
+                              Click to upload certificate picture
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              PNG, JPG, GIF up to 10MB
+                            </p>
+                          </div>
+                        )}
+                        <input
+                          ref={certificateFileRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, 'certificate');
+                          }}
+                          data-testid="input-certificate-picture"
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
