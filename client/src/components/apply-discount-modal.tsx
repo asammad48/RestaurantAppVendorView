@@ -14,6 +14,7 @@ import type { MenuItem } from "@shared/schema";
 
 const applyDiscountSchema = z.object({
   selectedItems: z.array(z.string()).min(1, "Please select at least one item"),
+  discountCategory: z.string().min(1, "Please select a discount category"),
   discountPercentage: z.number().min(1, "Discount must be at least 1%").max(100, "Discount cannot exceed 100%"),
 });
 
@@ -39,6 +40,7 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
     resolver: zodResolver(applyDiscountSchema),
     defaultValues: {
       selectedItems: [],
+      discountCategory: "",
       discountPercentage: 10,
     },
   });
@@ -153,6 +155,32 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
               </div>
               {form.formState.errors.selectedItems && (
                 <p className="text-sm text-red-500">{form.formState.errors.selectedItems.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="discountCategory">Discount Category</Label>
+              <Select 
+                onValueChange={(value) => form.setValue("discountCategory", value)}
+                data-testid="select-discount-category"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select discount category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="seasonal">Seasonal Discount</SelectItem>
+                  <SelectItem value="bulk">Bulk Order Discount</SelectItem>
+                  <SelectItem value="loyalty">Loyalty Customer Discount</SelectItem>
+                  <SelectItem value="promotional">Promotional Discount</SelectItem>
+                  <SelectItem value="clearance">Clearance Sale</SelectItem>
+                  <SelectItem value="student">Student Discount</SelectItem>
+                  <SelectItem value="senior">Senior Citizen Discount</SelectItem>
+                  <SelectItem value="employee">Employee Discount</SelectItem>
+                  <SelectItem value="special">Special Event Discount</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.discountCategory && (
+                <p className="text-sm text-red-500">{form.formState.errors.discountCategory.message}</p>
               )}
             </div>
 
