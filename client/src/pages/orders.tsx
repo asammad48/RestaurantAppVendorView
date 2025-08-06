@@ -11,9 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
 import AddMenuModal from "@/components/add-menu-modal";
+import AddCategoryModal from "@/components/add-category-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
 import { useLocation } from "wouter";
-import type { MenuItem } from "@shared/schema";
+import type { MenuItem, Category } from "@shared/schema";
 
 interface Order {
   id: string;
@@ -148,10 +149,12 @@ export default function Orders() {
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [tables, setTables] = useState<TableData[]>(mockTables);
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [activeMenuTab, setActiveMenuTab] = useState("Menu");
 
   const filteredOrders = mockOrders.filter(order => {
@@ -196,6 +199,12 @@ export default function Orders() {
     queryFn: () => fetch("/api/menu-items").then(res => res.json()),
   });
 
+  // Query for categories
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    queryFn: () => fetch("/api/categories").then(res => res.json()),
+  });
+
   const handleAddTable = (tableData: any) => {
     const newTable: TableData = {
       id: (tables.length + 1).toString(),
@@ -212,6 +221,11 @@ export default function Orders() {
   const filteredMenuItems = menuItems.filter(item =>
     item.name.toLowerCase().includes(menuSearchTerm.toLowerCase()) ||
     item.category.toLowerCase().includes(menuSearchTerm.toLowerCase())
+  );
+
+  // Filter categories based on search
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
   // Format price from cents to rupees
@@ -391,21 +405,34 @@ export default function Orders() {
             </Tabs>
 
             <div className="flex items-center space-x-4">
-              <Button 
-                className="bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
-                onClick={() => setShowApplyDiscountModal(true)}
-                data-testid="button-apply-discount"
-              >
-                Apply Discount
-              </Button>
-              <Button 
-                className="bg-green-500 hover:bg-green-600 text-white"
-                onClick={() => setShowAddMenuModal(true)}
-                data-testid="button-add-item"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Item
-              </Button>
+              {activeMenuTab === "Menu" ? (
+                <>
+                  <Button 
+                    className="bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                    onClick={() => setShowApplyDiscountModal(true)}
+                    data-testid="button-apply-discount"
+                  >
+                    Apply Discount
+                  </Button>
+                  <Button 
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                    onClick={() => setShowAddMenuModal(true)}
+                    data-testid="button-add-item"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Item
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                  onClick={() => setShowAddCategoryModal(true)}
+                  data-testid="button-add-category"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Category
+                </Button>
+              )}
             </div>
           </div>
 
@@ -414,76 +441,120 @@ export default function Orders() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
               placeholder="Search"
-              value={menuSearchTerm}
-              onChange={(e) => setMenuSearchTerm(e.target.value)}
+              value={activeMenuTab === "Menu" ? menuSearchTerm : categorySearchTerm}
+              onChange={(e) => activeMenuTab === "Menu" ? setMenuSearchTerm(e.target.value) : setCategorySearchTerm(e.target.value)}
               className="pl-10"
-              data-testid="menu-search"
+              data-testid={activeMenuTab === "Menu" ? "menu-search" : "category-search"}
             />
           </div>
 
-          {/* Menu Items Table */}
+          {/* Content Table */}
           <div className="bg-white rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                  <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                  <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                  <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                  <TableHead>Image <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingMenu ? (
+            {activeMenuTab === "Menu" ? (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Loading menu items...
-                    </TableCell>
+                    <TableHead>Item Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Image <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
-                ) : filteredMenuItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      No menu items found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredMenuItems.map((item) => (
-                    <TableRow key={item.id} data-testid={`menu-item-row-${item.id}`}>
-                      <TableCell className="font-medium" data-testid={`menu-item-name-${item.id}`}>
-                        {item.name}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600 max-w-xs truncate" data-testid={`menu-item-description-${item.id}`}>
-                        {item.description || "No description"}
-                      </TableCell>
-                      <TableCell data-testid={`menu-item-category-${item.id}`}>
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                          {item.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
-                        {formatPrice(item.price)}
-                      </TableCell>
-                      <TableCell data-testid={`menu-item-image-${item.id}`}>
-                        <span className="text-gray-500">
-                          {item.image ? "Image" : "No image"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-gray-600 hover:text-gray-800"
-                          data-testid={`button-menu-options-${item.id}`}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingMenu ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        Loading menu items...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : filteredMenuItems.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        No menu items found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredMenuItems.map((item) => (
+                      <TableRow key={item.id} data-testid={`menu-item-row-${item.id}`}>
+                        <TableCell className="font-medium" data-testid={`menu-item-name-${item.id}`}>
+                          {item.name}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-600 max-w-xs truncate" data-testid={`menu-item-description-${item.id}`}>
+                          {item.description || "No description"}
+                        </TableCell>
+                        <TableCell data-testid={`menu-item-category-${item.id}`}>
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                            {item.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
+                          {formatPrice(item.price)}
+                        </TableCell>
+                        <TableCell data-testid={`menu-item-image-${item.id}`}>
+                          <span className="text-gray-500">
+                            {item.image ? "Image" : "No image"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-gray-600 hover:text-gray-800"
+                            data-testid={`button-menu-options-${item.id}`}
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Category Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingCategories ? (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center py-8">
+                        Loading categories...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCategories.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center py-8">
+                        No categories found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCategories.map((category) => (
+                      <TableRow key={category.id} data-testid={`category-row-${category.id}`}>
+                        <TableCell className="font-medium" data-testid={`category-name-${category.id}`}>
+                          {category.name}
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-gray-600 hover:text-gray-800"
+                            data-testid={`button-category-options-${category.id}`}
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
 
           {/* Pagination for Menu */}
@@ -645,6 +716,13 @@ export default function Orders() {
       <AddMenuModal
         isOpen={showAddMenuModal}
         onClose={() => setShowAddMenuModal(false)}
+        restaurantId="1"
+      />
+
+      {/* Add Category Modal */}
+      <AddCategoryModal
+        isOpen={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
         restaurantId="1"
       />
 

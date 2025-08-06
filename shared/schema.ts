@@ -62,6 +62,14 @@ export const analytics = pgTable("analytics", {
   menuItems: integer("menu_items").notNull(),
 });
 
+export const categories = pgTable("categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  status: text("status").notNull().default("active"), // active, inactive
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const menuItems = pgTable("menu_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -101,6 +109,11 @@ export const insertAnalyticsSchema = createInsertSchema(analytics).omit({
   id: true,
 });
 
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({
   id: true,
   createdAt: true,
@@ -132,6 +145,8 @@ export type InsertBranch = z.infer<typeof insertBranchSchema>;
 export type Branch = typeof branches.$inferSelect;
 export type InsertAnalytics = z.infer<typeof insertAnalyticsSchema>;
 export type Analytics = typeof analytics.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Category = typeof categories.$inferSelect;
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 export type MenuItem = typeof menuItems.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;

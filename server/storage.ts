@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem } from "@shared/schema";
+import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem, type Category, type InsertCategory } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -39,6 +39,14 @@ export interface IStorage {
   createAnalytics(analytics: InsertAnalytics): Promise<Analytics>;
   getAnalyticsByDateRange(startDate: string, endDate: string): Promise<Analytics[]>;
 
+  // Categories
+  getCategory(id: string): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: string): Promise<boolean>;
+  getAllCategories(): Promise<Category[]>;
+  getCategoriesByRestaurant(restaurantId: string): Promise<Category[]>;
+
   // Menu Items
   getMenuItem(id: string): Promise<MenuItem | undefined>;
   createMenuItem(menuItem: InsertMenuItem): Promise<MenuItem>;
@@ -55,6 +63,7 @@ export class MemStorage implements IStorage {
   private restaurants: Map<string, Restaurant>;
   private branches: Map<string, Branch>;
   private analytics: Map<string, Analytics>;
+  private categories: Map<string, Category>;
   private menuItems: Map<string, MenuItem>;
 
   constructor() {
@@ -63,6 +72,7 @@ export class MemStorage implements IStorage {
     this.restaurants = new Map();
     this.branches = new Map();
     this.analytics = new Map();
+    this.categories = new Map();
     this.menuItems = new Map();
     this.seedData();
   }
@@ -279,6 +289,47 @@ export class MemStorage implements IStorage {
     }));
 
     seedAnalytics.forEach(analytics => this.analytics.set(analytics.id, analytics));
+
+    // Seed categories
+    const seedCategories: Category[] = [
+      {
+        id: "1",
+        name: "Main Course",
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "2",
+        name: "Appetizers",
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "3",
+        name: "Desserts",
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "4",
+        name: "Beverages",
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "5",
+        name: "Fast Food",
+        restaurantId: "2",
+        status: "active",
+        createdAt: new Date(),
+      },
+    ];
+
+    seedCategories.forEach(category => this.categories.set(category.id, category));
 
     // Seed menu items
     const seedMenuItems: MenuItem[] = [
@@ -544,6 +595,45 @@ export class MemStorage implements IStorage {
 
   async getBranchesByRestaurant(restaurantId: string): Promise<Branch[]> {
     return Array.from(this.branches.values()).filter(branch => branch.restaurantId === restaurantId);
+  }
+
+  // Category methods
+  async getCategory(id: string): Promise<Category | undefined> {
+    return this.categories.get(id);
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const id = randomUUID();
+    const category: Category = { 
+      ...insertCategory, 
+      id, 
+      createdAt: new Date(),
+      status: insertCategory.status || "active",
+      restaurantId: insertCategory.restaurantId || null
+    };
+    this.categories.set(id, category);
+    return category;
+  }
+
+  async updateCategory(id: string, updateData: Partial<InsertCategory>): Promise<Category | undefined> {
+    const existingCategory = this.categories.get(id);
+    if (!existingCategory) return undefined;
+
+    const updatedCategory = { ...existingCategory, ...updateData };
+    this.categories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+
+  async deleteCategory(id: string): Promise<boolean> {
+    return this.categories.delete(id);
+  }
+
+  async getAllCategories(): Promise<Category[]> {
+    return Array.from(this.categories.values());
+  }
+
+  async getCategoriesByRestaurant(restaurantId: string): Promise<Category[]> {
+    return Array.from(this.categories.values()).filter(category => category.restaurantId === restaurantId);
   }
 
   // Menu Item methods

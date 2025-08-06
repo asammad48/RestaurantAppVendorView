@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertMenuItemSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertCategorySchema, insertMenuItemSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -318,6 +318,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Category routes
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const { restaurantId } = req.query;
+      let categories;
+      
+      if (restaurantId && typeof restaurantId === "string") {
+        categories = await storage.getCategoriesByRestaurant(restaurantId);
+      } else {
+        categories = await storage.getAllCategories();
+      }
+
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/categories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const category = await storage.getCategory(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const categoryData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/categories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertCategorySchema.partial().parse(req.body);
+      
+      const category = await storage.updateCategory(id, updateData);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      res.json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCategory(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      res.json({ message: "Category deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
