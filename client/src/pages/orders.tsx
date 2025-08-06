@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import QRCodeModal from "@/components/qr-code-modal";
 import { useLocation } from "wouter";
 
 interface Order {
@@ -140,6 +141,8 @@ export default function Orders() {
   const [orderFilter, setOrderFilter] = useState("All Orders");
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -392,6 +395,10 @@ export default function Orders() {
                   <div className="flex items-center justify-between">
                     <Button 
                       className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm"
+                      onClick={() => {
+                        setSelectedTable(table);
+                        setShowQRModal(true);
+                      }}
                       data-testid={`button-view-qr-${table.id}`}
                     >
                       View QR Code
@@ -436,6 +443,16 @@ export default function Orders() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* QR Code Modal */}
+      {selectedTable && (
+        <QRCodeModal
+          open={showQRModal}
+          onOpenChange={setShowQRModal}
+          tableNumber={selectedTable.tableNumber}
+          branchName={selectedTable.branch}
+        />
+      )}
     </div>
   );
 }
