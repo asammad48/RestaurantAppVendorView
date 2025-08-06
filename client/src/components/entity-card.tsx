@@ -1,13 +1,7 @@
-import { Building2, Hotel, MapPin, Phone, Settings, Edit, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { Settings, Edit, Trash2 } from "lucide-react";
 import type { Entity } from "@shared/schema";
 
 interface EntityCardProps {
@@ -18,115 +12,71 @@ interface EntityCardProps {
 }
 
 export default function EntityCard({ entity, onEdit, onDelete, onManage }: EntityCardProps) {
-  const isHotel = entity.entityType === "hotel";
-
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800" data-testid={`card-entity-${entity.id}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {isHotel ? (
-                <Hotel className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              ) : (
-                <Building2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              )}
-              <Badge 
-                variant={isHotel ? "secondary" : "default"}
-                className="text-xs"
-                data-testid={`badge-type-${entity.id}`}
-              >
-                {entity.entityType.toUpperCase()}
-              </Badge>
-            </div>
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white leading-tight" data-testid={`text-name-${entity.id}`}>
-              {entity.name}
-            </h3>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                data-testid={`button-menu-${entity.id}`}
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onManage(entity)} data-testid={`menu-manage-${entity.id}`}>
-                <Settings className="w-4 h-4 mr-2" />
-                Manage
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(entity)} data-testid={`menu-edit-${entity.id}`}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete(entity)} 
-                className="text-red-600 dark:text-red-400"
-                data-testid={`menu-delete-${entity.id}`}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <Card className="bg-white border border-gray-100 overflow-hidden" data-testid={`card-entity-${entity.id}`}>
+      <div className="relative">
+        <img 
+          src={entity.profilePicture || "/api/placeholder/400/200"} 
+          alt={`${entity.name} profile`} 
+          className="w-full h-48 object-cover"
+          data-testid={`entity-image-${entity.id}`}
+        />
+        <div className="absolute top-3 right-3">
+          <Badge 
+            className={entity.status === 'active' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}
+            data-testid={`entity-status-${entity.id}`}
+          >
+            {entity.status === 'active' ? 'Active' : 'Inactive'}
+          </Badge>
         </div>
-      </CardHeader>
+        <div className="absolute top-3 left-3">
+          <Badge 
+            variant="secondary"
+            className="bg-white/90 text-gray-800"
+            data-testid={`entity-type-${entity.id}`}
+          >
+            {entity.entityType.toUpperCase()}
+          </Badge>
+        </div>
+      </div>
       
-      <CardContent className="space-y-4">
-        <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-          <img
-            src={entity.profilePicture}
-            alt={entity.name}
-            className="w-full h-full object-cover"
-            data-testid={`img-profile-${entity.id}`}
-          />
-        </div>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4" data-testid={`entity-name-${entity.id}`}>
+          {entity.name}
+        </h3>
         
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-            <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="truncate" data-testid={`text-address-${entity.id}`}>
-              {entity.address}
-            </span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-            <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span data-testid={`text-phone-${entity.id}`}>
-              {entity.phone}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex gap-2 pt-2">
-          <Button 
+        <div className="flex items-center justify-around">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="action-button action-button-manage"
             onClick={() => onManage(entity)}
-            className="flex-1 text-sm"
             data-testid={`button-manage-${entity.id}`}
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Manage
+            <Settings className="w-5 h-5 mb-1" />
+            <span className="text-sm">Manage</span>
           </Button>
-          <Button 
-            variant="outline" 
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="action-button action-button-edit"
             onClick={() => onEdit(entity)}
-            className="flex-1 text-sm"
             data-testid={`button-edit-${entity.id}`}
           >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
+            <Edit className="w-5 h-5 mb-1" />
+            <span className="text-sm">Edit</span>
           </Button>
-          <Button 
-            variant="outline" 
+          
+          <Button
+            variant="ghost"
             size="sm"
+            className="action-button action-button-delete"
             onClick={() => onDelete(entity)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
             data-testid={`button-delete-${entity.id}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5 mb-1" />
+            <span className="text-sm">Delete</span>
           </Button>
         </div>
       </CardContent>
