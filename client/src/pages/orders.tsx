@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
+import AddMenuModal from "@/components/add-menu-modal";
 import { useLocation } from "wouter";
+import type { MenuItem } from "@shared/schema";
 
 interface Order {
   id: string;
@@ -144,8 +146,11 @@ export default function Orders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
+  const [showAddMenuModal, setShowAddMenuModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [tables, setTables] = useState<TableData[]>(mockTables);
+  const [menuSearchTerm, setMenuSearchTerm] = useState("");
+  const [activeMenuTab, setActiveMenuTab] = useState("Menu");
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -183,6 +188,12 @@ export default function Orders() {
       <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Unpaid</Badge>;
   };
 
+  // Query for menu items
+  const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery<MenuItem[]>({
+    queryKey: ["/api/menu-items"],
+    queryFn: () => fetch("/api/menu-items").then(res => res.json()),
+  });
+
   const handleAddTable = (tableData: any) => {
     const newTable: TableData = {
       id: (tables.length + 1).toString(),
@@ -193,6 +204,17 @@ export default function Orders() {
       status: tableData.available ? "Active" : "Inactive"
     };
     setTables([...tables, newTable]);
+  };
+
+  // Filter menu items based on search
+  const filteredMenuItems = menuItems.filter(item =>
+    item.name.toLowerCase().includes(menuSearchTerm.toLowerCase()) ||
+    item.category.toLowerCase().includes(menuSearchTerm.toLowerCase())
+  );
+
+  // Format price from cents to rupees
+  const formatPrice = (priceInCents: number) => {
+    return `Rs${(priceInCents / 100).toFixed(0)}`;
   };
 
   return (
@@ -354,10 +376,146 @@ export default function Orders() {
           </div>
         </TabsContent>
 
-        <TabsContent value="menu">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Menu Management</h3>
-            <p className="text-gray-600">Menu management features will be implemented here.</p>
+        <TabsContent value="menu" className="space-y-6">
+          {/* Menu Filter Tabs */}
+          <div className="flex items-center justify-between">
+            <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab}>
+              <TabsList data-testid="menu-filter-tabs">
+                <TabsTrigger value="Menu" className="bg-green-500 text-white data-[state=active]:bg-green-600">
+                  Menu
+                </TabsTrigger>
+                <TabsTrigger value="Category">Category</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="flex items-center space-x-4">
+              <Button 
+                className="bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200" 
+                data-testid="button-apply-discount"
+              >
+                Apply Discount
+              </Button>
+              <Button 
+                className="bg-green-500 hover:bg-green-600 text-white"
+                onClick={() => setShowAddMenuModal(true)}
+                data-testid="button-add-item"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative w-64">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search"
+              value={menuSearchTerm}
+              onChange={(e) => setMenuSearchTerm(e.target.value)}
+              className="pl-10"
+              data-testid="menu-search"
+            />
+          </div>
+
+          {/* Menu Items Table */}
+          <div className="bg-white rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>Image <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingMenu ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      Loading menu items...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredMenuItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      No menu items found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredMenuItems.map((item) => (
+                    <TableRow key={item.id} data-testid={`menu-item-row-${item.id}`}>
+                      <TableCell className="font-medium" data-testid={`menu-item-name-${item.id}`}>
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600 max-w-xs truncate" data-testid={`menu-item-description-${item.id}`}>
+                        {item.description || "No description"}
+                      </TableCell>
+                      <TableCell data-testid={`menu-item-category-${item.id}`}>
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                          {item.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
+                        {formatPrice(item.price)}
+                      </TableCell>
+                      <TableCell data-testid={`menu-item-image-${item.id}`}>
+                        <span className="text-gray-500">
+                          {item.image ? "Image" : "No image"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-gray-600 hover:text-gray-800"
+                          data-testid={`button-menu-options-${item.id}`}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination for Menu */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Show result:</span>
+              <Select value="6">
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm">
+                Previous
+              </Button>
+              <Button className="bg-green-500 hover:bg-green-600" size="sm">
+                1
+              </Button>
+              <Button variant="outline" size="sm">
+                2
+              </Button>
+              <Button variant="outline" size="sm">
+                20
+              </Button>
+              <Button variant="outline" size="sm">
+                Next
+              </Button>
+            </div>
           </div>
         </TabsContent>
 
@@ -478,6 +636,13 @@ export default function Orders() {
         open={showAddTableModal}
         onOpenChange={setShowAddTableModal}
         onAddTable={handleAddTable}
+      />
+
+      {/* Add Menu Modal */}
+      <AddMenuModal
+        isOpen={showAddMenuModal}
+        onClose={() => setShowAddMenuModal(false)}
+        restaurantId="1"
       />
     </div>
   );

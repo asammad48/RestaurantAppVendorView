@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics } from "@shared/schema";
+import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -38,6 +38,15 @@ export interface IStorage {
   getAnalytics(date?: string): Promise<Analytics[]>;
   createAnalytics(analytics: InsertAnalytics): Promise<Analytics>;
   getAnalyticsByDateRange(startDate: string, endDate: string): Promise<Analytics[]>;
+
+  // Menu Items
+  getMenuItem(id: string): Promise<MenuItem | undefined>;
+  createMenuItem(menuItem: InsertMenuItem): Promise<MenuItem>;
+  updateMenuItem(id: string, menuItem: Partial<InsertMenuItem>): Promise<MenuItem | undefined>;
+  deleteMenuItem(id: string): Promise<boolean>;
+  getAllMenuItems(): Promise<MenuItem[]>;
+  getMenuItemsByRestaurant(restaurantId: string): Promise<MenuItem[]>;
+  getMenuItemsByCategory(category: string): Promise<MenuItem[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -46,6 +55,7 @@ export class MemStorage implements IStorage {
   private restaurants: Map<string, Restaurant>;
   private branches: Map<string, Branch>;
   private analytics: Map<string, Analytics>;
+  private menuItems: Map<string, MenuItem>;
 
   constructor() {
     this.users = new Map();
@@ -53,6 +63,7 @@ export class MemStorage implements IStorage {
     this.restaurants = new Map();
     this.branches = new Map();
     this.analytics = new Map();
+    this.menuItems = new Map();
     this.seedData();
   }
 
@@ -268,6 +279,82 @@ export class MemStorage implements IStorage {
     }));
 
     seedAnalytics.forEach(analytics => this.analytics.set(analytics.id, analytics));
+
+    // Seed menu items
+    const seedMenuItems: MenuItem[] = [
+      {
+        id: "1",
+        name: "Chicken Karahi",
+        category: "Cuisine",
+        description: "A spicy and flavorful pizza topped with marinated chicken, fajita strips, bell peppers, onions and crust.",
+        image: "Image",
+        price: 100000, // Rs 1000 in cents
+        addOns: ['{"name": "Extra Cheese", "price": 200}', '{"name": "Extra Sauce", "price": 100}'],
+        customizations: ['{"name": "Spice Level", "options": ["Mild", "Medium", "Hot", "Extra Hot"]}'],
+        variants: ['{"option": "Small", "price": 100000}', '{"option": "Medium", "price": 150000}', '{"option": "Large", "price": 200000}'],
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "2",
+        name: "Beef Burger",
+        category: "Fast Food",
+        description: "Juicy beef patty with fresh lettuce, tomato, onion and special sauce.",
+        image: "Image",
+        price: 80000, // Rs 800 in cents
+        addOns: ['{"name": "Extra Patty", "price": 300}', '{"name": "Cheese", "price": 150}'],
+        customizations: ['{"name": "Bun Type", "options": ["Regular", "Sesame", "Whole Wheat"]}'],
+        variants: ['{"option": "Single", "price": 80000}', '{"option": "Double", "price": 120000}'],
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "3",
+        name: "Margherita Pizza",
+        category: "Italian",
+        description: "Classic pizza with fresh mozzarella, tomato sauce and basil.",
+        image: "Image",
+        price: 120000, // Rs 1200 in cents
+        addOns: ['{"name": "Extra Cheese", "price": 200}', '{"name": "Olives", "price": 150}'],
+        customizations: ['{"name": "Crust", "options": ["Thin", "Thick", "Stuffed"]}'],
+        variants: ['{"option": "Small", "price": 120000}', '{"option": "Medium", "price": 180000}', '{"option": "Large", "price": 250000}'],
+        restaurantId: "2",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "4",
+        name: "Caesar Salad",
+        category: "Salads",
+        description: "Fresh romaine lettuce with caesar dressing, croutons and parmesan cheese.",
+        image: "Image",
+        price: 60000, // Rs 600 in cents
+        addOns: ['{"name": "Grilled Chicken", "price": 300}', '{"name": "Extra Dressing", "price": 50}'],
+        customizations: ['{"name": "Dressing Amount", "options": ["Light", "Regular", "Extra"]}'],
+        variants: ['{"option": "Regular", "price": 60000}', '{"option": "Large", "price": 80000}'],
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "5",
+        name: "Fish & Chips",
+        category: "Seafood",
+        description: "Crispy battered fish served with golden fries and tartar sauce.",
+        image: "Image",
+        price: 90000, // Rs 900 in cents
+        addOns: ['{"name": "Extra Fish", "price": 400}', '{"name": "Mushy Peas", "price": 100}'],
+        customizations: ['{"name": "Fish Type", "options": ["Cod", "Haddock", "Plaice"]}'],
+        variants: ['{"option": "Regular", "price": 90000}', '{"option": "Large", "price": 130000}'],
+        restaurantId: "2",
+        status: "active",
+        createdAt: new Date(),
+      },
+    ];
+
+    seedMenuItems.forEach(menuItem => this.menuItems.set(menuItem.id, menuItem));
   }
 
   // User methods
@@ -457,6 +544,54 @@ export class MemStorage implements IStorage {
 
   async getBranchesByRestaurant(restaurantId: string): Promise<Branch[]> {
     return Array.from(this.branches.values()).filter(branch => branch.restaurantId === restaurantId);
+  }
+
+  // Menu Item methods
+  async getMenuItem(id: string): Promise<MenuItem | undefined> {
+    return this.menuItems.get(id);
+  }
+
+  async createMenuItem(insertMenuItem: InsertMenuItem): Promise<MenuItem> {
+    const id = randomUUID();
+    const menuItem: MenuItem = { 
+      ...insertMenuItem, 
+      id, 
+      createdAt: new Date(),
+      status: insertMenuItem.status || "active",
+      restaurantId: insertMenuItem.restaurantId || null,
+      description: insertMenuItem.description || null,
+      image: insertMenuItem.image || null,
+      addOns: insertMenuItem.addOns || [],
+      customizations: insertMenuItem.customizations || [],
+      variants: insertMenuItem.variants || []
+    };
+    this.menuItems.set(id, menuItem);
+    return menuItem;
+  }
+
+  async updateMenuItem(id: string, updateData: Partial<InsertMenuItem>): Promise<MenuItem | undefined> {
+    const existingMenuItem = this.menuItems.get(id);
+    if (!existingMenuItem) return undefined;
+
+    const updatedMenuItem = { ...existingMenuItem, ...updateData };
+    this.menuItems.set(id, updatedMenuItem);
+    return updatedMenuItem;
+  }
+
+  async deleteMenuItem(id: string): Promise<boolean> {
+    return this.menuItems.delete(id);
+  }
+
+  async getAllMenuItems(): Promise<MenuItem[]> {
+    return Array.from(this.menuItems.values());
+  }
+
+  async getMenuItemsByRestaurant(restaurantId: string): Promise<MenuItem[]> {
+    return Array.from(this.menuItems.values()).filter(item => item.restaurantId === restaurantId);
+  }
+
+  async getMenuItemsByCategory(category: string): Promise<MenuItem[]> {
+    return Array.from(this.menuItems.values()).filter(item => item.category === category);
   }
 }
 

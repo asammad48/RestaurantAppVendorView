@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertMenuItemSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -323,18 +323,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Menu Item routes
+  app.get("/api/menu-items", async (req, res) => {
+    try {
+      const { restaurantId, category } = req.query;
+      let menuItems;
+      
+      if (restaurantId && typeof restaurantId === "string") {
+        menuItems = await storage.getMenuItemsByRestaurant(restaurantId);
+      } else if (category && typeof category === "string") {
+        menuItems = await storage.getMenuItemsByCategory(category);
+      } else {
+        menuItems = await storage.getAllMenuItems();
+      }
+
+      res.json(menuItems);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/menu-items/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const menuItem = await storage.getMenuItem(id);
+      
+      if (!menuItem) {
+        return res.status(404).json({ message: "Menu item not found" });
+      }
+
+      res.json(menuItem);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/menu-items", async (req, res) => {
+    try {
+      const menuItemData = insertMenuItemSchema.parse(req.body);
+      const menuItem = await storage.createMenuItem(menuItemData);
+      res.status(201).json(menuItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/menu-items/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertMenuItemSchema.partial().parse(req.body);
+      
+      const menuItem = await storage.updateMenuItem(id, updateData);
+      if (!menuItem) {
+        return res.status(404).json({ message: "Menu item not found" });
+      }
+
+      res.json(menuItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/menu-items/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteMenuItem(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Menu item not found" });
+      }
+
+      res.json({ message: "Menu item deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Dashboard stats route
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
       const analytics = await storage.getAnalytics();
       const users = await storage.getAllUsers();
       const restaurants = await storage.getAllRestaurants();
+      const menuItems = await storage.getAllMenuItems();
 
       // Calculate totals
       const totalRevenue = analytics.reduce((sum, item) => sum + item.revenue, 0);
       const totalCustomers = analytics.reduce((sum, item) => sum + item.customers, 0);
       const totalOrders = analytics.reduce((sum, item) => sum + item.orders, 0);
-      const totalMenuItems = analytics[0]?.menuItems || 345;
+      const totalMenuItems = menuItems.length;
 
       res.json({
         totalRevenue,
