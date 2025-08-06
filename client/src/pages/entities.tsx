@@ -9,6 +9,7 @@ import EntityCard from "@/components/entity-card";
 import AddEntityModal from "@/components/add-entity-modal";
 import EditEntityModal from "@/components/edit-entity-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
+import PricingPlansModal from "@/components/pricing-plans-modal";
 import type { Entity } from "@shared/schema";
 
 export default function Entities() {
@@ -16,6 +17,7 @@ export default function Entities() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
 
   const { data: entities = [], isLoading } = useQuery<Entity[]>({
@@ -135,7 +137,22 @@ export default function Entities() {
 
       <AddEntityModal
         open={showAddModal}
-        onOpenChange={setShowAddModal}
+        onOpenChange={(open) => {
+          setShowAddModal(open);
+          // Show pricing modal after successfully adding entity
+          if (!open && showAddModal) {
+            setTimeout(() => setShowPricingModal(true), 500);
+          }
+        }}
+      />
+
+      <PricingPlansModal
+        open={showPricingModal}
+        onOpenChange={setShowPricingModal}
+        onPlanSelect={(plan) => {
+          console.log(`Selected plan: ${plan}`);
+          // Handle plan selection logic here
+        }}
       />
 
       {selectedEntity && (
