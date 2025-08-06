@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
 import AddMenuModal from "@/components/add-menu-modal";
+import ApplyDiscountModal from "@/components/apply-discount-modal";
 import { useLocation } from "wouter";
 import type { MenuItem } from "@shared/schema";
 
@@ -147,6 +148,7 @@ export default function Orders() {
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [tables, setTables] = useState<TableData[]>(mockTables);
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
@@ -390,7 +392,8 @@ export default function Orders() {
 
             <div className="flex items-center space-x-4">
               <Button 
-                className="bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200" 
+                className="bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                onClick={() => setShowApplyDiscountModal(true)}
                 data-testid="button-apply-discount"
               >
                 Apply Discount
@@ -643,6 +646,12 @@ export default function Orders() {
         isOpen={showAddMenuModal}
         onClose={() => setShowAddMenuModal(false)}
         restaurantId="1"
+      />
+
+      {/* Apply Discount Modal */}
+      <ApplyDiscountModal
+        isOpen={showApplyDiscountModal}
+        onClose={() => setShowApplyDiscountModal(false)}
       />
     </div>
   );
