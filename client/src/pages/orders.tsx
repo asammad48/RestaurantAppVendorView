@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import QRCodeModal from "@/components/qr-code-modal";
+import AddTableModal from "@/components/add-table-modal";
 import { useLocation } from "wouter";
 
 interface Order {
@@ -142,7 +143,9 @@ export default function Orders() {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
+  const [tables, setTables] = useState<TableData[]>(mockTables);
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -178,6 +181,18 @@ export default function Orders() {
     return payment === "Paid" ? 
       <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Paid</Badge> :
       <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Unpaid</Badge>;
+  };
+
+  const handleAddTable = (tableData: any) => {
+    const newTable: TableData = {
+      id: (tables.length + 1).toString(),
+      tableNumber: tableData.tableNumber,
+      branch: "Gulshan Branch", // Default branch
+      waiter: tableData.assignedTo,
+      seats: parseInt(tableData.seatingCapacity),
+      status: tableData.available ? "Active" : "Inactive"
+    };
+    setTables([...tables, newTable]);
   };
 
   return (
@@ -349,7 +364,11 @@ export default function Orders() {
         <TabsContent value="tables" className="space-y-6">
           {/* Add Table Button */}
           <div className="flex justify-end">
-            <Button className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50" data-testid="button-add-table">
+            <Button 
+              className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50" 
+              onClick={() => setShowAddTableModal(true)}
+              data-testid="button-add-table"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Table
             </Button>
@@ -357,7 +376,7 @@ export default function Orders() {
 
           {/* Tables Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockTables.map((table) => (
+            {tables.map((table) => (
               <Card key={table.id} className="bg-white border border-gray-200 shadow-sm" data-testid={`table-card-${table.id}`}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -453,6 +472,13 @@ export default function Orders() {
           branchName={selectedTable.branch}
         />
       )}
+
+      {/* Add Table Modal */}
+      <AddTableModal
+        open={showAddTableModal}
+        onOpenChange={setShowAddTableModal}
+        onAddTable={handleAddTable}
+      />
     </div>
   );
 }
