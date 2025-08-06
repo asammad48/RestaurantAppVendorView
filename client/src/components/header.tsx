@@ -1,0 +1,78 @@
+import { useLocation } from "wouter";
+import { Search, Bell, User } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+
+const pageNames: Record<string, string> = {
+  "/": "Dashboard",
+  "/dashboard": "Dashboard",
+  "/restaurants": "Restaurants",
+  "/analytics": "Analytics",
+  "/users": "Users",
+  "/feedbacks": "Feedbacks",
+  "/reporting": "Reporting",
+};
+
+export default function Header() {
+  const [location] = useLocation();
+  const { user, logout } = useAuth();
+  const pageName = pageNames[location] || "Dashboard";
+
+  return (
+    <header className="bg-white border-b border-gray-200 px-6 py-4" data-testid="header">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-800" data-testid="page-title">
+          {pageName}
+        </h1>
+        
+        <div className="flex items-center space-x-4">
+          {/* Search */}
+          <div className="relative" data-testid="search-container">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search..."
+              className="w-64 pl-10"
+              data-testid="search-input"
+            />
+          </div>
+          
+          {/* Notifications */}
+          <Button variant="ghost" size="icon" className="relative" data-testid="notifications-button">
+            <Bell className="h-5 w-5 text-gray-400" />
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full text-xs flex items-center justify-center p-0"
+              data-testid="notification-badge"
+            >
+              3
+            </Badge>
+          </Button>
+          
+          {/* Profile */}
+          <div className="relative" data-testid="profile-menu">
+            <Button
+              variant="ghost"
+              className="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              onClick={() => logout()}
+              data-testid="profile-button"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&h=150" />
+                <AvatarFallback data-testid="avatar-fallback">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+              {user && (
+                <span className="hidden md:block" data-testid="user-name">{user.username}</span>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
