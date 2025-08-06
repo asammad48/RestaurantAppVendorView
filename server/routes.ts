@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, signupSchema, insertRestaurantSchema, insertUserSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -169,6 +169,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ message: "Restaurant deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Branch routes
+  app.get("/api/branches", async (req, res) => {
+    try {
+      const { restaurantId } = req.query;
+      let branches;
+      
+      if (restaurantId && typeof restaurantId === "string") {
+        branches = await storage.getBranchesByRestaurant(restaurantId);
+      } else {
+        branches = await storage.getAllBranches();
+      }
+
+      res.json(branches);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/branches/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const branch = await storage.getBranch(id);
+      
+      if (!branch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+
+      res.json(branch);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/branches", async (req, res) => {
+    try {
+      const branchData = insertBranchSchema.parse(req.body);
+      const branch = await storage.createBranch(branchData);
+      res.status(201).json(branch);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/branches/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertBranchSchema.partial().parse(req.body);
+      
+      const branch = await storage.updateBranch(id, updateData);
+      if (!branch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+
+      res.json(branch);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/branches/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBranch(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+
+      res.json({ message: "Branch deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

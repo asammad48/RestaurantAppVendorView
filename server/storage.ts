@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Restaurant, type InsertRestaurant, type Analytics, type InsertAnalytics } from "@shared/schema";
+import { type User, type InsertUser, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -19,6 +19,14 @@ export interface IStorage {
   deleteRestaurant(id: string): Promise<boolean>;
   getAllRestaurants(): Promise<Restaurant[]>;
 
+  // Branches
+  getBranch(id: string): Promise<Branch | undefined>;
+  createBranch(branch: InsertBranch): Promise<Branch>;
+  updateBranch(id: string, branch: Partial<InsertBranch>): Promise<Branch | undefined>;
+  deleteBranch(id: string): Promise<boolean>;
+  getAllBranches(): Promise<Branch[]>;
+  getBranchesByRestaurant(restaurantId: string): Promise<Branch[]>;
+
   // Analytics
   getAnalytics(date?: string): Promise<Analytics[]>;
   createAnalytics(analytics: InsertAnalytics): Promise<Analytics>;
@@ -28,11 +36,13 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private restaurants: Map<string, Restaurant>;
+  private branches: Map<string, Branch>;
   private analytics: Map<string, Analytics>;
 
   constructor() {
     this.users = new Map();
     this.restaurants = new Map();
+    this.branches = new Map();
     this.analytics = new Map();
     this.seedData();
   }
@@ -146,6 +156,42 @@ export class MemStorage implements IStorage {
     ];
 
     seedRestaurants.forEach(restaurant => this.restaurants.set(restaurant.id, restaurant));
+
+    // Seed branches
+    const seedBranches: Branch[] = [
+      {
+        id: "1",
+        name: "Main Branch",
+        restaurantType: "fast-food",
+        contactNo: "+1234567890",
+        address: "123 Main Street, Downtown",
+        restaurantLogo: "burger_house_logo.png",
+        instagram: "@burgerhousemain",
+        whatsapp: "+1234567890",
+        facebook: "BurgerHouseMain",
+        googleMap: "https://maps.google.com/burgerhousemain",
+        restaurantId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "2", 
+        name: "North Branch",
+        restaurantType: "casual-dining",
+        contactNo: "+1234567891",
+        address: "456 North Avenue, Uptown",
+        restaurantLogo: "pizza_palace_logo.png",
+        instagram: "@pizzapalacenorth",
+        whatsapp: "+1234567891",
+        facebook: "PizzaPalaceNorth",
+        googleMap: "https://maps.google.com/pizzapalacenorth",
+        restaurantId: "2",
+        status: "active",
+        createdAt: new Date(),
+      },
+    ];
+
+    seedBranches.forEach(branch => this.branches.set(branch.id, branch));
 
     // Seed analytics
     const months = ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12"];
@@ -268,6 +314,45 @@ export class MemStorage implements IStorage {
     return Array.from(this.analytics.values()).filter(
       analytics => analytics.date >= startDate && analytics.date <= endDate
     );
+  }
+
+  // Branch methods
+  async getBranch(id: string): Promise<Branch | undefined> {
+    return this.branches.get(id);
+  }
+
+  async createBranch(insertBranch: InsertBranch): Promise<Branch> {
+    const id = randomUUID();
+    const branch: Branch = { 
+      ...insertBranch, 
+      id, 
+      createdAt: new Date(),
+      status: insertBranch.status || "active",
+      restaurantId: insertBranch.restaurantId || null
+    };
+    this.branches.set(id, branch);
+    return branch;
+  }
+
+  async updateBranch(id: string, updateData: Partial<InsertBranch>): Promise<Branch | undefined> {
+    const existingBranch = this.branches.get(id);
+    if (!existingBranch) return undefined;
+
+    const updatedBranch = { ...existingBranch, ...updateData };
+    this.branches.set(id, updatedBranch);
+    return updatedBranch;
+  }
+
+  async deleteBranch(id: string): Promise<boolean> {
+    return this.branches.delete(id);
+  }
+
+  async getAllBranches(): Promise<Branch[]> {
+    return Array.from(this.branches.values());
+  }
+
+  async getBranchesByRestaurant(restaurantId: string): Promise<Branch[]> {
+    return Array.from(this.branches.values()).filter(branch => branch.restaurantId === restaurantId);
   }
 }
 

@@ -23,6 +23,22 @@ export const restaurants = pgTable("restaurants", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const branches = pgTable("branches", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  restaurantType: text("restaurant_type").notNull(),
+  contactNo: text("contact_no").notNull(),
+  address: text("address").notNull(),
+  restaurantLogo: text("restaurant_logo").default(""),
+  instagram: text("instagram").default(""),
+  whatsapp: text("whatsapp").default(""),
+  facebook: text("facebook").default(""),
+  googleMap: text("google_map").default(""),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const analytics = pgTable("analytics", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   date: text("date").notNull(),
@@ -38,6 +54,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const insertRestaurantSchema = createInsertSchema(restaurants).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBranchSchema = createInsertSchema(branches).omit({
   id: true,
   createdAt: true,
 });
@@ -66,6 +87,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertRestaurant = z.infer<typeof insertRestaurantSchema>;
 export type Restaurant = typeof restaurants.$inferSelect;
+export type InsertBranch = z.infer<typeof insertBranchSchema>;
+export type Branch = typeof branches.$inferSelect;
 export type InsertAnalytics = z.infer<typeof insertAnalyticsSchema>;
 export type Analytics = typeof analytics.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;

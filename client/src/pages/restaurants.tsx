@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import RestaurantCard from "@/components/restaurant-card";
+import AddBranchModal from "@/components/add-branch-modal";
 
 export default function Restaurants() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [showAddBranchModal, setShowAddBranchModal] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -38,9 +40,9 @@ export default function Restaurants() {
     },
   });
 
-  const filteredRestaurants = (restaurants || []).filter((restaurant: any) =>
+  const filteredRestaurants = Array.isArray(restaurants) ? restaurants.filter((restaurant: any) =>
     restaurant.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   const totalPages = Math.ceil(filteredRestaurants.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -65,7 +67,11 @@ export default function Restaurants() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-800" data-testid="page-title">Restaurants</h2>
-        <Button className="bg-green-500 hover:bg-green-600" data-testid="button-add-branch">
+        <Button 
+          onClick={() => setShowAddBranchModal(true)}
+          className="bg-green-500 hover:bg-green-600" 
+          data-testid="button-add-branch"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Branch
         </Button>
@@ -170,6 +176,11 @@ export default function Restaurants() {
           </div>
         </div>
       )}
+
+      <AddBranchModal
+        open={showAddBranchModal}
+        onOpenChange={setShowAddBranchModal}
+      />
     </div>
   );
 }
