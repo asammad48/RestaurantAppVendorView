@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Dashboard from "@/pages/dashboard";
+import Entities from "@/pages/entities";
 import Restaurants from "@/pages/restaurants";
 import Analytics from "@/pages/analytics";
 import Users from "@/pages/users";
@@ -43,7 +44,10 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/entities" component={() => <ProtectedRoute component={Entities} />} />
       <Route path="/restaurants" component={() => <ProtectedRoute component={Restaurants} />} />
+      <Route path="/hotel-management" component={() => <ProtectedRoute component={Restaurants} />} />
+      <Route path="/restaurant-management" component={() => <ProtectedRoute component={Restaurants} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={Analytics} />} />
       <Route path="/users" component={() => <ProtectedRoute component={Users} />} />
       <Route path="/feedbacks" component={() => <ProtectedRoute component={Feedbacks} />} />

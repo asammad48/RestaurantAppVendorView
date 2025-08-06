@@ -17,10 +17,10 @@ const navigationItems = [
     icon: LayoutDashboard,
   },
   {
-    name: "Restaurants",
-    href: "/restaurants",
+    name: "Entities",
+    href: "/entities",
     icon: Building2,
-    badge: "8",
+    badge: "4",
   },
   {
     name: "Analytics",

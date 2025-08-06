@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +10,18 @@ import RestaurantCard from "@/components/restaurant-card";
 import AddBranchModal from "@/components/add-branch-modal";
 
 export default function Restaurants() {
+  const [location] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [showAddBranchModal, setShowAddBranchModal] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Determine page type based on current location
+  const isHotelManagement = location === "/hotel-management";
+  const isRestaurantManagement = location === "/restaurant-management";
+  const pageTitle = isHotelManagement ? "Hotel Management" : isRestaurantManagement ? "Restaurant Management" : "Restaurants";
 
   const { data: restaurants, isLoading } = useQuery({
     queryKey: ["/api/restaurants"],
@@ -66,7 +73,7 @@ export default function Restaurants() {
     <div className="space-y-6" data-testid="restaurants-page">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-800" data-testid="page-title">Restaurants</h2>
+        <h2 className="text-2xl font-semibold text-gray-800" data-testid="page-title">{pageTitle}</h2>
         <Button 
           onClick={() => setShowAddBranchModal(true)}
           className="bg-green-500 hover:bg-green-600" 

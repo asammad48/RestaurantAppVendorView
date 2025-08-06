@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, signupSchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -115,6 +115,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Entity routes
+  app.get("/api/entities", async (req, res) => {
+    try {
+      const entities = await storage.getAllEntities();
+      res.json(entities);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/entities", async (req, res) => {
+    try {
+      const entityData = insertEntitySchema.parse(req.body);
+      const entity = await storage.createEntity(entityData);
+      res.status(201).json(entity);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/entities/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      const entity = await storage.updateEntity(id, updateData);
+      if (!entity) {
+        return res.status(404).json({ message: "Entity not found" });
+      }
+
+      res.json(entity);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/entities/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteEntity(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Entity not found" });
+      }
+
+      res.json({ message: "Entity deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

@@ -15,6 +15,20 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const entities = pgTable("entities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  address: text("address").notNull(),
+  certificateUrl: text("certificate_url"),
+  certificatePicture: text("certificate_picture"),
+  profilePicture: text("profile_picture").notNull(),
+  entityType: text("entity_type").notNull(), // hotel, restaurant
+  status: text("status").notNull().default("active"), // active, inactive
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Keep restaurants table for backward compatibility in branches
 export const restaurants = pgTable("restaurants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -53,6 +67,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
+export const insertEntitySchema = createInsertSchema(entities).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertRestaurantSchema = createInsertSchema(restaurants).omit({
   id: true,
   createdAt: true,
@@ -85,6 +104,8 @@ export const signupSchema = z.object({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertEntity = z.infer<typeof insertEntitySchema>;
+export type Entity = typeof entities.$inferSelect;
 export type InsertRestaurant = z.infer<typeof insertRestaurantSchema>;
 export type Restaurant = typeof restaurants.$inferSelect;
 export type InsertBranch = z.infer<typeof insertBranchSchema>;

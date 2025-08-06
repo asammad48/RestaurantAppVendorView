@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics } from "@shared/schema";
+import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -11,6 +11,13 @@ export interface IStorage {
   deleteUser(id: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
+
+  // Entities
+  getEntity(id: string): Promise<Entity | undefined>;
+  createEntity(entity: InsertEntity): Promise<Entity>;
+  updateEntity(id: string, entity: Partial<InsertEntity>): Promise<Entity | undefined>;
+  deleteEntity(id: string): Promise<boolean>;
+  getAllEntities(): Promise<Entity[]>;
 
   // Restaurants
   getRestaurant(id: string): Promise<Restaurant | undefined>;
@@ -35,12 +42,14 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private entities: Map<string, Entity>;
   private restaurants: Map<string, Restaurant>;
   private branches: Map<string, Branch>;
   private analytics: Map<string, Analytics>;
 
   constructor() {
     this.users = new Map();
+    this.entities = new Map();
     this.restaurants = new Map();
     this.branches = new Map();
     this.analytics = new Map();
@@ -108,6 +117,60 @@ export class MemStorage implements IStorage {
     ];
 
     seedUsers.forEach(user => this.users.set(user.id, user));
+
+    // Seed entities
+    const seedEntities: Entity[] = [
+      {
+        id: "1",
+        name: "Grand Plaza Hotel",
+        phone: "+1234567890",
+        address: "123 Grand Avenue, Downtown City",
+        certificateUrl: "https://example.com/certificates/grand-plaza.pdf",
+        certificatePicture: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+        profilePicture: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        entityType: "hotel",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "2",
+        name: "The Burger House",
+        phone: "+1234567891",
+        address: "456 Food Street, Midtown",
+        certificateUrl: "https://example.com/certificates/burger-house.pdf",
+        certificatePicture: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+        profilePicture: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        entityType: "restaurant",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "3",
+        name: "Luxury Resort & Spa",
+        phone: "+1234567892",
+        address: "789 Beach Road, Coastal Area",
+        certificateUrl: "https://example.com/certificates/luxury-resort.pdf",
+        certificatePicture: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+        profilePicture: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        entityType: "hotel",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "4",
+        name: "Pizza Palace",
+        phone: "+1234567893",
+        address: "321 Italy Square, Little Italy",
+        certificateUrl: "https://example.com/certificates/pizza-palace.pdf",
+        certificatePicture: "https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+        profilePicture: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        entityType: "restaurant",
+        status: "active",
+        createdAt: new Date(),
+      },
+    ];
+
+    seedEntities.forEach(entity => this.entities.set(entity.id, entity));
 
     // Seed restaurants
     const seedRestaurants: Restaurant[] = [
@@ -260,6 +323,42 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).filter(user => user.role === role);
   }
 
+  // Entity methods
+  async getEntity(id: string): Promise<Entity | undefined> {
+    return this.entities.get(id);
+  }
+
+  async createEntity(insertEntity: InsertEntity): Promise<Entity> {
+    const id = randomUUID();
+    const entity: Entity = { 
+      ...insertEntity, 
+      id, 
+      createdAt: new Date(),
+      status: insertEntity.status || "active",
+      certificateUrl: insertEntity.certificateUrl || null,
+      certificatePicture: insertEntity.certificatePicture || null
+    };
+    this.entities.set(id, entity);
+    return entity;
+  }
+
+  async updateEntity(id: string, updateData: Partial<InsertEntity>): Promise<Entity | undefined> {
+    const existingEntity = this.entities.get(id);
+    if (!existingEntity) return undefined;
+
+    const updatedEntity = { ...existingEntity, ...updateData };
+    this.entities.set(id, updatedEntity);
+    return updatedEntity;
+  }
+
+  async deleteEntity(id: string): Promise<boolean> {
+    return this.entities.delete(id);
+  }
+
+  async getAllEntities(): Promise<Entity[]> {
+    return Array.from(this.entities.values());
+  }
+
   // Restaurant methods
   async getRestaurant(id: string): Promise<Restaurant | undefined> {
     return this.restaurants.get(id);
@@ -328,7 +427,12 @@ export class MemStorage implements IStorage {
       id, 
       createdAt: new Date(),
       status: insertBranch.status || "active",
-      restaurantId: insertBranch.restaurantId || null
+      restaurantId: insertBranch.restaurantId || null,
+      restaurantLogo: insertBranch.restaurantLogo || null,
+      instagram: insertBranch.instagram || null,
+      whatsapp: insertBranch.whatsapp || null,
+      facebook: insertBranch.facebook || null,
+      googleMap: insertBranch.googleMap || null
     };
     this.branches.set(id, branch);
     return branch;
