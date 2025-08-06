@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search, ChevronDown } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 
 interface Order {
@@ -18,6 +19,15 @@ interface Order {
   payment: "Paid" | "Unpaid";
   status: "Preparing" | "Delivered" | "Cancelled";
   price: number;
+}
+
+interface TableData {
+  id: string;
+  tableNumber: string;
+  branch: string;
+  waiter: string;
+  seats: number;
+  status: "Active" | "Inactive";
 }
 
 const mockOrders: Order[] = [
@@ -70,6 +80,57 @@ const mockOrders: Order[] = [
     payment: "Paid",
     status: "Preparing",
     price: 10.62
+  }
+];
+
+const mockTables: TableData[] = [
+  {
+    id: "1",
+    tableNumber: "Table #5",
+    branch: "Gulshan Branch",
+    waiter: "Raza",
+    seats: 4,
+    status: "Active"
+  },
+  {
+    id: "2",
+    tableNumber: "Table #5",
+    branch: "Gulshan Branch",
+    waiter: "Raza",
+    seats: 4,
+    status: "Active"
+  },
+  {
+    id: "3",
+    tableNumber: "Table #5",
+    branch: "Gulshan Branch",
+    waiter: "Raza",
+    seats: 4,
+    status: "Active"
+  },
+  {
+    id: "4",
+    tableNumber: "Table #5",
+    branch: "Gulshan Branch",
+    waiter: "Raza",
+    seats: 4,
+    status: "Active"
+  },
+  {
+    id: "5",
+    tableNumber: "Table #5",
+    branch: "Gulshan Branch",
+    waiter: "Raza",
+    seats: 4,
+    status: "Active"
+  },
+  {
+    id: "6",
+    tableNumber: "Table #5",
+    branch: "Gulshan Branch",
+    waiter: "Raza",
+    seats: 4,
+    status: "Active"
   }
 ];
 
@@ -282,10 +343,82 @@ export default function Orders() {
           </div>
         </TabsContent>
 
-        <TabsContent value="tables">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Table Management</h3>
-            <p className="text-gray-600">Table management features will be implemented here.</p>
+        <TabsContent value="tables" className="space-y-6">
+          {/* Add Table Button */}
+          <div className="flex justify-end">
+            <Button className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50" data-testid="button-add-table">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Table
+            </Button>
+          </div>
+
+          {/* Tables Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mockTables.map((table) => (
+              <Card key={table.id} className="bg-white border border-gray-200 shadow-sm" data-testid={`table-card-${table.id}`}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1" data-testid={`table-name-${table.id}`}>
+                        {table.tableNumber}
+                      </h3>
+                      <p className="text-sm text-gray-600" data-testid={`table-branch-${table.id}`}>
+                        {table.branch}
+                      </p>
+                    </div>
+                    <Badge 
+                      className="bg-green-100 text-green-800 hover:bg-green-200" 
+                      data-testid={`table-status-${table.id}`}
+                    >
+                      {table.status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Waiter:</span>
+                      <span className="font-medium text-red-500" data-testid={`table-waiter-${table.id}`}>
+                        {table.waiter}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Seats:</span>
+                      <span className="font-medium text-red-500" data-testid={`table-seats-${table.id}`}>
+                        {table.seats}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Button 
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm"
+                      data-testid={`button-view-qr-${table.id}`}
+                    >
+                      View QR Code
+                    </Button>
+                    
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-gray-600 hover:text-gray-800"
+                        data-testid={`button-edit-table-${table.id}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-red-500 hover:text-red-700"
+                        data-testid={`button-delete-table-${table.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
 
