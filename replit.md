@@ -19,6 +19,9 @@ This is a full-stack restaurant and hotel management application built with Reac
 - **Branch Management System**: Implemented missing branches functionality with intermediate branch selection screen between entities and management pages
 - **Trial User Integration**: Added pricing plans modal that shows when trial users try to access branch management or create new branches
 - **Entity-to-Branch Navigation Flow**: Fixed navigation flow so entity "Manage" button goes to branches page, then branch "Manage" button goes to management screens
+- **Deals & Services System**: Replaced "Discount" tab with "Deals" and "Services" tabs in orders section
+- **Add Deals Modal**: Complete deals management with deal name, items with quantities, pricing, status, image upload, and expiry time
+- **Add Services Modal**: Multi-select services system with predefined free and paid options (Request for Bottle, Request for Song, etc.) plus custom service creation
 
 ## User Preferences
 

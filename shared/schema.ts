@@ -85,6 +85,29 @@ export const menuItems = pgTable("menu_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const deals = pgTable("deals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  items: text("items").array().notNull(), // JSON array of items with quantities [{itemId, name, quantity}]
+  dealPrice: integer("deal_price").notNull(), // price in cents
+  image: text("image"),
+  expiryTime: timestamp("expiry_time"),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  status: text("status").notNull().default("active"), // active, inactive
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const services = pgTable("services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // free, paid
+  price: integer("price").default(0), // price in cents for paid services
+  description: text("description"),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  status: text("status").notNull().default("active"), // active, inactive
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -119,6 +142,16 @@ export const insertMenuItemSchema = createInsertSchema(menuItems).omit({
   createdAt: true,
 });
 
+export const insertDealSchema = createInsertSchema(deals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertServiceSchema = createInsertSchema(services).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
@@ -149,5 +182,9 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 export type MenuItem = typeof menuItems.$inferSelect;
+export type InsertDeal = z.infer<typeof insertDealSchema>;
+export type Deal = typeof deals.$inferSelect;
+export type InsertService = z.infer<typeof insertServiceSchema>;
+export type Service = typeof services.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type SignupRequest = z.infer<typeof signupSchema>;

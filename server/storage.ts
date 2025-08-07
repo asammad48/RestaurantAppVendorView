@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem, type Category, type InsertCategory } from "@shared/schema";
+import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem, type Category, type InsertCategory, type Deal, type InsertDeal, type Service, type InsertService } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -55,6 +55,22 @@ export interface IStorage {
   getAllMenuItems(): Promise<MenuItem[]>;
   getMenuItemsByRestaurant(restaurantId: string): Promise<MenuItem[]>;
   getMenuItemsByCategory(category: string): Promise<MenuItem[]>;
+
+  // Deals
+  getDeal(id: string): Promise<Deal | undefined>;
+  createDeal(deal: InsertDeal): Promise<Deal>;
+  updateDeal(id: string, deal: Partial<InsertDeal>): Promise<Deal | undefined>;
+  deleteDeal(id: string): Promise<boolean>;
+  getAllDeals(): Promise<Deal[]>;
+  getDealsByRestaurant(restaurantId: string): Promise<Deal[]>;
+
+  // Services
+  getService(id: string): Promise<Service | undefined>;
+  createService(service: InsertService): Promise<Service>;
+  updateService(id: string, service: Partial<InsertService>): Promise<Service | undefined>;
+  deleteService(id: string): Promise<boolean>;
+  getAllServices(): Promise<Service[]>;
+  getServicesByRestaurant(restaurantId: string): Promise<Service[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -65,6 +81,8 @@ export class MemStorage implements IStorage {
   private analytics: Map<string, Analytics>;
   private categories: Map<string, Category>;
   private menuItems: Map<string, MenuItem>;
+  private deals: Map<string, Deal>;
+  private services: Map<string, Service>;
 
   constructor() {
     this.users = new Map();
@@ -74,6 +92,8 @@ export class MemStorage implements IStorage {
     this.analytics = new Map();
     this.categories = new Map();
     this.menuItems = new Map();
+    this.deals = new Map();
+    this.services = new Map();
     this.seedData();
   }
 
@@ -682,6 +702,80 @@ export class MemStorage implements IStorage {
 
   async getMenuItemsByCategory(category: string): Promise<MenuItem[]> {
     return Array.from(this.menuItems.values()).filter(item => item.category === category);
+  }
+
+  // Deals methods
+  async getDeal(id: string): Promise<Deal | undefined> {
+    return this.deals.get(id);
+  }
+
+  async createDeal(insertDeal: InsertDeal): Promise<Deal> {
+    const id = randomUUID();
+    const deal: Deal = {
+      id,
+      ...insertDeal,
+      createdAt: new Date(),
+    };
+    this.deals.set(id, deal);
+    return deal;
+  }
+
+  async updateDeal(id: string, updateData: Partial<InsertDeal>): Promise<Deal | undefined> {
+    const existingDeal = this.deals.get(id);
+    if (!existingDeal) return undefined;
+
+    const updatedDeal = { ...existingDeal, ...updateData };
+    this.deals.set(id, updatedDeal);
+    return updatedDeal;
+  }
+
+  async deleteDeal(id: string): Promise<boolean> {
+    return this.deals.delete(id);
+  }
+
+  async getAllDeals(): Promise<Deal[]> {
+    return Array.from(this.deals.values());
+  }
+
+  async getDealsByRestaurant(restaurantId: string): Promise<Deal[]> {
+    return Array.from(this.deals.values()).filter(deal => deal.restaurantId === restaurantId);
+  }
+
+  // Services methods
+  async getService(id: string): Promise<Service | undefined> {
+    return this.services.get(id);
+  }
+
+  async createService(insertService: InsertService): Promise<Service> {
+    const id = randomUUID();
+    const service: Service = {
+      id,
+      ...insertService,
+      createdAt: new Date(),
+    };
+    this.services.set(id, service);
+    return service;
+  }
+
+  async updateService(id: string, updateData: Partial<InsertService>): Promise<Service | undefined> {
+    const existingService = this.services.get(id);
+    if (!existingService) return undefined;
+
+    const updatedService = { ...existingService, ...updateData };
+    this.services.set(id, updatedService);
+    return updatedService;
+  }
+
+  async deleteService(id: string): Promise<boolean> {
+    return this.services.delete(id);
+  }
+
+  async getAllServices(): Promise<Service[]> {
+    return Array.from(this.services.values());
+  }
+
+  async getServicesByRestaurant(restaurantId: string): Promise<Service[]> {
+    return Array.from(this.services.values()).filter(service => service.restaurantId === restaurantId);
   }
 }
 

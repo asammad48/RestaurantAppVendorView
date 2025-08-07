@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertCategorySchema, insertMenuItemSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertCategorySchema, insertMenuItemSchema, insertDealSchema, insertServiceSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -497,6 +497,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ message: "Menu item deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Deals routes
+  app.get("/api/deals", async (req, res) => {
+    try {
+      const { restaurantId } = req.query;
+      let deals;
+      
+      if (restaurantId && typeof restaurantId === "string") {
+        deals = await storage.getDealsByRestaurant(restaurantId);
+      } else {
+        deals = await storage.getAllDeals();
+      }
+
+      res.json(deals);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/deals", async (req, res) => {
+    try {
+      const dealData = insertDealSchema.parse(req.body);
+      const deal = await storage.createDeal(dealData);
+      res.status(201).json(deal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/deals/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertDealSchema.partial().parse(req.body);
+      
+      const deal = await storage.updateDeal(id, updateData);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      res.json(deal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/deals/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteDeal(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      res.json({ message: "Deal deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Services routes
+  app.get("/api/services", async (req, res) => {
+    try {
+      const { restaurantId } = req.query;
+      let services;
+      
+      if (restaurantId && typeof restaurantId === "string") {
+        services = await storage.getServicesByRestaurant(restaurantId);
+      } else {
+        services = await storage.getAllServices();
+      }
+
+      res.json(services);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/services", async (req, res) => {
+    try {
+      const serviceData = insertServiceSchema.parse(req.body);
+      const service = await storage.createService(serviceData);
+      res.status(201).json(service);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/services/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertServiceSchema.partial().parse(req.body);
+      
+      const service = await storage.updateService(id, updateData);
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+
+      res.json(service);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/services/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteService(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+
+      res.json({ message: "Service deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

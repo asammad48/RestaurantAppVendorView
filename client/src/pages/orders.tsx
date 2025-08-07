@@ -13,8 +13,10 @@ import AddTableModal from "@/components/add-table-modal";
 import AddMenuModal from "@/components/add-menu-modal";
 import AddCategoryModal from "@/components/add-category-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
+import AddDealsModal from "@/components/add-deals-modal";
+import AddServicesModal from "@/components/add-services-modal";
 import { useLocation } from "wouter";
-import type { MenuItem, Category } from "@shared/schema";
+import type { MenuItem, Category, Deal, Service } from "@shared/schema";
 
 interface Order {
   id: string;
@@ -151,6 +153,8 @@ export default function Orders() {
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
+  const [showAddDealsModal, setShowAddDealsModal] = useState(false);
+  const [showAddServicesModal, setShowAddServicesModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [tables, setTables] = useState<TableData[]>(mockTables);
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
@@ -278,7 +282,7 @@ export default function Orders() {
           <TabsTrigger value="menu">Menu</TabsTrigger>
           <TabsTrigger value="tables">Tables</TabsTrigger>
           <TabsTrigger value="deals">Deals</TabsTrigger>
-          <TabsTrigger value="discount">Discount</TabsTrigger>
+          <TabsTrigger value="services">Free Services</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6">
@@ -681,16 +685,176 @@ export default function Orders() {
         </TabsContent>
 
         <TabsContent value="deals">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Deals Management</h3>
-            <p className="text-gray-600">Deals management features will be implemented here.</p>
+          {/* Deals Tab Content */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Button
+                  className="bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  onClick={() => setShowApplyDiscountModal(true)}
+                >
+                  Apply Discount
+                </Button>
+              </div>
+              <Button 
+                className="bg-green-500 hover:bg-green-600 text-white"
+                onClick={() => setShowAddDealsModal(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Deals
+              </Button>
+            </div>
+
+            {/* Mock Deals Table */}
+            <div className="bg-white rounded-lg border">
+              <div className="p-4">
+                <div className="relative mb-4">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Search"
+                    className="pl-10 w-64"
+                  />
+                </div>
+              </div>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12"></TableHead>
+                    <TableHead>Deal Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Items <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <input type="checkbox" className="rounded" />
+                    </TableCell>
+                    <TableCell className="font-medium">Family Feast Deal</TableCell>
+                    <TableCell>
+                      <div className="text-sm text-gray-600">
+                        1 large Pizza, 6 wings, 2 Drinks, 1 Fries
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">$10.62</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                  {/* Repeat for more mock deals */}
+                  {[...Array(4)].map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <input type="checkbox" className="rounded" />
+                      </TableCell>
+                      <TableCell className="font-medium">Family Feast Deal</TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-600">
+                          1 large Pizza, 6 wings, 2 Drinks, 1 Fries
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">$10.62</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {/* Pagination */}
+              <div className="flex items-center justify-between p-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Show result:</span>
+                  <Select defaultValue="6">
+                    <SelectTrigger className="w-16">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6">6</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" disabled>
+                    &lt;
+                  </Button>
+                  <Button variant="default" size="sm" className="bg-green-500 hover:bg-green-600">1</Button>
+                  <Button variant="outline" size="sm">2</Button>
+                  <Button variant="outline" size="sm">4</Button>
+                  <span className="text-sm text-gray-500">20</span>
+                  <Button variant="outline" size="sm">
+                    &gt;
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="discount">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Discount Management</h3>
-            <p className="text-gray-600">Discount management features will be implemented here.</p>
+        <TabsContent value="services">
+          {/* Services Tab Content */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-end">
+              <Button 
+                className="bg-green-500 hover:bg-green-600 text-white"
+                onClick={() => setShowAddServicesModal(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Services
+              </Button>
+            </div>
+
+            {/* Mock Services Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { name: "Request for Bottle", type: "Free", description: "Request a water bottle for the table" },
+                { name: "Request for Song", type: "Paid - $2.00", description: "Request a specific song to be played" },
+                { name: "Table Cleaning", type: "Free", description: "Request additional table cleaning" },
+                { name: "Extra Napkins", type: "Free", description: "Request additional napkins" },
+                { name: "Birthday Celebration", type: "Paid - $5.00", description: "Special birthday celebration setup" },
+                { name: "Photo Service", type: "Paid - $3.00", description: "Professional photo service" },
+              ].map((service, index) => (
+                <Card key={index} className="bg-white border border-gray-100 hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="font-medium text-gray-900">{service.name}</h4>
+                      <Badge 
+                        className={service.type.startsWith('Free') 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                        }
+                      >
+                        {service.type}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">{service.description}</p>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
@@ -730,6 +894,20 @@ export default function Orders() {
       <ApplyDiscountModal
         isOpen={showApplyDiscountModal}
         onClose={() => setShowApplyDiscountModal(false)}
+      />
+
+      {/* Add Deals Modal */}
+      <AddDealsModal
+        open={showAddDealsModal}
+        onOpenChange={setShowAddDealsModal}
+        restaurantId="1"
+      />
+
+      {/* Add Services Modal */}
+      <AddServicesModal
+        open={showAddServicesModal}
+        onOpenChange={setShowAddServicesModal}
+        restaurantId="1"
       />
     </div>
   );
