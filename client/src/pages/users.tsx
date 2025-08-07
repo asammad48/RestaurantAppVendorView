@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UsersTable from "@/components/users-table";
+import AddUserModal from "@/components/add-user-modal";
 
 const roleFilters = [
   { value: "all", label: "All Users" },
@@ -18,15 +19,19 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const { data: users, isLoading } = useQuery({
     queryKey: activeRole === "all" ? ["/api/users"] : ["/api/users", { role: activeRole }],
   });
 
-  const filteredUsers = (users || []).filter((user: any) =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = Array.isArray(users) 
+    ? users.filter((user: any) =>
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -45,7 +50,14 @@ export default function Users() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-800" data-testid="page-title">Users</h2>
-        <Button className="bg-green-500 hover:bg-green-600" data-testid="button-add-user">
+        <Button 
+          className="bg-green-500 hover:bg-green-600" 
+          onClick={() => {
+            setEditingUser(null);
+            setIsAddUserModalOpen(true);
+          }}
+          data-testid="button-add-user"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add User
         </Button>
@@ -103,6 +115,16 @@ export default function Users() {
           setItemsPerPage(newItemsPerPage);
           setCurrentPage(1);
         }}
+      />
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={isAddUserModalOpen}
+        onClose={() => {
+          setIsAddUserModalOpen(false);
+          setEditingUser(null);
+        }}
+        editingUser={editingUser}
       />
     </div>
   );

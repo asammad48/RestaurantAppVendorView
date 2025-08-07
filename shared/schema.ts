@@ -8,6 +8,10 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  address: text("address"),
+  image: text("image"), // Base64 encoded profile image
   role: text("role").notNull().default("waiter"), // waiter, manager, chef
   assignedTable: text("assigned_table"),
   assignedBranch: text("assigned_branch"),
@@ -108,6 +112,17 @@ export const services = pgTable("services", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const tickets = pgTable("tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subject: text("subject").notNull(),
+  category: text("category").notNull(),
+  description: text("description").notNull(),
+  image: text("image"), // Base64 encoded image
+  status: text("status").notNull().default("in_progress"), // in_progress, resolved, closed
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -152,6 +167,11 @@ export const insertServiceSchema = createInsertSchema(services).omit({
   createdAt: true,
 });
 
+export const insertTicketSchema = createInsertSchema(tickets).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
@@ -186,5 +206,7 @@ export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type Deal = typeof deals.$inferSelect;
 export type InsertService = z.infer<typeof insertServiceSchema>;
 export type Service = typeof services.$inferSelect;
+export type InsertTicket = z.infer<typeof insertTicketSchema>;
+export type Ticket = typeof tickets.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type SignupRequest = z.infer<typeof signupSchema>;
