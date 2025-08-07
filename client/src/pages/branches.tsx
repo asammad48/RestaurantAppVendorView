@@ -57,12 +57,7 @@ export default function Branches() {
   };
 
   const handleAddBranch = () => {
-    // Check if user is in trial period before showing add modal
-    if (isTrialUser) {
-      setShowPricingModal(true);
-      return;
-    }
-    
+    // Show add branch modal directly - pricing modal should show after branch creation or when accessing management
     setShowAddModal(true);
   };
 
