@@ -70,7 +70,7 @@ export default function Users() {
             <TabsTrigger
               key={filter.value}
               value={filter.value}
-              className={`data-[state=active]:bg-green-500 data-[state=active]:text-white`}
+              className={`data-[state=active]:!bg-green-500 data-[state=active]:!text-white hover:data-[state=active]:!bg-green-600 transition-colors`}
               data-testid={`filter-${filter.value}`}
             >
               {filter.label}

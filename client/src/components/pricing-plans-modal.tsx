@@ -70,7 +70,7 @@ export default function PricingPlansModal({ open, onOpenChange, onPlanSelect }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" data-testid="pricing-plans-modal">
+      <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto" data-testid="pricing-plans-modal">
         <DialogHeader className="text-center pb-6">
           <DialogTitle className="text-4xl font-bold text-gray-900 mb-4" data-testid="modal-title">
             Plans & Pricing

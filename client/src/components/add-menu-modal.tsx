@@ -173,7 +173,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId }: AddMenuM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-add-menu">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="modal-add-menu">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Add Menu</DialogTitle>
           <Button

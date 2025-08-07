@@ -111,7 +111,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId }: AddD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-6 bg-white rounded-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl p-6 bg-white rounded-lg max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Add Deal

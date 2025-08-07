@@ -134,7 +134,7 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-6 bg-white rounded-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl p-6 bg-white rounded-lg max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Add Services
@@ -260,6 +260,7 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
                       <FormControl>
                         <Input
                           {...field}
+                          value={field.value || ""}
                           placeholder="Describe the service..."
                         />
                       </FormControl>
