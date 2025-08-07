@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import BranchCard from "@/components/branch-card";
+import BranchCard from "../components/branch-card";
 import AddBranchModal from "@/components/add-branch-modal";
+import PricingPlansModal from "@/components/pricing-plans-modal";
 import type { Branch, Entity } from "@shared/schema";
 
 export default function Branches() {
   const [location, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentEntity, setCurrentEntity] = useState<Entity | null>(null);
+  const [isTrialUser, setIsTrialUser] = useState(true); // Assume trial for demo
   
   // Extract entity ID from URL query params
   const entityId = new URLSearchParams(window.location.search).get('entityId');
@@ -43,8 +46,28 @@ export default function Branches() {
   );
 
   const handleManage = (branch: Branch) => {
+    // Check if user is in trial period before navigating
+    if (isTrialUser) {
+      setShowPricingModal(true);
+      return;
+    }
+    
     // Navigate to the appropriate management page based on entity type
     navigate(entityType === "hotel" ? "/hotel-management" : "/restaurant-management");
+  };
+
+  const handleAddBranch = () => {
+    // Check if user is in trial period before showing add modal
+    if (isTrialUser) {
+      setShowPricingModal(true);
+      return;
+    }
+    
+    setShowAddModal(true);
+  };
+
+  const handlePricingModalClose = () => {
+    setShowPricingModal(false);
   };
 
   const handleBack = () => {
@@ -83,7 +106,7 @@ export default function Branches() {
           </div>
         </div>
         <Button 
-          onClick={() => setShowAddModal(true)}
+          onClick={handleAddBranch}
           className="w-full md:w-auto"
           data-testid="button-add-branch"
         >
@@ -126,7 +149,7 @@ export default function Branches() {
                   : "Get started by adding your first branch"}
               </p>
               {!searchTerm && (
-                <Button onClick={() => setShowAddModal(true)} data-testid="button-add-first-branch">
+                <Button onClick={handleAddBranch} data-testid="button-add-first-branch">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Your First Branch
                 </Button>
@@ -151,6 +174,18 @@ export default function Branches() {
           open={showAddModal}
           onOpenChange={(open) => setShowAddModal(open)}
           restaurantId={currentEntity.id}
+        />
+      )}
+
+      {showPricingModal && (
+        <PricingPlansModal
+          open={showPricingModal}
+          onOpenChange={(open) => setShowPricingModal(open)}
+          onPlanSelect={(plan) => {
+            console.log("Selected plan:", plan);
+            setShowPricingModal(false);
+            // In real app, you would upgrade user's subscription here
+          }}
         />
       )}
     </div>

@@ -17,6 +17,8 @@ This is a full-stack restaurant and hotel management application built with Reac
 - **Menu Section Implementation**: Full menu management interface with searchable item listings, category filtering, and comprehensive CRUD operations
 - **Migration to Replit**: Successfully migrated from Replit Agent environment with all dependencies and functionality intact
 - **Branch Management System**: Implemented missing branches functionality with intermediate branch selection screen between entities and management pages
+- **Trial User Integration**: Added pricing plans modal that shows when trial users try to access branch management or create new branches
+- **Entity-to-Branch Navigation Flow**: Fixed navigation flow so entity "Manage" button goes to branches page, then branch "Manage" button goes to management screens
 
 ## User Preferences
 
