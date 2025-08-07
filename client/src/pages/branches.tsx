@@ -39,11 +39,11 @@ export default function Branches() {
     }
   }, [entity]);
 
-  const filteredBranches = branches.filter((branch) =>
+  const filteredBranches = Array.isArray(branches) ? branches.filter((branch) =>
     branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     branch.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
     branch.restaurantType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   const handleManage = (branch: Branch) => {
     // Check if user is in trial period before navigating

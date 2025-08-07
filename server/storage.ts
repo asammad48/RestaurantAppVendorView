@@ -714,6 +714,10 @@ export class MemStorage implements IStorage {
     const deal: Deal = {
       id,
       ...insertDeal,
+      status: insertDeal.status || "active",
+      restaurantId: insertDeal.restaurantId || null,
+      image: insertDeal.image || null,
+      expiryTime: insertDeal.expiryTime || null,
       createdAt: new Date(),
     };
     this.deals.set(id, deal);
@@ -751,6 +755,10 @@ export class MemStorage implements IStorage {
     const service: Service = {
       id,
       ...insertService,
+      status: insertService.status || "active",
+      restaurantId: insertService.restaurantId || null,
+      description: insertService.description || null,
+      price: insertService.price || null,
       createdAt: new Date(),
     };
     this.services.set(id, service);
