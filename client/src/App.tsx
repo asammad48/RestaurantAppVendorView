@@ -7,6 +7,7 @@ import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Dashboard from "@/pages/dashboard";
 import Entities from "@/pages/entities";
+import Branches from "@/pages/branches";
 import Restaurants from "@/pages/restaurants";
 import Orders from "@/pages/orders";
 import Analytics from "@/pages/analytics";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/entities" component={() => <ProtectedRoute component={Entities} />} />
+      <Route path="/branches" component={() => <ProtectedRoute component={Branches} />} />
       <Route path="/restaurants" component={() => <ProtectedRoute component={Restaurants} />} />
       <Route path="/hotel-management" component={() => <ProtectedRoute component={Orders} />} />
       <Route path="/restaurant-management" component={() => <ProtectedRoute component={Orders} />} />

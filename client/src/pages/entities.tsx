@@ -41,8 +41,8 @@ export default function Entities() {
   };
 
   const handleManage = (entity: Entity) => {
-    // Navigate to the appropriate management page based on entity type
-    window.location.href = entity.entityType === "hotel" ? "/hotel-management" : "/restaurant-management";
+    // Navigate to branches page for this entity
+    window.location.href = `/branches?entityId=${entity.id}&entityType=${entity.entityType}`;
   };
 
   if (isLoading) {

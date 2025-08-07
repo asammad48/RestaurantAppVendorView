@@ -130,6 +130,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/entities/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const entity = await storage.getEntity(id);
+      
+      if (!entity) {
+        return res.status(404).json({ message: "Entity not found" });
+      }
+
+      res.json(entity);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/entities", async (req, res) => {
     try {
       const entityData = insertEntitySchema.parse(req.body);
@@ -231,10 +246,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Branch routes
   app.get("/api/branches", async (req, res) => {
     try {
-      const { restaurantId } = req.query;
+      const { restaurantId, entityId } = req.query;
       let branches;
       
-      if (restaurantId && typeof restaurantId === "string") {
+      if (entityId && typeof entityId === "string") {
+        branches = await storage.getBranchesByRestaurant(entityId);
+      } else if (restaurantId && typeof restaurantId === "string") {
         branches = await storage.getBranchesByRestaurant(restaurantId);
       } else {
         branches = await storage.getAllBranches();
