@@ -47,14 +47,15 @@ export default function Branches() {
   ) : [];
 
   const handleManage = (branch: Branch) => {
-    // Check if user is in trial period before navigating
-    if (isTrialUser) {
-      setShowPricingModal(true);
-      return;
-    }
-    
-    // Navigate to the appropriate management page based on entity type
-    navigate(entityType === "hotel" ? "/hotel-management" : "/restaurant-management");
+    // Always navigate to the management page - pricing modal will show there for trial users
+    const managementPath = entityType === "hotel" ? "/hotel-management" : "/restaurant-management";
+    const queryParams = new URLSearchParams({
+      entityId: entityId || "",
+      branchId: branch.id,
+      entityType: entityType || "restaurant",
+      showPricing: isTrialUser ? "true" : "false"
+    });
+    navigate(`${managementPath}?${queryParams.toString()}`);
   };
 
   const handleAddBranch = () => {

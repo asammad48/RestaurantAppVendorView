@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import AddCategoryModal from "@/components/add-category-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
 import AddDealsModal from "@/components/add-deals-modal";
 import AddServicesModal from "@/components/add-services-modal";
+import PricingPlansModal from "@/components/pricing-plans-modal";
 import { useLocation } from "wouter";
 import type { MenuItem, Category, Deal, Service } from "@shared/schema";
 
@@ -155,7 +156,17 @@ export default function Orders() {
   const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
   const [showAddDealsModal, setShowAddDealsModal] = useState(false);
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
+
+  // Check URL params for pricing modal trigger
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const showPricing = urlParams.get('showPricing');
+    if (showPricing === 'true') {
+      setShowPricingModal(true);
+    }
+  }, []);
   const [tables, setTables] = useState<TableData[]>(mockTables);
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
@@ -908,6 +919,12 @@ export default function Orders() {
         open={showAddServicesModal}
         onOpenChange={setShowAddServicesModal}
         restaurantId="1"
+      />
+
+      {/* Pricing Plans Modal */}
+      <PricingPlansModal
+        open={showPricingModal}
+        onOpenChange={setShowPricingModal}
       />
     </div>
   );
