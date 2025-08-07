@@ -47,6 +47,7 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/branches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/branches", entityId] });
       queryClient.invalidateQueries({ queryKey: ["/api/restaurants"] });
       toast({
         title: "Success",
