@@ -128,10 +128,10 @@ export default function Branches() {
         </div>
         <div className="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
           <Badge variant="outline" data-testid="badge-total-branches">
-            Total Branches: {branches.length}
+            Total Branches: {Array.isArray(branches) ? branches.length : 0}
           </Badge>
           <Badge variant="outline" data-testid="badge-active-branches">
-            Active: {branches.filter(b => b.status === "active").length}
+            Active: {Array.isArray(branches) ? branches.filter(b => b.status === "active").length : 0}
           </Badge>
         </div>
       </div>
