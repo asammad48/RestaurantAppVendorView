@@ -172,8 +172,8 @@ export default function Branches() {
       {showAddModal && currentEntity && (
         <AddBranchModal
           open={showAddModal}
-          onOpenChange={(open) => setShowAddModal(open)}
-          restaurantId={currentEntity.id}
+          onClose={() => setShowAddModal(false)}
+          entityId={currentEntity.id}
         />
       )}
 

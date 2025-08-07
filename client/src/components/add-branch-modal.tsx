@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,11 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 
 interface AddBranchModalProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  restaurantId?: string;
+  onClose: () => void;
+  entityId: string;
 }
 
-export default function AddBranchModal({ open, onOpenChange, restaurantId }: AddBranchModalProps) {
+export default function AddBranchModal({ open, onClose, entityId }: AddBranchModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -36,7 +36,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
       whatsapp: "",
       facebook: "",
       googleMap: "",
-      restaurantId: restaurantId || undefined,
+      restaurantId: entityId,
       status: "active",
     },
   });
@@ -54,7 +54,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
       });
       form.reset();
       setSelectedFile(null);
-      onOpenChange(false);
+      onClose();
     },
     onError: (error: any) => {
       toast({
@@ -79,31 +79,28 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-6 bg-white rounded-lg" data-testid="add-branch-modal">
-        <div className="flex items-center justify-between mb-6">
-          <DialogTitle className="text-xl font-semibold text-gray-900" data-testid="modal-title">
-            Add Branch
-          </DialogTitle>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="relative">
+          <DialogTitle className="text-center text-xl font-semibold">Add Branch</DialogTitle>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-6 w-6 p-0"
-            data-testid="button-close-modal"
+            className="absolute right-0 top-0 p-0 h-6 w-6"
+            onClick={onClose}
           >
             <X className="h-4 w-4" />
           </Button>
-        </div>
+        </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-1">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700" data-testid="label-name">Name</FormLabel>
+                  <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Name</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -123,7 +120,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
                 name="restaurantType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700" data-testid="label-restaurant-type">
+                    <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">
                       Restaurant Type
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -150,7 +147,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
                 name="contactNo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700" data-testid="label-contact">
+                    <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">
                       Contact No
                     </FormLabel>
                     <FormControl>
@@ -172,7 +169,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700" data-testid="label-address">Address</FormLabel>
+                  <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Address</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -187,7 +184,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
             />
 
             <div>
-              <Label className="text-sm font-medium text-gray-700" data-testid="label-logo">Restaurant Logo</Label>
+              <Label className="text-sm font-medium text-gray-900 dark:text-white">Restaurant Logo</Label>
               <div className="flex mt-1">
                 <Input
                   type="file"
@@ -208,7 +205,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
                   <Button
                     type="button"
                     onClick={() => document.getElementById('logo-upload')?.click()}
-                    className="ml-2 bg-green-500 hover:bg-green-600 text-white px-4"
+                    className="ml-2 bg-green-600 hover:bg-green-700 text-white px-4"
                     data-testid="button-browse-logo"
                   >
                     Browse
@@ -218,7 +215,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
             </div>
 
             <div>
-              <Label className="text-sm font-medium text-gray-700 mb-3 block" data-testid="label-social-media">
+              <Label className="text-sm font-medium text-gray-900 dark:text-white mb-3 block">
                 Attach Social Media
               </Label>
               <div className="space-y-3">
@@ -296,7 +293,7 @@ export default function AddBranchModal({ open, onOpenChange, restaurantId }: Add
               <Button
                 type="submit"
                 disabled={createBranchMutation.isPending}
-                className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-md"
                 data-testid="button-next"
               >
                 {createBranchMutation.isPending ? "Adding..." : "Next"}
