@@ -220,8 +220,8 @@ export default function Dashboard() {
             </CardTitle>
             <p className="text-sm text-gray-600">Top 5 dishes by sales today</p>
           </CardHeader>
-          <CardContent className="pt-6">
-            <ResponsiveContainer width="100%" height={320}>
+          <CardContent className="p-2">
+            <ResponsiveContainer width="100%" height={400}>
               <BarChart 
                 data={topItems?.slice(0, 5) || [
                   { itemName: "Chicken Karahi", salesAmount: 12500, category: "Main Course" },
@@ -230,7 +230,7 @@ export default function Dashboard() {
                   { itemName: "Mutton Pulao", salesAmount: 7300, category: "Rice" },
                   { itemName: "Chicken Wings", salesAmount: 6100, category: "Appetizer" }
                 ]}
-                margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                margin={{ top: 10, right: 10, left: 10, bottom: 80 }}
               >
                 <defs>
                   {COLORS.chartColors.map((color, index) => (
@@ -267,9 +267,10 @@ export default function Dashboard() {
                 />
                 <Bar 
                   dataKey="salesAmount" 
-                  radius={[6, 6, 0, 0]}
+                  radius={[4, 4, 0, 0]}
                   stroke="#10b981"
-                  strokeWidth={2}
+                  strokeWidth={1}
+                  maxBarSize={40}
                 >
                   {(topItems?.slice(0, 5) || [
                     { itemName: "Chicken Karahi", salesAmount: 12500, category: "Main Course" },
@@ -283,7 +284,7 @@ export default function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center">
+            <div className="mt-2 p-3 bg-gray-50 rounded-lg text-center">
               <p className="text-sm text-gray-600">
                 Best-selling category: <span className="font-bold text-emerald-600 text-lg">{bestSellingCategory}</span>
               </p>
@@ -304,8 +305,8 @@ export default function Dashboard() {
             </CardTitle>
             <p className="text-sm text-gray-600">Feedback distribution by rating</p>
           </CardHeader>
-          <CardContent className="pt-6">
-            <ResponsiveContainer width="100%" height={320}>
+          <CardContent className="p-2">
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <defs>
                   <linearGradient id="positiveGradient" x1="0" y1="0" x2="1" y2="1">
@@ -325,14 +326,14 @@ export default function Dashboard() {
                   data={feedbackDistribution}
                   cx="50%"
                   cy="50%"
-                  innerRadius={70}
-                  outerRadius={130}
-                  paddingAngle={3}
+                  innerRadius={50}
+                  outerRadius={90}
+                  paddingAngle={2}
                   dataKey="value"
                   label={({ percentage }) => `${percentage}%`}
                   labelLine={false}
                   stroke="#ffffff"
-                  strokeWidth={3}
+                  strokeWidth={2}
                   animationBegin={0}
                   animationDuration={1500}
                 >
@@ -355,17 +356,17 @@ export default function Dashboard() {
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex justify-center gap-8 mt-6">
+            <div className="flex justify-center gap-6 mt-4">
               {feedbackDistribution.map((entry, index) => (
-                <div key={entry.name} className="flex flex-col items-center gap-2 p-3 rounded-lg bg-gray-50 shadow-md hover:shadow-lg transition-all duration-200">
+                <div key={entry.name} className="flex flex-col items-center gap-1 p-2 rounded-lg bg-gray-50 shadow-md hover:shadow-lg transition-all duration-200">
                   <div className="flex items-center gap-2">
                     <div 
-                      className="w-4 h-4 rounded-full shadow-lg" 
+                      className="w-3 h-3 rounded-full shadow-lg" 
                       style={{ backgroundColor: COLORS.feedbackColors[index] }}
                     ></div>
-                    <span className="text-sm font-semibold text-gray-700">{entry.name}</span>
+                    <span className="text-xs font-semibold text-gray-700">{entry.name}</span>
                   </div>
-                  <span className="text-lg font-bold" style={{ color: COLORS.feedbackColors[index] }}>
+                  <span className="text-sm font-bold" style={{ color: COLORS.feedbackColors[index] }}>
                     {entry.value}
                   </span>
                 </div>
@@ -387,13 +388,13 @@ export default function Dashboard() {
             </CardTitle>
             <p className="text-sm text-gray-600">Dine-in table occupancy percentage</p>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <div className="relative w-56 h-56">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <CardContent className="flex flex-col items-center justify-center p-4">
+            <div className="relative w-64 h-64">
+              <svg className="w-full h-full" viewBox="0 0 100 100">
                 <defs>
                   <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2"/>
-                    <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.6"/>
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3"/>
+                    <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.7"/>
                     <stop offset="100%" stopColor="#3b82f6" stopOpacity="1"/>
                   </linearGradient>
                   <filter id="glow">
@@ -407,37 +408,40 @@ export default function Dashboard() {
                 <circle
                   cx="50"
                   cy="50"
-                  r="40"
+                  r="45"
                   stroke="#e5e7eb"
-                  strokeWidth="6"
+                  strokeWidth="8"
                   fill="transparent"
                 />
                 <circle
                   cx="50"
                   cy="50"
-                  r="40"
+                  r="45"
                   stroke="url(#gaugeGradient)"
-                  strokeWidth="6"
-                  fill="transparent"
-                  strokeDasharray={`${2.51 * currentOccupancy} 251`}
+                  strokeWidth="8"
+                  fill="url(#gaugeGradient)"
+                  fillOpacity="0.1"
+                  strokeDasharray={`${2.827 * currentOccupancy} 282.7`}
                   strokeLinecap="round"
                   filter="url(#glow)"
                   className="transition-all duration-2000 ease-out"
                   style={{
                     animation: 'gauge-fill 2s ease-out',
+                    transformOrigin: '50% 50%',
+                    transform: 'rotate(-90deg)'
                   }}
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center bg-white rounded-full p-6 shadow-xl">
-                  <div className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                <div className="text-center">
+                  <div className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                     {currentOccupancy}%
                   </div>
-                  <div className="text-sm text-gray-500 font-medium">Occupied</div>
+                  <div className="text-xs text-gray-500 font-medium">Occupied</div>
                 </div>
               </div>
             </div>
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center w-full">
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center w-full">
               <p className="text-sm text-gray-600">
                 <span className="font-bold text-blue-600 text-lg">{occupancyData?.occupiedTables || 15}</span> of <span className="font-bold text-lg">{occupancyData?.totalTables || 20}</span> tables occupied
               </p>
@@ -458,8 +462,8 @@ export default function Dashboard() {
             </CardTitle>
             <p className="text-sm text-gray-600">Orders per hour for today</p>
           </CardHeader>
-          <CardContent className="pt-6">
-            <ResponsiveContainer width="100%" height={320}>
+          <CardContent className="p-2">
+            <ResponsiveContainer width="100%" height={400}>
               <LineChart 
                 data={hourlyOrders || [
                   { hour: 8, orderCount: 5 }, { hour: 9, orderCount: 12 }, { hour: 10, orderCount: 18 },
@@ -468,7 +472,7 @@ export default function Dashboard() {
                   { hour: 17, orderCount: 35 }, { hour: 18, orderCount: 48 }, { hour: 19, orderCount: 55 },
                   { hour: 20, orderCount: 42 }, { hour: 21, orderCount: 30 }, { hour: 22, orderCount: 15 }
                 ]}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
               >
                 <defs>
                   <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
@@ -514,17 +518,17 @@ export default function Dashboard() {
                   type="monotone" 
                   dataKey="orderCount" 
                   stroke="url(#lineGradient)"
-                  strokeWidth={4}
+                  strokeWidth={3}
                   dot={{ 
                     fill: '#f59e0b', 
-                    strokeWidth: 3, 
-                    r: 5,
+                    strokeWidth: 2, 
+                    r: 4,
                     filter: 'url(#shadow)'
                   }}
                   activeDot={{ 
-                    r: 8, 
+                    r: 6, 
                     stroke: '#f59e0b', 
-                    strokeWidth: 3,
+                    strokeWidth: 2,
                     fill: '#ffffff',
                     filter: 'url(#shadow)'
                   }}
