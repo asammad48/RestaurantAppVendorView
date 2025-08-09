@@ -198,16 +198,17 @@ export default function Branches() {
             setSelectedBranch(null);
           }}
           entityId={currentEntity?.id || ""}
-          editBranch={selectedBranch}
         />
       )}
 
       {showDeleteModal && selectedBranch && (
         <DeleteConfirmationModal
           open={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false);
-            setSelectedBranch(null);
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowDeleteModal(false);
+              setSelectedBranch(null);
+            }
           }}
           onConfirm={() => {
             // Handle delete logic here

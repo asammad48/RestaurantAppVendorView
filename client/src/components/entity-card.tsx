@@ -66,37 +66,40 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button
             variant="default"
             size="sm"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md"
+            className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold shadow-lg hover:shadow-2xl transform hover:scale-110 transition-all duration-300 hover:ring-4 hover:ring-blue-300/50 ripple-effect glow-on-hover relative overflow-hidden"
             onClick={() => onManage(entity)}
             data-testid={`button-manage-${entity.id}`}
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Manage
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 shimmer-effect"></div>
+            <Settings className="w-4 h-4 mr-2 animate-spin" />
+            <span className="neon-text relative z-10">Manage</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="flex-1 border-2 border-emerald-400 text-emerald-700 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-green-100 hover:border-emerald-500 hover:shadow-xl transform hover:scale-110 transition-all duration-300 hover:ring-4 hover:ring-emerald-300/50 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-900/30 pulse-grow relative overflow-hidden group"
             onClick={() => onEdit(entity)}
             data-testid={`button-edit-${entity.id}`}
           >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <Edit className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-500 relative z-10" />
+            <span className="relative z-10 font-semibold">Edit</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            className="px-3 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+            className="px-3 border-2 border-rose-400 text-rose-600 hover:bg-gradient-to-r hover:from-rose-100 hover:to-red-100 hover:border-rose-500 hover:shadow-xl transform hover:scale-110 transition-all duration-300 hover:ring-4 hover:ring-rose-300/50 dark:border-rose-500 dark:text-rose-400 dark:hover:bg-rose-900/30 group relative overflow-hidden"
             onClick={() => onDelete(entity)}
             data-testid={`button-delete-${entity.id}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-400/20 to-red-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <Trash2 className="w-4 h-4 group-hover:animate-pulse group-hover:scale-125 transition-all duration-300 relative z-10" />
           </Button>
         </div>
       </CardContent>
