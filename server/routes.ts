@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertCategorySchema, insertMenuItemSchema, insertDealSchema, insertServiceSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertEntitySchema, insertRestaurantSchema, insertUserSchema, insertBranchSchema, insertCategorySchema, insertMenuItemSchema, insertDealSchema, insertServiceSchema, insertFeedbackSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -39,6 +39,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username,
         email,
         password,
+        name: username, // Default name to username
+        phoneNumber: "0000000000", // Default phone number
         role: "waiter",
         assignedTable: null,
         assignedBranch: null,
@@ -627,6 +629,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ message: "Service deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Feedback routes
+  app.get("/api/feedbacks", async (req, res) => {
+    try {
+      const { restaurantId } = req.query;
+      let feedbacks;
+      
+      if (restaurantId && typeof restaurantId === "string") {
+        feedbacks = await storage.getFeedbacksByRestaurant(restaurantId);
+      } else {
+        feedbacks = await storage.getAllFeedbacks();
+      }
+
+      res.json(feedbacks);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/feedbacks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const feedback = await storage.getFeedback(id);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+
+      res.json(feedback);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/feedbacks", async (req, res) => {
+    try {
+      const feedbackData = insertFeedbackSchema.parse(req.body);
+      const feedback = await storage.createFeedback(feedbackData);
+      res.status(201).json(feedback);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/feedbacks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertFeedbackSchema.partial().parse(req.body);
+      
+      const feedback = await storage.updateFeedback(id, updateData);
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+
+      res.json(feedback);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/feedbacks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteFeedback(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+
+      res.json({ message: "Feedback deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

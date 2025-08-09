@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem, type Category, type InsertCategory, type Deal, type InsertDeal, type Service, type InsertService } from "@shared/schema";
+import { type User, type InsertUser, type Entity, type InsertEntity, type Restaurant, type InsertRestaurant, type Branch, type InsertBranch, type Analytics, type InsertAnalytics, type MenuItem, type InsertMenuItem, type Category, type InsertCategory, type Deal, type InsertDeal, type Service, type InsertService, type Feedback, type InsertFeedback } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -71,6 +71,14 @@ export interface IStorage {
   deleteService(id: string): Promise<boolean>;
   getAllServices(): Promise<Service[]>;
   getServicesByRestaurant(restaurantId: string): Promise<Service[]>;
+
+  // Feedbacks
+  getFeedback(id: string): Promise<Feedback | undefined>;
+  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  updateFeedback(id: string, feedback: Partial<InsertFeedback>): Promise<Feedback | undefined>;
+  deleteFeedback(id: string): Promise<boolean>;
+  getAllFeedbacks(): Promise<Feedback[]>;
+  getFeedbacksByRestaurant(restaurantId: string): Promise<Feedback[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -83,6 +91,7 @@ export class MemStorage implements IStorage {
   private menuItems: Map<string, MenuItem>;
   private deals: Map<string, Deal>;
   private services: Map<string, Service>;
+  private feedbacks: Map<string, Feedback>;
 
   constructor() {
     this.users = new Map();
@@ -94,6 +103,7 @@ export class MemStorage implements IStorage {
     this.menuItems = new Map();
     this.deals = new Map();
     this.services = new Map();
+    this.feedbacks = new Map();
     this.seedData();
   }
 
@@ -105,6 +115,10 @@ export class MemStorage implements IStorage {
         username: "john_doe",
         email: "john@example.com",
         password: "password123",
+        name: "John Doe",
+        phoneNumber: "+1234567890",
+        address: "123 Main Street",
+        image: null,
         role: "manager",
         assignedTable: null,
         assignedBranch: "The Burger House",
@@ -116,6 +130,10 @@ export class MemStorage implements IStorage {
         username: "ali_raza",
         email: "ali@example.com",
         password: "password123",
+        name: "Ali Raza",
+        phoneNumber: "+1234567891",
+        address: "456 Oak Avenue",
+        image: null,
         role: "waiter",
         assignedTable: "Table No 3",
         assignedBranch: "The Burger House",
@@ -127,6 +145,10 @@ export class MemStorage implements IStorage {
         username: "jane_chef",
         email: "jane@example.com",
         password: "password123",
+        name: "Jane Smith",
+        phoneNumber: "+1234567892",
+        address: "789 Pine Street",
+        image: null,
         role: "chef",
         assignedTable: null,
         assignedBranch: "The Burger House",
@@ -138,6 +160,10 @@ export class MemStorage implements IStorage {
         username: "mike_waiter",
         email: "mike@example.com",
         password: "password123",
+        name: "Mike Johnson",
+        phoneNumber: "+1234567893",
+        address: "321 Elm Drive",
+        image: null,
         role: "waiter",
         assignedTable: "Table No 5",
         assignedBranch: "The Burger House",
@@ -149,6 +175,10 @@ export class MemStorage implements IStorage {
         username: "sarah_manager",
         email: "sarah@example.com",
         password: "password123",
+        name: "Sarah Wilson",
+        phoneNumber: "+1234567894",
+        address: "654 Maple Lane",
+        image: null,
         role: "manager",
         assignedTable: null,
         assignedBranch: "The Burger House",
@@ -426,6 +456,66 @@ export class MemStorage implements IStorage {
     ];
 
     seedMenuItems.forEach(menuItem => this.menuItems.set(menuItem.id, menuItem));
+
+    // Seed feedbacks
+    const seedFeedbacks: Feedback[] = [
+      {
+        id: "1",
+        customerName: "Megan B.",
+        customerImage: "https://images.unsplash.com/photo-1494790108755-2616b9f8e5a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        rating: 5,
+        comment: "I am delighted with the taste and freshness of these donuts! I ordered a set for the whole family, and everyone found something for themselves - from the classic one with chocolate to more sophisticated flavors such as salted caramel with pistachios. Great quality, fast delivery, and friendly service. On it definitely come back for more!",
+        restaurantId: "1",
+        createdAt: new Date(),
+      },
+      {
+        id: "2",
+        customerName: "Megan B.",
+        customerImage: "https://images.unsplash.com/photo-1494790108755-2616b9f8e5a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        rating: 5,
+        comment: "I am delighted with the taste and freshness of these donuts! I ordered a set for the whole family, and everyone found something for themselves - from the classic one with chocolate to more sophisticated flavors such as salted caramel with pistachios. Great quality, fast delivery, and friendly service. On it definitely come back for more!",
+        restaurantId: "1",
+        createdAt: new Date(),
+      },
+      {
+        id: "3",
+        customerName: "Megan B.",
+        customerImage: "https://images.unsplash.com/photo-1494790108755-2616b9f8e5a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        rating: 5,
+        comment: "I am delighted with the taste and freshness of these donuts! I ordered a set for the whole family, and everyone found something for themselves - from the classic one with chocolate to more sophisticated flavors such as salted caramel with pistachios. Great quality, fast delivery, and friendly service. On it definitely come back for more!",
+        restaurantId: "1",
+        createdAt: new Date(),
+      },
+      {
+        id: "4",
+        customerName: "Alex Rodriguez",
+        customerImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        rating: 4,
+        comment: "Great food and excellent service! The atmosphere was perfect for our date night. The pasta was cooked to perfection and the staff was very attentive.",
+        restaurantId: "1",
+        createdAt: new Date(),
+      },
+      {
+        id: "5",
+        customerName: "Sarah Johnson",
+        customerImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        rating: 5,
+        comment: "Amazing pizza! Best I've had in the city. The crust was perfectly crispy and the toppings were fresh. Will definitely be back!",
+        restaurantId: "2",
+        createdAt: new Date(),
+      },
+      {
+        id: "6",
+        customerName: "David Kim",
+        customerImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        rating: 4,
+        comment: "Good food and reasonable prices. The burger was juicy and the fries were crispy. Could use a bit more seasoning but overall a solid meal.",
+        restaurantId: "1",
+        createdAt: new Date(),
+      },
+    ];
+
+    seedFeedbacks.forEach(feedback => this.feedbacks.set(feedback.id, feedback));
   }
 
   // User methods
@@ -454,7 +544,9 @@ export class MemStorage implements IStorage {
       role: insertUser.role || "waiter",
       assignedTable: insertUser.assignedTable || null,
       assignedBranch: insertUser.assignedBranch || null,
-      status: insertUser.status || "active"
+      status: insertUser.status || "active",
+      address: insertUser.address || null,
+      image: insertUser.image || null
     };
     this.users.set(id, user);
     return user;
@@ -586,11 +678,11 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       status: insertBranch.status || "active",
       restaurantId: insertBranch.restaurantId || null,
-      restaurantLogo: insertBranch.restaurantLogo || null,
-      instagram: insertBranch.instagram || null,
-      whatsapp: insertBranch.whatsapp || null,
-      facebook: insertBranch.facebook || null,
-      googleMap: insertBranch.googleMap || null
+      restaurantLogo: insertBranch.restaurantLogo || "",
+      instagram: insertBranch.instagram || "",
+      whatsapp: insertBranch.whatsapp || "",
+      facebook: insertBranch.facebook || "",
+      googleMap: insertBranch.googleMap || ""
     };
     this.branches.set(id, branch);
     return branch;
@@ -784,6 +876,45 @@ export class MemStorage implements IStorage {
 
   async getServicesByRestaurant(restaurantId: string): Promise<Service[]> {
     return Array.from(this.services.values()).filter(service => service.restaurantId === restaurantId);
+  }
+
+  // Feedback methods
+  async getFeedback(id: string): Promise<Feedback | undefined> {
+    return this.feedbacks.get(id);
+  }
+
+  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+    const id = randomUUID();
+    const feedback: Feedback = {
+      id,
+      ...insertFeedback,
+      restaurantId: insertFeedback.restaurantId || null,
+      customerImage: insertFeedback.customerImage || null,
+      createdAt: new Date(),
+    };
+    this.feedbacks.set(id, feedback);
+    return feedback;
+  }
+
+  async updateFeedback(id: string, updateData: Partial<InsertFeedback>): Promise<Feedback | undefined> {
+    const existingFeedback = this.feedbacks.get(id);
+    if (!existingFeedback) return undefined;
+
+    const updatedFeedback = { ...existingFeedback, ...updateData };
+    this.feedbacks.set(id, updatedFeedback);
+    return updatedFeedback;
+  }
+
+  async deleteFeedback(id: string): Promise<boolean> {
+    return this.feedbacks.delete(id);
+  }
+
+  async getAllFeedbacks(): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values());
+  }
+
+  async getFeedbacksByRestaurant(restaurantId: string): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values()).filter(feedback => feedback.restaurantId === restaurantId);
   }
 }
 
