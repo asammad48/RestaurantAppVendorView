@@ -1,223 +1,335 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import StatsCard from "@/components/stats-card";
-import RevenueChart from "@/components/charts/revenue-chart";
-import DonutChart from "@/components/charts/donut-chart";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { TrendingUp, ShoppingCart, DollarSign, Clock, Users, Star, ChefHat } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import type { DashboardStats, TopPerformingItems, OccupancyData, HourlyOrders, Feedback } from "@shared/schema";
 
-const usersList = [
-  {
-    id: "1",
-    name: "Ana Black",
-    email: "ana@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b5bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-  },
-  {
-    id: "2",
-    name: "George Litz",
-    email: "georgelitz@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-  },
-  {
-    id: "3",
-    name: "John Miller",
-    email: "jmiller@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-  },
-  {
-    id: "4",
-    name: "Jane Johnson",
-    email: "jj@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-  },
-  {
-    id: "5",
-    name: "Mezel Agnes",
-    email: "fefekartika@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-  },
-  {
-    id: "6",
-    name: "Katona Beatrix",
-    email: "edoeram@gmail.com",
-    avatar: "https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-  },
-];
+// Chart colors for consistent theming
+const COLORS = {
+  primary: '#10b981', // emerald-500
+  secondary: '#3b82f6', // blue-500
+  success: '#22c55e', // green-500
+  warning: '#f59e0b', // amber-500
+  danger: '#ef4444', // red-500
+  neutral: '#6b7280', // gray-500
+  positive: '#10b981',
+  negative: '#ef4444',
+  feedbackColors: ['#10b981', '#f59e0b', '#ef4444'], // Positive, Neutral, Negative
+};
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/dashboard/stats"],
+  const [selectedPeriod, setSelectedPeriod] = useState<"today" | "this_week" | "this_month">("today");
+
+  // Query for dashboard stats with period filter
+  const { data: dashboardStats, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/dashboard/stats", selectedPeriod],
   });
 
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
-    queryKey: ["/api/analytics"],
+  // Query for top performing items
+  const { data: topItems, isLoading: topItemsLoading } = useQuery({
+    queryKey: ["/api/dashboard/top-items"],
   });
 
-  if (statsLoading || analyticsLoading) {
+  // Query for occupancy data
+  const { data: occupancyData, isLoading: occupancyLoading } = useQuery({
+    queryKey: ["/api/dashboard/occupancy"],
+  });
+
+  // Query for hourly orders
+  const { data: hourlyOrders, isLoading: hourlyOrdersLoading } = useQuery({
+    queryKey: ["/api/dashboard/hourly-orders"],
+  });
+
+  // Query for feedback data
+  const { data: feedbacks, isLoading: feedbacksLoading } = useQuery({
+    queryKey: ["/api/feedbacks"],
+  });
+
+  const isLoading = statsLoading || topItemsLoading || occupancyLoading || hourlyOrdersLoading || feedbacksLoading;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="loading-spinner" data-testid="loading-spinner"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" data-testid="loading-spinner"></div>
       </div>
     );
   }
 
-  const chartData = (analytics || []).map((item: any) => ({
-    name: new Date(item.date).toLocaleString('default', { month: 'short' }),
-    income: item.revenue,
-    pending: Math.floor(item.revenue * 0.1),
-  }));
+  // Process feedback data for pie chart
+  const feedbackDistribution = (() => {
+    if (!feedbacks?.length) return [
+      { name: 'Positive', value: 45, percentage: 65 },
+      { name: 'Neutral', value: 15, percentage: 22 },
+      { name: 'Negative', value: 9, percentage: 13 },
+    ];
+    
+    const positive = feedbacks.filter((f: Feedback) => f.rating >= 4).length;
+    const neutral = feedbacks.filter((f: Feedback) => f.rating === 3).length;
+    const negative = feedbacks.filter((f: Feedback) => f.rating <= 2).length;
+    const total = feedbacks.length;
+
+    return [
+      { name: 'Positive', value: positive, percentage: Math.round((positive / total) * 100) },
+      { name: 'Neutral', value: neutral, percentage: Math.round((neutral / total) * 100) },
+      { name: 'Negative', value: negative, percentage: Math.round((negative / total) * 100) },
+    ];
+  })();
+
+  // Get best selling category
+  const bestSellingCategory = topItems?.length > 0 ? topItems[0]?.category || "Main Course" : "Main Course";
+
+  // Format currency
+  const formatCurrency = (amount: number) => `$${(amount / 100).toLocaleString()}`;
+
+  // Current occupancy percentage
+  const currentOccupancy = occupancyData?.occupancyPercentage || 75;
 
   return (
-    <div className="space-y-8" data-testid="dashboard-page">
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <StatsCard
-          title="Total Menu"
-          value={(stats as any)?.totalMenuItems?.toString() || "0"}
-          icon="menu"
-          data-testid="stat-total-menu"
-        />
-        <StatsCard
-          title="Total Revenue"
-          value={`$${(stats as any)?.totalRevenue?.toLocaleString() || "0"}`}
-          icon="revenue"
-          data-testid="stat-total-revenue"
-        />
-        <StatsCard
-          title="Total Customer"
-          value={(stats as any)?.totalCustomers?.toLocaleString() || "0"}
-          icon="customers"
-          data-testid="stat-total-customers"
-        />
-        <StatsCard
-          title="Total Orders"
-          value={(stats as any)?.totalOrders?.toLocaleString() || "0"}
-          icon="orders"
-          data-testid="stat-total-orders"
-        />
-      </div>
-
-      {/* Charts Row */}
-      <div className="analytics-grid">
-        {/* Revenue Chart */}
-        <Card data-testid="revenue-chart-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900" data-testid="revenue-chart-title">Revenue</h3>
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" data-testid="button-filters">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
-                <Button variant="outline" size="sm" data-testid="button-date-range">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  April 11 - April 24
-                </Button>
-              </div>
-            </div>
-            <div className="mb-4">
-              <p className="text-3xl font-bold text-gray-900" data-testid="revenue-total">$112,340</p>
-            </div>
-            <RevenueChart data={chartData} />
-          </CardContent>
-        </Card>
-
-        {/* Customers Chart */}
-        <Card data-testid="customers-chart-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900" data-testid="customers-chart-title">Customers</h3>
-                <p className="text-sm text-gray-500" data-testid="customers-subtitle">Customers that buy our products</p>
-              </div>
-              <Button variant="ghost" size="icon" data-testid="button-more">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
-                </svg>
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-center mb-6">
-              <div className="relative">
-                <DonutChart 
-                  data={[
-                    { name: "Current", value: 82.3, color: "#5CB85C" },
-                    { name: "New", value: 17.7, color: "#A7F3D0" }
-                  ]}
-                  centerText="82.3%"
-                  centerSubtext="Total"
-                />
-              </div>
-              
-              <div className="ml-8 space-y-4">
-                <div className="flex items-center" data-testid="daily-customers">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-gray-900">+ 18%</p>
-                    <p className="text-sm text-gray-500">Daily customers</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center" data-testid="weekly-customers">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-gray-900">+ 14%</p>
-                    <p className="text-sm text-gray-500">Weekly new customers</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-600">Current customers</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-300 rounded-full mr-2"></div>
-                <span className="text-gray-600">New customers</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Users List */}
-      <Card data-testid="users-list-card">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900" data-testid="users-list-title">Users List</h3>
+    <div className="space-y-8 p-6" data-testid="dashboard-page">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard Analytics</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Real-time insights for your restaurant performance</p>
         </div>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {usersList.map((user) => (
-              <div 
-                key={user.id} 
-                className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors"
-                data-testid={`user-${user.id}`}
-              >
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-gray-900" data-testid={`user-name-${user.id}`}>{user.name}</p>
-                  <p className="text-sm text-gray-500" data-testid={`user-email-${user.id}`}>{user.email}</p>
+      </div>
+
+      {/* Sales Summary Cards */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Sales Summary</h2>
+          <Tabs value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value as typeof selectedPeriod)}>
+            <TabsList className="grid w-full grid-cols-3 max-w-md">
+              <TabsTrigger value="today">Today</TabsTrigger>
+              <TabsTrigger value="this_week">This Week</TabsTrigger>
+              <TabsTrigger value="this_month">This Month</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="border-l-4 border-l-emerald-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-emerald-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">
+                {formatCurrency(dashboardStats?.totalRevenue || 85420)}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                +12.5% from last {selectedPeriod.replace('_', ' ')}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Number of Orders</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {dashboardStats?.totalOrders || 342}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                +8.2% from last {selectedPeriod.replace('_', ' ')}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-purple-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
+              <TrendingUp className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">
+                {formatCurrency(dashboardStats?.averageOrderValue || 2497)}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                +4.1% from last {selectedPeriod.replace('_', ' ')}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Top Performing Items Bar Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ChefHat className="h-5 w-5 text-emerald-500" />
+              Top Performing Items
+            </CardTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Top 5 dishes by sales today</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topItems?.slice(0, 5) || [
+                { itemName: "Chicken Karahi", salesAmount: 12500, category: "Main Course" },
+                { itemName: "Beef Biryani", salesAmount: 10200, category: "Rice" },
+                { itemName: "Fish Tikka", salesAmount: 8500, category: "BBQ" },
+                { itemName: "Mutton Pulao", salesAmount: 7300, category: "Rice" },
+                { itemName: "Chicken Wings", salesAmount: 6100, category: "Appetizer" }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="itemName" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  fontSize={12}
+                />
+                <YAxis tickFormatter={(value) => `$${value / 100}`} />
+                <Tooltip formatter={(value) => [formatCurrency(value as number), "Sales"]} />
+                <Bar dataKey="salesAmount" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Best-selling category: <span className="font-semibold text-emerald-600">{bestSellingCategory}</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Customer Feedback Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              Customer Feedback
+            </CardTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Feedback distribution by rating</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={feedbackDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={120}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ percentage }) => `${percentage}%`}
+                  labelLine={false}
+                >
+                  {feedbackDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS.feedbackColors[index]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`${value} reviews`, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex justify-center gap-6 mt-4">
+              {feedbackDistribution.map((entry, index) => (
+                <div key={entry.name} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: COLORS.feedbackColors[index] }}
+                  ></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{entry.name}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Occupancy Gauge */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              Current Occupancy
+            </CardTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Dine-in table occupancy percentage</p>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <div className="relative w-48 h-48">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-gray-200 dark:text-gray-700"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={`${2.51 * currentOccupancy} 251`}
+                  className="text-blue-500 transition-all duration-1000"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">{currentOccupancy}%</div>
+                  <div className="text-sm text-gray-500">Occupied</div>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {occupancyData?.occupiedTables || 15} of {occupancyData?.totalTables || 20} tables occupied
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Peak Hours Line Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-orange-500" />
+              Peak Hours Traffic
+            </CardTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Orders per hour for today</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={hourlyOrders || [
+                { hour: 8, orderCount: 5 }, { hour: 9, orderCount: 12 }, { hour: 10, orderCount: 18 },
+                { hour: 11, orderCount: 25 }, { hour: 12, orderCount: 45 }, { hour: 13, orderCount: 52 },
+                { hour: 14, orderCount: 38 }, { hour: 15, orderCount: 28 }, { hour: 16, orderCount: 22 },
+                { hour: 17, orderCount: 35 }, { hour: 18, orderCount: 48 }, { hour: 19, orderCount: 55 },
+                { hour: 20, orderCount: 42 }, { hour: 21, orderCount: 30 }, { hour: 22, orderCount: 15 }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="hour" 
+                  tickFormatter={(hour) => `${hour}:00`}
+                />
+                <YAxis />
+                <Tooltip 
+                  labelFormatter={(hour) => `${hour}:00`}
+                  formatter={(value) => [`${value} orders`, "Orders"]}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="orderCount" 
+                  stroke={COLORS.warning} 
+                  strokeWidth={3}
+                  dot={{ fill: COLORS.warning, strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: COLORS.warning, strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

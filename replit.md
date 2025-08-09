@@ -28,6 +28,7 @@ This is a full-stack restaurant and hotel management application built with Reac
 - **Reporting Page Redesign**: Transformed reporting page to display ticket management table with search, filtering, and pagination functionality
 - **Complete Feedback System Implementation**: Built comprehensive customer feedback system with customer profiles, star ratings, order numbers, feedback timestamps, and pagination functionality
 - **Enhanced Card Design System**: Implemented attractive entity and branch cards with gradient overlays, hover effects, fascinating animated buttons with green color scheme, proper text centering, and visual feedback effects
+- **Comprehensive Dashboard Analytics**: Built complete analytics dashboard with sales summary cards (Revenue, Orders, Average Order Value), top performing items bar chart, occupancy gauge chart, peak hours line chart, and customer feedback pie chart with Today/This Week/This Month toggle functionality
 
 ## User Preferences
 

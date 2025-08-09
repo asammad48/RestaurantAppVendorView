@@ -135,6 +135,43 @@ export const feedbacks = pgTable("feedbacks", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const dashboardStats = pgTable("dashboard_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  period: text("period").notNull(), // today, this_week, this_month
+  totalRevenue: integer("total_revenue").notNull(),
+  totalOrders: integer("total_orders").notNull(),
+  averageOrderValue: integer("average_order_value").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  date: timestamp("date").defaultNow(),
+});
+
+export const topPerformingItems = pgTable("top_performing_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  itemName: text("item_name").notNull(),
+  category: text("category").notNull(),
+  salesAmount: integer("sales_amount").notNull(),
+  orderCount: integer("order_count").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  date: text("date").notNull(), // YYYY-MM-DD format
+});
+
+export const occupancyData = pgTable("occupancy_data", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  totalTables: integer("total_tables").notNull(),
+  occupiedTables: integer("occupied_tables").notNull(),
+  occupancyPercentage: integer("occupancy_percentage").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const hourlyOrders = pgTable("hourly_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  hour: integer("hour").notNull(), // 0-23
+  orderCount: integer("order_count").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  date: text("date").notNull(), // YYYY-MM-DD format
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -189,6 +226,24 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
   createdAt: true,
 });
 
+export const insertDashboardStatsSchema = createInsertSchema(dashboardStats).omit({
+  id: true,
+  date: true,
+});
+
+export const insertTopPerformingItemsSchema = createInsertSchema(topPerformingItems).omit({
+  id: true,
+});
+
+export const insertOccupancyDataSchema = createInsertSchema(occupancyData).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertHourlyOrdersSchema = createInsertSchema(hourlyOrders).omit({
+  id: true,
+});
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
@@ -227,5 +282,13 @@ export type InsertTicket = z.infer<typeof insertTicketSchema>;
 export type Ticket = typeof tickets.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type Feedback = typeof feedbacks.$inferSelect;
+export type InsertDashboardStats = z.infer<typeof insertDashboardStatsSchema>;
+export type DashboardStats = typeof dashboardStats.$inferSelect;
+export type InsertTopPerformingItems = z.infer<typeof insertTopPerformingItemsSchema>;
+export type TopPerformingItems = typeof topPerformingItems.$inferSelect;
+export type InsertOccupancyData = z.infer<typeof insertOccupancyDataSchema>;
+export type OccupancyData = typeof occupancyData.$inferSelect;
+export type InsertHourlyOrders = z.infer<typeof insertHourlyOrdersSchema>;
+export type HourlyOrders = typeof hourlyOrders.$inferSelect;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type SignupRequest = z.infer<typeof signupSchema>;
