@@ -70,13 +70,13 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
           <Button
             variant="default"
             size="sm"
-            className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold shadow-lg hover:shadow-2xl transform hover:scale-110 transition-all duration-300 hover:ring-4 hover:ring-blue-300/50 ripple-effect glow-on-hover relative overflow-hidden"
+            className="flex-1 bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 hover:from-green-700 hover:via-emerald-700 hover:to-green-800 text-white font-semibold shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 hover:ring-4 hover:ring-green-300/50 ripple-effect relative overflow-hidden"
             onClick={() => onManage(entity)}
             data-testid={`button-manage-${entity.id}`}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 shimmer-effect"></div>
-            <Settings className="w-4 h-4 mr-2 animate-spin" />
-            <span className="neon-text relative z-10">Manage</span>
+            <Settings className="w-4 h-4 mr-2 animate-pulse relative z-10" />
+            <span className="relative z-10 whitespace-nowrap">Manage</span>
           </Button>
           
           <Button

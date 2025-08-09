@@ -73,14 +73,14 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
           <Button
             variant="default"
             size="sm"
-            className="flex-1 bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 hover:from-indigo-700 hover:via-blue-700 hover:to-cyan-700 text-white font-bold shadow-lg hover:shadow-2xl transform hover:scale-110 transition-all duration-300 hover:ring-4 hover:ring-indigo-300/50 ripple-effect relative overflow-hidden group"
+            className="flex-1 bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 hover:from-green-700 hover:via-emerald-700 hover:to-green-800 text-white font-semibold shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 hover:ring-4 hover:ring-green-300/50 ripple-effect relative overflow-hidden group"
             onClick={() => onManage(branch)}
             data-testid={`button-manage-${branch.id}`}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/30 to-white/10 shimmer-effect opacity-0 group-hover:opacity-100"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-indigo-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <Settings className="w-4 h-4 mr-2 animate-spin group-hover:animate-pulse relative z-10" />
-            <span className="neon-text relative z-10 tracking-wide">Manage</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <Settings className="w-4 h-4 mr-2 animate-pulse group-hover:animate-spin relative z-10" />
+            <span className="relative z-10 whitespace-nowrap">Manage</span>
           </Button>
           
           {onEdit && (
