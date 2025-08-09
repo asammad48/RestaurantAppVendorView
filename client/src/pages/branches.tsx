@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import BranchCard from "../components/branch-card";
 import AddBranchModal from "@/components/add-branch-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
+import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
 import type { Branch, Entity } from "@shared/schema";
 
 export default function Branches() {
@@ -16,6 +17,9 @@ export default function Branches() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [currentEntity, setCurrentEntity] = useState<Entity | null>(null);
   const [isTrialUser, setIsTrialUser] = useState(true); // Assume trial for demo
   
@@ -69,6 +73,16 @@ export default function Branches() {
 
   const handleBack = () => {
     navigate("/entities");
+  };
+
+  const handleEdit = (branch: Branch) => {
+    setSelectedBranch(branch);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (branch: Branch) => {
+    setSelectedBranch(branch);
+    setShowDeleteModal(true);
   };
 
   if (isLoading) {
@@ -161,6 +175,8 @@ export default function Branches() {
               key={branch.id}
               branch={branch}
               onManage={handleManage}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -171,6 +187,36 @@ export default function Branches() {
           open={showAddModal}
           onClose={() => setShowAddModal(false)}
           entityId={currentEntity.id}
+        />
+      )}
+
+      {showEditModal && selectedBranch && (
+        <AddBranchModal
+          open={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedBranch(null);
+          }}
+          entityId={currentEntity?.id || ""}
+          editBranch={selectedBranch}
+        />
+      )}
+
+      {showDeleteModal && selectedBranch && (
+        <DeleteConfirmationModal
+          open={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedBranch(null);
+          }}
+          onConfirm={() => {
+            // Handle delete logic here
+            console.log("Deleting branch:", selectedBranch.id);
+            setShowDeleteModal(false);
+            setSelectedBranch(null);
+          }}
+          title="Delete Branch"
+          description={`Are you sure you want to delete "${selectedBranch.name}"? This action cannot be undone.`}
         />
       )}
 
