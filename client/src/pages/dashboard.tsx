@@ -122,12 +122,12 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-0 relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-emerald-950 dark:via-gray-900 dark:to-emerald-950 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent"></div>
+          <Card className="border-0 relative overflow-hidden bg-gradient-to-br from-white via-emerald-50 to-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Revenue</CardTitle>
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-full">
-                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <CardTitle className="text-sm font-medium text-gray-700">Total Revenue</CardTitle>
+              <div className="p-2 bg-emerald-100 rounded-full">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
@@ -135,7 +135,7 @@ export default function Dashboard() {
                 {formatCurrency(dashboardStats?.totalRevenue || 85420)}
               </div>
               <div className="flex items-center mt-2">
-                <div className="flex items-center text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center text-emerald-600">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   <span className="text-xs font-semibold">+12.5%</span>
                 </div>
@@ -146,20 +146,20 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-blue-950 dark:via-gray-900 dark:to-blue-950 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent"></div>
+          <Card className="border-0 relative overflow-hidden bg-gradient-to-br from-white via-emerald-50 to-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Number of Orders</CardTitle>
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
-                <ShoppingCart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <CardTitle className="text-sm font-medium text-gray-700">Number of Orders</CardTitle>
+              <div className="p-2 bg-emerald-100 rounded-full">
+                <ShoppingCart className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+              <div className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                 {dashboardStats?.totalOrders || 342}
               </div>
               <div className="flex items-center mt-2">
-                <div className="flex items-center text-blue-600 dark:text-blue-400">
+                <div className="flex items-center text-emerald-600">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   <span className="text-xs font-semibold">+8.2%</span>
                 </div>
@@ -170,20 +170,20 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-purple-50 dark:from-purple-950 dark:via-gray-900 dark:to-purple-950 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-transparent"></div>
+          <Card className="border-0 relative overflow-hidden bg-gradient-to-br from-white via-emerald-50 to-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Average Order Value</CardTitle>
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-full">
-                <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <CardTitle className="text-sm font-medium text-gray-700">Average Order Value</CardTitle>
+              <div className="p-2 bg-emerald-100 rounded-full">
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent">
+              <div className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                 {formatCurrency(dashboardStats?.averageOrderValue || 2497)}
               </div>
               <div className="flex items-center mt-2">
-                <div className="flex items-center text-purple-600 dark:text-purple-400">
+                <div className="flex items-center text-emerald-600">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   <span className="text-xs font-semibold">+4.1%</span>
                 </div>
@@ -208,17 +208,17 @@ export default function Dashboard() {
           }
         `}</style>
         {/* Top Performing Items Bar Chart */}
-        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-          <CardHeader className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-t-lg">
+        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-white">
+          <CardHeader className="bg-white rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-full">
-                <ChefHat className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="p-2 bg-emerald-100 rounded-full">
+                <ChefHat className="h-5 w-5 text-emerald-600" />
               </div>
-              <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent font-bold">
+              <span className="text-gray-800 font-bold">
                 Top Performing Items
               </span>
             </CardTitle>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Top 5 dishes by sales today</p>
+            <p className="text-sm text-gray-600">Top 5 dishes by sales today</p>
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={320}>
@@ -283,26 +283,26 @@ export default function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950 dark:to-blue-950 rounded-lg text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Best-selling category: <span className="font-bold text-emerald-600 dark:text-emerald-400 text-lg">{bestSellingCategory}</span>
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center">
+              <p className="text-sm text-gray-600">
+                Best-selling category: <span className="font-bold text-emerald-600 text-lg">{bestSellingCategory}</span>
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Customer Feedback Pie Chart */}
-        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white via-yellow-50 to-white dark:from-gray-900 dark:via-yellow-950 dark:to-gray-900">
-          <CardHeader className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-t-lg">
+        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-white">
+          <CardHeader className="bg-white rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-full animate-pulse">
-                <Star className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <div className="p-2 bg-yellow-100 rounded-full animate-pulse">
+                <Star className="h-5 w-5 text-yellow-600" />
               </div>
-              <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent font-bold">
+              <span className="text-gray-800 font-bold">
                 Customer Feedback
               </span>
             </CardTitle>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Feedback distribution by rating</p>
+            <p className="text-sm text-gray-600">Feedback distribution by rating</p>
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={320}>
@@ -357,13 +357,13 @@ export default function Dashboard() {
             </ResponsiveContainer>
             <div className="flex justify-center gap-8 mt-6">
               {feedbackDistribution.map((entry, index) => (
-                <div key={entry.name} className="flex flex-col items-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200">
+                <div key={entry.name} className="flex flex-col items-center gap-2 p-3 rounded-lg bg-gray-50 shadow-md hover:shadow-lg transition-all duration-200">
                   <div className="flex items-center gap-2">
                     <div 
                       className="w-4 h-4 rounded-full shadow-lg" 
                       style={{ backgroundColor: COLORS.feedbackColors[index] }}
                     ></div>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{entry.name}</span>
+                    <span className="text-sm font-semibold text-gray-700">{entry.name}</span>
                   </div>
                   <span className="text-lg font-bold" style={{ color: COLORS.feedbackColors[index] }}>
                     {entry.value}
@@ -375,17 +375,17 @@ export default function Dashboard() {
         </Card>
 
         {/* Occupancy Gauge */}
-        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white via-blue-50 to-white dark:from-gray-900 dark:via-blue-950 dark:to-gray-900">
-          <CardHeader className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-t-lg">
+        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-white">
+          <CardHeader className="bg-white rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
-                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Users className="h-5 w-5 text-blue-600" />
               </div>
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-bold">
+              <span className="text-gray-800 font-bold">
                 Current Occupancy
               </span>
             </CardTitle>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Dine-in table occupancy percentage</p>
+            <p className="text-sm text-gray-600">Dine-in table occupancy percentage</p>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <div className="relative w-56 h-56">
@@ -411,7 +411,6 @@ export default function Dashboard() {
                   stroke="#e5e7eb"
                   strokeWidth="6"
                   fill="transparent"
-                  className="dark:stroke-gray-700"
                 />
                 <circle
                   cx="50"
@@ -430,34 +429,34 @@ export default function Dashboard() {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center bg-white dark:bg-gray-900 rounded-full p-6 shadow-xl">
+                <div className="text-center bg-white rounded-full p-6 shadow-xl">
                   <div className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                     {currentOccupancy}%
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">Occupied</div>
+                  <div className="text-sm text-gray-500 font-medium">Occupied</div>
                 </div>
               </div>
             </div>
-            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-lg text-center w-full">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">{occupancyData?.occupiedTables || 15}</span> of <span className="font-bold text-lg">{occupancyData?.totalTables || 20}</span> tables occupied
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center w-full">
+              <p className="text-sm text-gray-600">
+                <span className="font-bold text-blue-600 text-lg">{occupancyData?.occupiedTables || 15}</span> of <span className="font-bold text-lg">{occupancyData?.totalTables || 20}</span> tables occupied
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Peak Hours Line Chart */}
-        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white via-orange-50 to-white dark:from-gray-900 dark:via-orange-950 dark:to-gray-900">
-          <CardHeader className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-t-lg">
+        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-white">
+          <CardHeader className="bg-white rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-full">
-                <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <div className="p-2 bg-orange-100 rounded-full">
+                <Clock className="h-5 w-5 text-orange-600" />
               </div>
-              <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold">
+              <span className="text-gray-800 font-bold">
                 Peak Hours Traffic
               </span>
             </CardTitle>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Orders per hour for today</p>
+            <p className="text-sm text-gray-600">Orders per hour for today</p>
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={320}>
