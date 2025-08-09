@@ -129,6 +129,8 @@ export const feedbacks = pgTable("feedbacks", {
   customerImage: text("customer_image"), // Profile picture URL or Base64
   rating: integer("rating").notNull(), // 1-5 star rating
   comment: text("comment").notNull(),
+  orderNumber: text("order_number").notNull(),
+  feedbackDate: timestamp("feedback_date").notNull(),
   restaurantId: varchar("restaurant_id").references(() => restaurants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, Calendar, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import type { Feedback } from "@shared/schema";
 
 function StarRating({ rating }: { rating: number }) {
@@ -32,11 +33,23 @@ function FeedbackCard({ feedback }: { feedback: Feedback }) {
         />
       </div>
       <div className="flex-1">
-        <div className="flex items-center gap-3 mb-2">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">
-            {feedback.customerName}
-          </h3>
-          <StarRating rating={feedback.rating} />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+              {feedback.customerName}
+            </h3>
+            <StarRating rating={feedback.rating} />
+          </div>
+          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-1">
+              <Hash className="w-3 h-3" />
+              <span>{feedback.orderNumber}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              <span>{format(new Date(feedback.feedbackDate), "MMM dd, yyyy HH:mm")}</span>
+            </div>
+          </div>
         </div>
         <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
           {feedback.comment}
