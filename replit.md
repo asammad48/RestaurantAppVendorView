@@ -27,6 +27,7 @@ This is a full-stack restaurant and hotel management application built with Reac
 - **Enhanced User Management**: Implemented comprehensive Add/Edit User modal with profile pictures, role assignment, and branch management
 - **Reporting Page Redesign**: Transformed reporting page to display ticket management table with search, filtering, and pagination functionality
 - **Complete Feedback System Implementation**: Built comprehensive customer feedback system with customer profiles, star ratings, order numbers, feedback timestamps, and pagination functionality
+- **Enhanced Card Design System**: Implemented attractive entity and branch cards with gradient overlays, hover effects, fascinating animated buttons with green color scheme, proper text centering, and visual feedback effects
 
 ## User Preferences
 
