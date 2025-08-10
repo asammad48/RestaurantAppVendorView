@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
+import EditTableModal from "@/components/edit-table-modal";
 import AddMenuModal from "@/components/add-menu-modal";
 import AddCategoryModal from "@/components/add-category-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
@@ -157,6 +158,7 @@ export default function Orders() {
   const [showAddDealsModal, setShowAddDealsModal] = useState(false);
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showEditTableModal, setShowEditTableModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
 
   // Check URL params for pricing modal trigger
@@ -232,6 +234,14 @@ export default function Orders() {
     setTables([...tables, newTable]);
   };
 
+  const handleEditTable = (tableId: string, updates: { seats: number; waiter: string }) => {
+    setTables(prev => prev.map(table => 
+      table.id === tableId 
+        ? { ...table, seats: updates.seats, waiter: updates.waiter }
+        : table
+    ));
+  };
+
   // Filter menu items based on search
   const filteredMenuItems = menuItems.filter(item =>
     item.name.toLowerCase().includes(menuSearchTerm.toLowerCase()) ||
@@ -287,13 +297,13 @@ export default function Orders() {
       {/* Navigation Tabs */}
       <Tabs defaultValue="orders" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5" data-testid="main-tabs">
-          <TabsTrigger value="orders" className="bg-green-500 text-white data-[state=active]:bg-green-600">
+          <TabsTrigger value="orders" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">
             Orders
           </TabsTrigger>
-          <TabsTrigger value="menu">Menu</TabsTrigger>
-          <TabsTrigger value="tables">Tables</TabsTrigger>
-          <TabsTrigger value="deals">Deals</TabsTrigger>
-          <TabsTrigger value="services">Free Services</TabsTrigger>
+          <TabsTrigger value="menu" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Menu</TabsTrigger>
+          <TabsTrigger value="tables" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Tables</TabsTrigger>
+          <TabsTrigger value="deals" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Deals</TabsTrigger>
+          <TabsTrigger value="services" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Services</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6">
@@ -411,11 +421,19 @@ export default function Orders() {
           {/* Menu Filter Tabs */}
           <div className="flex items-center justify-between">
             <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab}>
-              <TabsList data-testid="menu-filter-tabs">
-                <TabsTrigger value="Menu" className="bg-green-500 text-white data-[state=active]:bg-green-600">
+              <TabsList className="bg-transparent border-b border-gray-200 rounded-none" data-testid="menu-filter-tabs">
+                <TabsTrigger 
+                  value="Menu" 
+                  className="bg-gray-100 text-gray-700 border-b-2 border-transparent data-[state=active]:bg-gray-100 data-[state=active]:border-green-500 data-[state=active]:text-gray-900 rounded-none"
+                >
                   Menu
                 </TabsTrigger>
-                <TabsTrigger value="Category">Category</TabsTrigger>
+                <TabsTrigger 
+                  value="Category"
+                  className="bg-gray-100 text-gray-700 border-b-2 border-transparent data-[state=active]:bg-gray-100 data-[state=active]:border-green-500 data-[state=active]:text-gray-900 rounded-none"
+                >
+                  Category
+                </TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -675,6 +693,10 @@ export default function Orders() {
                         variant="ghost" 
                         size="sm"
                         className="text-gray-600 hover:text-gray-800"
+                        onClick={() => {
+                          setSelectedTable(table);
+                          setShowEditTableModal(true);
+                        }}
                         data-testid={`button-edit-table-${table.id}`}
                       >
                         <Edit className="w-4 h-4" />
@@ -854,14 +876,16 @@ export default function Orders() {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">{service.description}</p>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {service.type.startsWith('Paid') && (
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -885,6 +909,14 @@ export default function Orders() {
         open={showAddTableModal}
         onOpenChange={setShowAddTableModal}
         onAddTable={handleAddTable}
+      />
+
+      {/* Edit Table Modal */}
+      <EditTableModal
+        open={showEditTableModal}
+        onOpenChange={setShowEditTableModal}
+        table={selectedTable}
+        onEditTable={handleEditTable}
       />
 
       {/* Add Menu Modal */}

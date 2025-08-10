@@ -50,22 +50,27 @@ export function useAuthState() {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Login failed");
-      }
-
-      const { user } = await response.json();
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
+      // Dummy authentication - accept any credentials
+      const dummyUser = {
+        id: "1",
+        username: username,
+        email: `${username}@example.com`,
+        name: "John Doe",
+        phoneNumber: "+1234567890",
+        address: null,
+        image: null,
+        role: "manager",
+        assignedTable: null,
+        assignedBranch: null,
+        status: "active",
+        createdAt: new Date(),
+      };
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setUser(dummyUser);
+      localStorage.setItem("user", JSON.stringify(dummyUser));
     } catch (error) {
       throw error;
     } finally {
@@ -76,22 +81,27 @@ export function useAuthState() {
   const signup = async (userData: any) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Signup failed");
-      }
-
-      const { user } = await response.json();
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
+      // Dummy signup - accept any data
+      const dummyUser = {
+        id: "1",
+        username: userData.username,
+        email: userData.email,
+        name: userData.username,
+        phoneNumber: userData.phone,
+        address: null,
+        image: null,
+        role: "manager",
+        assignedTable: null,
+        assignedBranch: null,
+        status: "active",
+        createdAt: new Date(),
+      };
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setUser(dummyUser);
+      localStorage.setItem("user", JSON.stringify(dummyUser));
     } catch (error) {
       throw error;
     } finally {

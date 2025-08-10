@@ -54,19 +54,10 @@ export default function AddTableModal({ open, onOpenChange, onAddTable }: AddTab
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" data-testid="add-table-modal">
-        <DialogHeader className="relative">
+        <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold text-gray-900" data-testid="modal-title">
             Add Table
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-6 w-6 p-0"
-            onClick={() => onOpenChange(false)}
-            data-testid="button-close-modal"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <Form {...form}>

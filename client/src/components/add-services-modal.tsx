@@ -22,14 +22,14 @@ interface AddServicesModalProps {
 }
 
 const predefinedServices = [
-  { name: "Request for Bottle", type: "free", price: 0, description: "Request a water bottle for the table" },
+  { name: "Request for Bottle", type: "service", price: 0, description: "Request a water bottle for the table" },
   { name: "Request for Song", type: "paid", price: 200, description: "Request a specific song to be played" },
-  { name: "Table Cleaning", type: "free", price: 0, description: "Request additional table cleaning" },
-  { name: "Extra Napkins", type: "free", price: 0, description: "Request additional napkins" },
+  { name: "Table Cleaning", type: "service", price: 0, description: "Request additional table cleaning" },
+  { name: "Extra Napkins", type: "service", price: 0, description: "Request additional napkins" },
   { name: "Birthday Celebration", type: "paid", price: 500, description: "Special birthday celebration setup" },
   { name: "Photo Service", type: "paid", price: 300, description: "Professional photo service" },
-  { name: "Wi-Fi Password", type: "free", price: 0, description: "Request Wi-Fi password" },
-  { name: "High Chair", type: "free", price: 0, description: "Request high chair for children" },
+  { name: "Wi-Fi Password", type: "service", price: 0, description: "Request Wi-Fi password" },
+  { name: "High Chair", type: "service", price: 0, description: "Request high chair for children" },
 ];
 
 export default function AddServicesModal({ open, onOpenChange, restaurantId }: AddServicesModalProps) {
@@ -168,11 +168,11 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
                       <p className="font-medium text-gray-900">{service.name}</p>
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 text-xs rounded-full ${
-                          service.type === 'free' 
+                          service.type === 'service' 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {service.type === 'free' ? 'Free' : `$${(service.price / 100).toFixed(2)}`}
+                          {service.type === 'service' ? 'Service' : `$${(service.price / 100).toFixed(2)}`}
                         </span>
                       </div>
                     </div>

@@ -34,6 +34,14 @@ This is a full-stack restaurant and hotel management application built with Reac
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Technical preferences:
+- Use dummy/mock data instead of database connections
+- Remove API endpoints and render data directly from React components
+- UI styling: Order buttons should have gray background matching tables
+- Services: "Free Services" should be labeled as "Services"
+- Remove edit/delete buttons from free services cards
+- Table modals: Fix duplicate close buttons, edit modal should only allow editing seating capacity and assignee
+- Menu section: Menu and category buttons should have gray background, only down border, highlighted items have green border
 
 ## System Architecture
 

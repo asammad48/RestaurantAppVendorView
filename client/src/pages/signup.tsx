@@ -40,7 +40,7 @@ export default function Signup() {
         title: "Success",
         description: "Account created successfully!",
       });
-      setLocation("/dashboard");
+      setLocation("/entities");
     } catch (error: any) {
       toast({
         title: "Error",
