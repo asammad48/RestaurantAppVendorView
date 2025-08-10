@@ -80,53 +80,52 @@ export default function Appearance() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Color Grid */}
-              <div className="grid grid-cols-4 gap-3">
-                {colorPalettes.map((palette) => (
+              {/* Main Color Picker Area */}
+              <div className="relative">
+                <div className="h-64 w-full rounded-lg bg-gradient-to-br from-orange-400 via-orange-500 to-black relative overflow-hidden border-2 border-gray-200">
+                  {/* Color picker circle */}
                   <div 
-                    key={palette.id}
-                    className={`relative cursor-pointer group ${
-                      selectedColor === palette.color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
-                    }`}
-                    onClick={() => setSelectedColor(palette.color)}
-                    data-testid={`color-option-${palette.id}`}
+                    className="absolute w-5 h-5 border-2 border-white rounded-full shadow-lg cursor-pointer bg-white"
+                    style={{ 
+                      top: '30%', 
+                      right: '15%',
+                      transform: 'translate(50%, -50%)'
+                    }}
+                    data-testid="color-picker-handle"
                   >
-                    <div
-                      className="w-full h-16 rounded-lg border-2 border-gray-200 dark:border-gray-700 transition-all duration-200 group-hover:scale-105"
-                      style={{ backgroundColor: palette.color }}
-                    />
-                    <div className="mt-1 text-xs text-center text-gray-600 dark:text-gray-400">
-                      {palette.name}
-                    </div>
-                    {selectedColor === palette.color && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                          <div className="w-2 h-2 bg-gray-800 rounded-full" />
-                        </div>
-                      </div>
-                    )}
+                    <div className="w-3 h-3 border border-gray-400 rounded-full m-0.5" />
                   </div>
-                ))}
+                </div>
               </div>
               
-              {/* Color Info */}
-              <div className="pt-4 border-t">
-                <div className="flex items-center gap-4">
-                  <div 
-                    className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700"
-                    style={{ backgroundColor: selectedColor }}
-                    data-testid="color-preview-selected"
-                  />
-                  <div className="flex gap-4 text-sm">
-                    <div className="flex flex-col" data-testid="color-rgb-section">
-                      <span className="text-gray-500">RGB</span>
-                      <span className="font-mono">{selectedColor}</span>
+              {/* Color Strip */}
+              <div className="space-y-3">
+                <div className="h-6 w-full rounded-lg bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-cyan-500 via-blue-500 via-purple-500 to-pink-500 border border-gray-200"></div>
+                
+                {/* Color Values */}
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div className="space-y-1" data-testid="color-hex-section">
+                    <label className="text-gray-500 font-medium">Hex</label>
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="font-mono text-gray-800">#E89623</span>
                     </div>
-                    <div className="flex flex-col" data-testid="color-hex-section">
-                      <span className="text-gray-500">Hex</span>
-                      <span className="font-mono">
-                        {colorPalettes.find(p => p.color === selectedColor)?.hex || "#16a34a"}
-                      </span>
+                  </div>
+                  <div className="space-y-1" data-testid="color-rgb-r-section">
+                    <label className="text-gray-500 font-medium">R</label>
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="font-mono text-gray-800">232</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1" data-testid="color-rgb-g-section">
+                    <label className="text-gray-500 font-medium">G</label>
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="font-mono text-gray-800">150</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1" data-testid="color-rgb-b-section">
+                    <label className="text-gray-500 font-medium">B</label>
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="font-mono text-gray-800">35</span>
                     </div>
                   </div>
                 </div>
