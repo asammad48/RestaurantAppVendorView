@@ -8,21 +8,72 @@ import { Link } from "wouter";
 export default function Appearance() {
   const [selectedColor, setSelectedColor] = useState("rgb(22, 163, 74)"); // Green default
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [pickerPosition, setPickerPosition] = useState({ x: 85, y: 30 }); // Position as percentage
 
-  const colorPalettes = [
-    { id: 1, color: "rgb(22, 163, 74)", name: "Green", hex: "#16a34a" },
-    { id: 2, color: "rgb(59, 130, 246)", name: "Blue", hex: "#3b82f6" },
-    { id: 3, color: "rgb(239, 68, 68)", name: "Red", hex: "#ef4444" },
-    { id: 4, color: "rgb(139, 92, 246)", name: "Purple", hex: "#8b5cf6" },
-    { id: 5, color: "rgb(245, 158, 11)", name: "Orange", hex: "#f59e0b" },
-    { id: 6, color: "rgb(16, 185, 129)", name: "Emerald", hex: "#10b981" },
-    { id: 7, color: "rgb(236, 72, 153)", name: "Pink", hex: "#ec4899" },
-    { id: 8, color: "rgb(20, 184, 166)", name: "Teal", hex: "#14b8a6" },
-    { id: 9, color: "rgb(132, 204, 22)", name: "Lime", hex: "#84cc16" },
-    { id: 10, color: "rgb(168, 85, 247)", name: "Violet", hex: "#a855f7" },
-    { id: 11, color: "rgb(244, 63, 94)", name: "Rose", hex: "#f43f5e" },
-    { id: 12, color: "rgb(6, 182, 212)", name: "Cyan", hex: "#06b6d4" },
-  ];
+  // Extract RGB values from current color
+  const getRGBValues = (color: string) => {
+    const match = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (match) {
+      return {
+        r: parseInt(match[1]),
+        g: parseInt(match[2]),
+        b: parseInt(match[3])
+      };
+    }
+    return { r: 22, g: 163, b: 74 }; // Default green
+  };
+
+  const rgbToHex = (r: number, g: number, b: number) => {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  };
+
+  const currentRGB = getRGBValues(selectedColor);
+  const currentHex = rgbToHex(currentRGB.r, currentRGB.g, currentRGB.b);
+
+  // Handle color picker interactions
+  const handleColorStripClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const percentage = (x / rect.width) * 100;
+    
+    // Map percentage to color
+    let newColor;
+    if (percentage < 16.67) newColor = "rgb(239, 68, 68)"; // Red
+    else if (percentage < 33.33) newColor = "rgb(245, 158, 11)"; // Orange
+    else if (percentage < 50) newColor = "rgb(34, 197, 94)"; // Green
+    else if (percentage < 66.67) newColor = "rgb(6, 182, 212)"; // Cyan
+    else if (percentage < 83.33) newColor = "rgb(59, 130, 246)"; // Blue
+    else newColor = "rgb(168, 85, 247)"; // Purple
+    
+    setSelectedColor(newColor);
+  };
+
+  const handlePickerClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    
+    setPickerPosition({ x, y });
+    
+    // Generate color based on position (simplified)
+    const baseColors = [
+      { r: 232, g: 150, b: 35 }, // Orange
+      { r: 22, g: 163, b: 74 },  // Green
+      { r: 59, g: 130, b: 246 }  // Blue
+    ];
+    
+    // Simple interpolation based on position
+    const colorIndex = Math.floor((x / 100) * 2);
+    const baseColor = baseColors[colorIndex] || baseColors[0];
+    
+    // Adjust brightness based on Y position
+    const brightness = 1 - (y / 100) * 0.7;
+    const r = Math.round(baseColor.r * brightness);
+    const g = Math.round(baseColor.g * brightness);
+    const b = Math.round(baseColor.b * brightness);
+    
+    setSelectedColor(`rgb(${r}, ${g}, ${b})`);
+  };
 
   const previewItems = [
     {
@@ -82,14 +133,18 @@ export default function Appearance() {
             <CardContent className="space-y-4">
               {/* Main Color Picker Area */}
               <div className="relative">
-                <div className="h-64 w-full rounded-lg bg-gradient-to-br from-orange-400 via-orange-500 to-black relative overflow-hidden border-2 border-gray-200">
+                <div 
+                  className="h-64 w-full rounded-lg bg-gradient-to-br from-orange-400 via-orange-500 to-black relative overflow-hidden border-2 border-gray-200 cursor-crosshair"
+                  onClick={handlePickerClick}
+                  data-testid="color-picker-area"
+                >
                   {/* Color picker circle */}
                   <div 
                     className="absolute w-5 h-5 border-2 border-white rounded-full shadow-lg cursor-pointer bg-white"
                     style={{ 
-                      top: '30%', 
-                      right: '15%',
-                      transform: 'translate(50%, -50%)'
+                      top: `${pickerPosition.y}%`, 
+                      left: `${pickerPosition.x}%`,
+                      transform: 'translate(-50%, -50%)'
                     }}
                     data-testid="color-picker-handle"
                   >
@@ -100,32 +155,36 @@ export default function Appearance() {
               
               {/* Color Strip */}
               <div className="space-y-3">
-                <div className="h-6 w-full rounded-lg bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-cyan-500 via-blue-500 via-purple-500 to-pink-500 border border-gray-200"></div>
+                <div 
+                  className="h-6 w-full rounded-lg bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-cyan-500 via-blue-500 via-purple-500 to-pink-500 border border-gray-200 cursor-pointer"
+                  onClick={handleColorStripClick}
+                  data-testid="color-strip"
+                ></div>
                 
                 {/* Color Values */}
                 <div className="grid grid-cols-4 gap-4 text-sm">
                   <div className="space-y-1" data-testid="color-hex-section">
                     <label className="text-gray-500 font-medium">Hex</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                      <span className="font-mono text-gray-800">#E89623</span>
+                      <span className="font-mono text-gray-800">{currentHex}</span>
                     </div>
                   </div>
                   <div className="space-y-1" data-testid="color-rgb-r-section">
                     <label className="text-gray-500 font-medium">R</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                      <span className="font-mono text-gray-800">232</span>
+                      <span className="font-mono text-gray-800">{currentRGB.r}</span>
                     </div>
                   </div>
                   <div className="space-y-1" data-testid="color-rgb-g-section">
                     <label className="text-gray-500 font-medium">G</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                      <span className="font-mono text-gray-800">150</span>
+                      <span className="font-mono text-gray-800">{currentRGB.g}</span>
                     </div>
                   </div>
                   <div className="space-y-1" data-testid="color-rgb-b-section">
                     <label className="text-gray-500 font-medium">B</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                      <span className="font-mono text-gray-800">35</span>
+                      <span className="font-mono text-gray-800">{currentRGB.b}</span>
                     </div>
                   </div>
                 </div>
