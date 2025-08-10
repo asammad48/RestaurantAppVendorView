@@ -112,19 +112,9 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId }: AddD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6 bg-white rounded-lg max-h-[85vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <DialogTitle className="text-xl font-semibold text-gray-900">
-            Add Deal
-          </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <DialogTitle className="text-xl font-semibold text-gray-900 mb-6">
+          Add Deal
+        </DialogTitle>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

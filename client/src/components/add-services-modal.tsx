@@ -1,16 +1,10 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-// import { Textarea } from "@/components/ui/textarea";
-import { insertServiceSchema, type InsertService } from "@shared/schema";
+import { type InsertService } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,21 +28,10 @@ const predefinedServices = [
 
 export default function AddServicesModal({ open, onOpenChange, restaurantId }: AddServicesModalProps) {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [customServices, setCustomServices] = useState<InsertService[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const form = useForm<InsertService>({
-    resolver: zodResolver(insertServiceSchema),
-    defaultValues: {
-      name: "",
-      type: "free",
-      price: 0,
-      description: "",
-      restaurantId: restaurantId || undefined,
-      status: "active",
-    },
-  });
+
 
   const createServicesMutation = useMutation({
     mutationFn: async (services: InsertService[]) => {
@@ -61,11 +44,9 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       toast({
         title: "Success",
-        description: `${selectedServices.length + customServices.length} service(s) added successfully`,
+        description: `${selectedServices.length} service(s) added successfully`,
       });
       setSelectedServices([]);
-      setCustomServices([]);
-      form.reset();
       onOpenChange(false);
     },
     onError: (error: any) => {
@@ -85,21 +66,7 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
     );
   };
 
-  const addCustomService = (data: InsertService) => {
-    setCustomServices(prev => [...prev, data]);
-    form.reset({
-      name: "",
-      type: "free",
-      price: 0,
-      description: "",
-      restaurantId: restaurantId || undefined,
-      status: "active",
-    });
-  };
 
-  const removeCustomService = (index: number) => {
-    setCustomServices(prev => prev.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = () => {
     const servicesToAdd: InsertService[] = [];
@@ -117,9 +84,6 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
       }
     });
 
-    // Add custom services
-    servicesToAdd.push(...customServices);
-
     if (servicesToAdd.length === 0) {
       toast({
         title: "Warning",
@@ -135,19 +99,9 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl p-6 bg-white rounded-lg max-h-[85vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <DialogTitle className="text-xl font-semibold text-gray-900">
-            Add Services
-          </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <DialogTitle className="text-xl font-semibold text-gray-900 mb-6">
+          Add Services
+        </DialogTitle>
 
         <div className="space-y-6">
           {/* Predefined Services */}
@@ -183,147 +137,16 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
             </div>
           </div>
 
-          {/* Custom Service Form */}
-          <div className="border-t pt-6">
-            <Label className="text-lg font-medium text-gray-900 mb-4 block">
-              Add Custom Service
-            </Label>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(addCustomService)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Service Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter service name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Service Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="paid">Paid</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {form.watch('type') === 'paid' && (
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price ($)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            {...field}
-                            onChange={(e) => field.onChange(Math.round(parseFloat(e.target.value) * 100))}
-                            value={field.value ? (field.value / 100).toFixed(2) : ""}
-                            placeholder="0.00"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || ""}
-                          placeholder="Describe the service..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="w-full"
-                >
-                  Add to Custom Services
-                </Button>
-              </form>
-            </Form>
-          </div>
-
-          {/* Custom Services List */}
-          {customServices.length > 0 && (
-            <div className="border-t pt-6">
-              <Label className="text-lg font-medium text-gray-900 mb-4 block">
-                Custom Services to Add ({customServices.length})
-              </Label>
-              <div className="space-y-2">
-                {customServices.map((service, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{service.name}</p>
-                      <p className="text-sm text-gray-600">{service.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        service.type === 'free' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {service.type === 'free' ? 'Free' : `$${((service.price || 0) / 100).toFixed(2)}`}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCustomService(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Submit Button */}
           <div className="flex justify-center pt-6 border-t">
             <Button
               onClick={handleSubmit}
-              disabled={createServicesMutation.isPending || (selectedServices.length === 0 && customServices.length === 0)}
+              disabled={createServicesMutation.isPending || selectedServices.length === 0}
               className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
             >
-              {createServicesMutation.isPending ? "Adding..." : `Add ${selectedServices.length + customServices.length} Service(s)`}
+              {createServicesMutation.isPending ? "Adding..." : `Add ${selectedServices.length} Service(s)`}
             </Button>
           </div>
         </div>
