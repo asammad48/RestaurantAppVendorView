@@ -189,6 +189,16 @@ export default function Appearance() {
                   </div>
                 </div>
               </div>
+              
+              {/* Save Button */}
+              <div className="pt-4 border-t">
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  data-testid="button-save-appearance"
+                >
+                  Save Changes
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -227,11 +237,9 @@ export default function Appearance() {
                   background: `linear-gradient(to right, ${selectedColor}, ${selectedColor}dd)` 
                 }}
               >
-                <img 
-                  src="/api/placeholder/400/100" 
-                  alt="Restaurant" 
-                  className="w-full h-full object-cover"
-                />
+                <div className="w-full h-full bg-gradient-to-r from-gray-600 to-gray-700 flex items-center justify-center">
+                  <span className="text-white font-semibold">Restaurant Header</span>
+                </div>
                 <div className="absolute inset-0 bg-black/30" />
                 <div className="absolute bottom-2 left-4 text-white">
                   <div className="flex items-center gap-2">
@@ -250,12 +258,8 @@ export default function Appearance() {
                 <div className={`grid ${previewMode === "desktop" ? "grid-cols-4" : "grid-cols-2"} gap-3`}>
                   {previewItems.slice(0, 4).map((item) => (
                     <Card key={item.id} className="p-3" data-testid={`card-menu-item-${item.id}`}>
-                      <div className="aspect-square bg-gray-200 rounded-lg mb-2 relative overflow-hidden">
-                        <img 
-                          src="/api/placeholder/150/150" 
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="aspect-square bg-orange-400 rounded-lg mb-2 relative overflow-hidden flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">Pizza</span>
                       </div>
                       <div className="space-y-1">
                         <h4 className="text-sm font-medium line-clamp-1" data-testid={`text-item-name-${item.id}`}>
@@ -297,12 +301,8 @@ export default function Appearance() {
                 {previewItems.slice(0, 4).map((item) => (
                   <Card key={`list-${item.id}`} className="p-4" data-testid={`card-menu-list-item-${item.id}`}>
                     <div className="flex gap-4">
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
-                        <img 
-                          src="/api/placeholder/64/64" 
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="w-16 h-16 bg-orange-400 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">Pizza</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 dark:text-white" data-testid={`text-list-item-name-${item.id}`}>
