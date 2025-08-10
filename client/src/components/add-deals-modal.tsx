@@ -18,6 +18,7 @@ interface AddDealsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   restaurantId?: string;
+  editDeal?: any;
 }
 
 interface DealItem {
@@ -26,7 +27,7 @@ interface DealItem {
   quantity: number;
 }
 
-export default function AddDealsModal({ open, onOpenChange, restaurantId }: AddDealsModalProps) {
+export default function AddDealsModal({ open, onOpenChange, restaurantId, editDeal }: AddDealsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<DealItem[]>([]);
   const queryClient = useQueryClient();
@@ -39,7 +40,15 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId }: AddD
 
   const form = useForm<InsertDeal>({
     resolver: zodResolver(insertDealSchema),
-    defaultValues: {
+    defaultValues: editDeal ? {
+      name: editDeal.name || "",
+      items: editDeal.items || [],
+      dealPrice: editDeal.price ? parseFloat(editDeal.price.replace('$', '')) : 0,
+      image: editDeal.image || "",
+      expiryTime: editDeal.expiryTime || undefined,
+      restaurantId: restaurantId || undefined,
+      status: editDeal.status || "active",
+    } : {
       name: "",
       items: [],
       dealPrice: 0,
@@ -113,7 +122,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId }: AddD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6 bg-white rounded-lg max-h-[85vh] overflow-y-auto">
         <DialogTitle className="text-xl font-semibold text-gray-900 mb-6">
-          Add Deal
+          {editDeal ? 'Edit Deal' : 'Add Deal'}
         </DialogTitle>
 
         <Form {...form}>

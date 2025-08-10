@@ -160,6 +160,8 @@ export default function Orders() {
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
   const [showAddDealsModal, setShowAddDealsModal] = useState(false);
+  const [showEditDealsModal, setShowEditDealsModal] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<any>(null);
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditTableModal, setShowEditTableModal] = useState(false);
@@ -183,7 +185,7 @@ export default function Orders() {
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category', id: string, name: string} | null>(null);
+  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'deal' | 'table', id: string, name: string} | null>(null);
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -251,6 +253,21 @@ export default function Orders() {
         ? { ...table, seats: updates.seats, waiter: updates.waiter }
         : table
     ));
+  };
+
+  const handleDeleteTable = (table: TableData) => {
+    setDeleteItem({ type: 'table', id: table.id, name: `Table ${table.tableNumber}` });
+    setShowDeleteModal(true);
+  };
+
+  const handleEditDeal = (deal: any) => {
+    setSelectedDeal(deal);
+    setShowEditDealsModal(true);
+  };
+
+  const handleDeleteDeal = (deal: any) => {
+    setDeleteItem({ type: 'deal', id: deal.id, name: deal.name });
+    setShowDeleteModal(true);
   };
 
   // Filter menu items based on search
@@ -767,6 +784,7 @@ export default function Orders() {
                         variant="ghost" 
                         size="sm"
                         className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDeleteTable(table)}
                         data-testid={`button-delete-table-${table.id}`}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -862,11 +880,11 @@ export default function Orders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditDeal(deal)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Deal
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteDeal(deal)}>
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Delete Deal
                               </DropdownMenuItem>
@@ -1007,6 +1025,19 @@ export default function Orders() {
         restaurantId="1"
       />
 
+      {/* Edit Deals Modal */}
+      {selectedDeal && (
+        <AddDealsModal
+          open={showEditDealsModal}
+          onOpenChange={(open) => {
+            setShowEditDealsModal(open);
+            if (!open) setSelectedDeal(null);
+          }}
+          restaurantId="1"
+          editDeal={selectedDeal}
+        />
+      )}
+
       {/* Add Services Modal */}
       <AddServicesModal
         open={showAddServicesModal}
@@ -1055,12 +1086,22 @@ export default function Orders() {
             setShowDeleteModal(open);
             if (!open) setDeleteItem(null);
           }}
-          title={deleteItem.type === 'menu' ? 'Delete Menu Item' : 'Delete Category'}
+          title={
+            deleteItem.type === 'menu' ? 'Delete Menu Item' :
+            deleteItem.type === 'category' ? 'Delete Category' :
+            deleteItem.type === 'deal' ? 'Delete Deal' :
+            'Delete Table'
+          }
           description={`Are you sure you want to delete this ${deleteItem.type}?`}
           itemName={deleteItem.name}
           onConfirm={() => {
+            if (deleteItem.type === 'table') {
+              setTables(prev => prev.filter(table => table.id !== deleteItem.id));
+            }
             // Here you would typically call an API to delete the item
             console.log(`Deleting ${deleteItem.type}: ${deleteItem.name}`);
+            setShowDeleteModal(false);
+            setDeleteItem(null);
           }}
         />
       )}
