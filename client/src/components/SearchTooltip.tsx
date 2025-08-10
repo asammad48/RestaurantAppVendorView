@@ -44,7 +44,10 @@ export function SearchTooltip({ placeholder, onSearch, onClear, currentValue = '
     <TooltipProvider>
       <Tooltip open={isOpen} onOpenChange={setIsOpen}>
         <TooltipTrigger asChild>
-          <div className="flex items-center space-x-2 cursor-pointer group">
+          <div 
+            className="flex items-center space-x-2 cursor-pointer group"
+            onClick={() => setIsOpen(!isOpen)}
+          >
             <Search 
               className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
             />
