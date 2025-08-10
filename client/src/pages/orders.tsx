@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
 import EditTableModal from "@/components/edit-table-modal";
@@ -174,6 +175,7 @@ export default function Orders() {
   const [tables, setTables] = useState<TableData[]>(mockTables);
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [dealsSearchTerm, setDealsSearchTerm] = useState("");
   const [activeMenuTab, setActiveMenuTab] = useState("Menu");
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -261,6 +263,21 @@ export default function Orders() {
     category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
+  // Mock deals data
+  const mockDeals = [
+    { id: "1", name: "Family Feast Deal", items: "1 large Pizza, 6 wings, 2 Drinks, 1 Fries", status: "Active", price: "$10.62" },
+    { id: "2", name: "Lunch Special", items: "1 medium Pizza, 1 Drink", status: "Active", price: "$8.50" },
+    { id: "3", name: "Weekend Combo", items: "2 large Pizza, 4 wings, 2 Drinks", status: "Inactive", price: "$15.99" },
+    { id: "4", name: "Student Deal", items: "1 small Pizza, 1 Drink", status: "Active", price: "$6.25" },
+    { id: "5", name: "Party Pack", items: "3 large Pizza, 12 wings, 4 Drinks, 2 Fries", status: "Active", price: "$32.50" },
+  ];
+
+  // Filter deals based on search
+  const filteredDeals = mockDeals.filter(deal =>
+    deal.name.toLowerCase().includes(dealsSearchTerm.toLowerCase()) ||
+    deal.items.toLowerCase().includes(dealsSearchTerm.toLowerCase())
+  );
+
   // Format price from cents to rupees
   const formatPrice = (priceInCents: number) => {
     return `Rs${(priceInCents / 100).toFixed(0)}`;
@@ -300,8 +317,8 @@ export default function Orders() {
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6">
-          {/* Orders Filter Tabs */}
-          <div className="flex items-center justify-between">
+          {/* Orders Filter Tabs and Search */}
+          <div className="flex items-center justify-between gap-4">
             <Tabs value={orderFilter} onValueChange={setOrderFilter}>
               <TabsList data-testid="order-filter-tabs">
                 <TabsTrigger value="All Orders">All Orders</TabsTrigger>
@@ -310,8 +327,18 @@ export default function Orders() {
                 <TabsTrigger value="Cancelled">Cancelled</TabsTrigger>
               </TabsList>
             </Tabs>
-
-
+            
+            {/* Orders Search Input */}
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search orders, table..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-orders"
+              />
+            </div>
           </div>
 
           {/* Orders Table */}
@@ -320,10 +347,19 @@ export default function Orders() {
               <TableHeader>
                 <TableRow>
                   <TableHead>
-                    <div className="flex items-center space-x-2 cursor-pointer group">
-                      <span>Orders</span>
-                      <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by order number" />
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-2 cursor-pointer group">
+                            <span>Orders</span>
+                            <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Search by order number or table</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableHead>
                   <TableHead>Date <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Table No <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -403,8 +439,8 @@ export default function Orders() {
         </TabsContent>
 
         <TabsContent value="menu" className="space-y-6">
-          {/* Menu Filter Tabs */}
-          <div className="flex items-center justify-between">
+          {/* Menu Filter Tabs and Search */}
+          <div className="flex items-center justify-between gap-4">
             <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab}>
               <TabsList className="bg-transparent border-b border-gray-200 rounded-none" data-testid="menu-filter-tabs">
                 <TabsTrigger 
@@ -423,6 +459,18 @@ export default function Orders() {
             </Tabs>
 
             <div className="flex items-center space-x-4">
+              {/* Search Input */}
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder={activeMenuTab === "Menu" ? "Search menu items..." : "Search categories..."}
+                  value={activeMenuTab === "Menu" ? menuSearchTerm : categorySearchTerm}
+                  onChange={(e) => activeMenuTab === "Menu" ? setMenuSearchTerm(e.target.value) : setCategorySearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid={`input-search-${activeMenuTab.toLowerCase()}`}
+                />
+              </div>
+              
               {activeMenuTab === "Menu" ? (
                 <>
                   <Button 
@@ -463,10 +511,19 @@ export default function Orders() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <div className="flex items-center space-x-2 cursor-pointer group">
-                        <span>Item Name</span>
-                        <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by item name" />
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2 cursor-pointer group">
+                              <span>Item Name</span>
+                              <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Search by item name or category</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableHead>
                     <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -553,10 +610,19 @@ export default function Orders() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <div className="flex items-center space-x-2 cursor-pointer group">
-                        <span>Category Name</span>
-                        <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by category name" />
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2 cursor-pointer group">
+                              <span>Category Name</span>
+                              <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Search by category name</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -751,7 +817,19 @@ export default function Orders() {
         <TabsContent value="deals">
           {/* Deals Tab Content */}
           <div className="space-y-4">
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-between gap-4">
+              {/* Deals Search Input */}
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search deals..."
+                  value={dealsSearchTerm}
+                  onChange={(e) => setDealsSearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search-deals"
+                />
+              </div>
+              
               <div className="flex items-center space-x-2">
                 <Button
                   className="bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -777,10 +855,19 @@ export default function Orders() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <div className="flex items-center space-x-2 cursor-pointer group">
-                        <span>Deal Name</span>
-                        <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by deal name" />
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2 cursor-pointer group">
+                              <span>Deal Name</span>
+                              <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Search by deal name</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableHead>
                     <TableHead>Items <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -789,71 +876,57 @@ export default function Orders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Family Feast Deal</TableCell>
-                    <TableCell>
-                      <div className="text-sm text-gray-600">
-                        1 large Pizza, 6 wings, 2 Drinks, 1 Fries
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">$10.62</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Deal
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Deal
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                  {/* Repeat for more mock deals */}
-                  {[...Array(4)].map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">Family Feast Deal</TableCell>
-                      <TableCell>
-                        <div className="text-sm text-gray-600">
-                          1 large Pizza, 6 wings, 2 Drinks, 1 Fries
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">$10.62</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Deal
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete Deal
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                  {filteredDeals.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        No deals found
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredDeals.map((deal) => (
+                      <TableRow key={deal.id} data-testid={`deal-row-${deal.id}`}>
+                        <TableCell className="font-medium" data-testid={`deal-name-${deal.id}`}>
+                          {deal.name}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-gray-600" data-testid={`deal-items-${deal.id}`}>
+                            {deal.items}
+                          </div>
+                        </TableCell>
+                        <TableCell data-testid={`deal-status-${deal.id}`}>
+                          <Badge className={deal.status === "Active" ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}>
+                            {deal.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium" data-testid={`deal-price-${deal.id}`}>
+                          {deal.price}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                data-testid={`button-deal-options-${deal.id}`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Deal
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Deal
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
               
@@ -996,6 +1069,7 @@ export default function Orders() {
       <PricingPlansModal
         open={showPricingModal}
         onOpenChange={setShowPricingModal}
+        onPlanSelect={() => setShowPricingModal(false)}
       />
 
       {/* Edit Menu Modal - uses same component as Add Menu */}
