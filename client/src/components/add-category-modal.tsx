@@ -21,16 +21,18 @@ interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   restaurantId?: string;
+  editCategory?: any; // Category type for edit mode
 }
 
-export default function AddCategoryModal({ isOpen, onClose, restaurantId }: AddCategoryModalProps) {
+export default function AddCategoryModal({ isOpen, onClose, restaurantId, editCategory }: AddCategoryModalProps) {
+  const isEditMode = !!editCategory;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const form = useForm<AddCategoryFormData>({
     resolver: zodResolver(addCategorySchema),
     defaultValues: {
-      name: "",
+      name: editCategory?.name || "",
       restaurantId: restaurantId || "",
     },
   });
@@ -75,7 +77,7 @@ export default function AddCategoryModal({ isOpen, onClose, restaurantId }: AddC
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md" data-testid="modal-add-category">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-center">Add Category</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-center">{isEditMode ? 'Edit Category' : 'Add Category'}</DialogTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -110,7 +112,10 @@ export default function AddCategoryModal({ isOpen, onClose, restaurantId }: AddC
               disabled={createCategoryMutation.isPending}
               data-testid="button-add-category"
             >
-              {createCategoryMutation.isPending ? "Adding..." : "Add Category"}
+              {createCategoryMutation.isPending 
+                ? (isEditMode ? "Updating..." : "Adding...") 
+                : (isEditMode ? "Update Category" : "Add Category")
+              }
             </Button>
           </div>
         </form>

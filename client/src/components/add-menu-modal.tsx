@@ -43,9 +43,11 @@ interface AddMenuModalProps {
   isOpen: boolean;
   onClose: () => void;
   restaurantId?: string;
+  editMenuItem?: any; // MenuItem type for edit mode
 }
 
-export default function AddMenuModal({ isOpen, onClose, restaurantId }: AddMenuModalProps) {
+export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuItem }: AddMenuModalProps) {
+  const isEditMode = !!editMenuItem;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [image, setImage] = useState<string>("");
@@ -56,10 +58,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId }: AddMenuM
   const form = useForm<AddMenuFormData>({
     resolver: zodResolver(addMenuSchema),
     defaultValues: {
-      name: "",
-      category: "",
-      description: "",
-      price: 0,
+      name: editMenuItem?.name || "",
+      category: editMenuItem?.category || "",
+      description: editMenuItem?.description || "",
+      price: editMenuItem?.price ? editMenuItem.price / 100 : 0, // Convert from cents
       restaurantId: restaurantId || "",
     },
   });
@@ -175,7 +177,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId }: AddMenuM
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="modal-add-menu">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Add Menu</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{isEditMode ? 'Edit Menu Item' : 'Add Menu'}</DialogTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -414,7 +416,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId }: AddMenuM
               disabled={createMenuItemMutation.isPending}
               data-testid="button-add-menu-item"
             >
-              {createMenuItemMutation.isPending ? "Adding..." : "Add"}
+              {createMenuItemMutation.isPending 
+                ? (isEditMode ? "Updating..." : "Adding...") 
+                : (isEditMode ? "Update Menu Item" : "Add")
+              }
             </Button>
           </div>
         </form>

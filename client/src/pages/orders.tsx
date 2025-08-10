@@ -18,6 +18,7 @@ import ApplyDiscountModal from "@/components/apply-discount-modal";
 import AddDealsModal from "@/components/add-deals-modal";
 import AddServicesModal from "@/components/add-services-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
+import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { useLocation } from "wouter";
 import type { MenuItem, Category, Deal, Service } from "@shared/schema";
 
@@ -174,6 +175,12 @@ export default function Orders() {
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [activeMenuTab, setActiveMenuTab] = useState("Menu");
+  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [showEditMenuModal, setShowEditMenuModal] = useState(false);
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category', id: string, name: string} | null>(null);
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -544,11 +551,20 @@ export default function Orders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedMenuItem(item);
+                                setShowEditMenuModal(true);
+                              }}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Menu Item
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => {
+                                  setDeleteItem({type: 'menu', id: item.id, name: item.name});
+                                  setShowDeleteModal(true);
+                                }}
+                              >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Delete Menu Item
                               </DropdownMenuItem>
@@ -600,11 +616,20 @@ export default function Orders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedCategory(category);
+                                setShowEditCategoryModal(true);
+                              }}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Category
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => {
+                                  setDeleteItem({type: 'category', id: category.id, name: category.name});
+                                  setShowDeleteModal(true);
+                                }}
+                              >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Delete Category
                               </DropdownMenuItem>
@@ -998,6 +1023,50 @@ export default function Orders() {
         open={showPricingModal}
         onOpenChange={setShowPricingModal}
       />
+
+      {/* Edit Menu Modal - uses same component as Add Menu */}
+      {selectedMenuItem && (
+        <AddMenuModal
+          isOpen={showEditMenuModal}
+          onClose={() => {
+            setShowEditMenuModal(false);
+            setSelectedMenuItem(null);
+          }}
+          restaurantId="1"
+          editMenuItem={selectedMenuItem}
+        />
+      )}
+
+      {/* Edit Category Modal - uses same component as Add Category */}
+      {selectedCategory && (
+        <AddCategoryModal
+          isOpen={showEditCategoryModal}
+          onClose={() => {
+            setShowEditCategoryModal(false);
+            setSelectedCategory(null);
+          }}
+          restaurantId="1"
+          editCategory={selectedCategory}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteItem && (
+        <SimpleDeleteModal
+          open={showDeleteModal}
+          onOpenChange={(open) => {
+            setShowDeleteModal(open);
+            if (!open) setDeleteItem(null);
+          }}
+          title={deleteItem.type === 'menu' ? 'Delete Menu Item' : 'Delete Category'}
+          description={`Are you sure you want to delete this ${deleteItem.type}?`}
+          itemName={deleteItem.name}
+          onConfirm={() => {
+            // Here you would typically call an API to delete the item
+            console.log(`Deleting ${deleteItem.type}: ${deleteItem.name}`);
+          }}
+        />
+      )}
     </div>
   );
 }
