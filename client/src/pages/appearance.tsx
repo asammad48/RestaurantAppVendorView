@@ -1,23 +1,27 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Palette, Edit } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Appearance() {
-  const [selectedTheme, setSelectedTheme] = useState<"light" | "dark">("light");
-  const [selectedColor, setSelectedColor] = useState("#E89623");
+  const [selectedColor, setSelectedColor] = useState("rgb(22, 163, 74)"); // Green default
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
 
   const colorPalettes = [
-    { id: 1, primary: "#4ade80", secondary: "#000000", name: "Green & Black" },
-    { id: 2, primary: "#3b82f6", secondary: "#1e40af", name: "Blue Gradient" },
-    { id: 3, primary: "#ef4444", secondary: "#dc2626", name: "Red Gradient" },
-    { id: 4, primary: "#8b5cf6", secondary: "#7c3aed", name: "Purple Gradient" },
-    { id: 5, primary: "#f59e0b", secondary: "#d97706", name: "Orange Gradient" },
-    { id: 6, primary: "#10b981", secondary: "#059669", name: "Emerald Gradient" },
+    { id: 1, color: "rgb(22, 163, 74)", name: "Green", hex: "#16a34a" },
+    { id: 2, color: "rgb(59, 130, 246)", name: "Blue", hex: "#3b82f6" },
+    { id: 3, color: "rgb(239, 68, 68)", name: "Red", hex: "#ef4444" },
+    { id: 4, color: "rgb(139, 92, 246)", name: "Purple", hex: "#8b5cf6" },
+    { id: 5, color: "rgb(245, 158, 11)", name: "Orange", hex: "#f59e0b" },
+    { id: 6, color: "rgb(16, 185, 129)", name: "Emerald", hex: "#10b981" },
+    { id: 7, color: "rgb(236, 72, 153)", name: "Pink", hex: "#ec4899" },
+    { id: 8, color: "rgb(20, 184, 166)", name: "Teal", hex: "#14b8a6" },
+    { id: 9, color: "rgb(132, 204, 22)", name: "Lime", hex: "#84cc16" },
+    { id: 10, color: "rgb(168, 85, 247)", name: "Violet", hex: "#a855f7" },
+    { id: 11, color: "rgb(244, 63, 94)", name: "Rose", hex: "#f43f5e" },
+    { id: 12, color: "rgb(6, 182, 212)", name: "Cyan", hex: "#06b6d4" },
   ];
 
   const previewItems = [
@@ -66,37 +70,8 @@ export default function Appearance() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Left Panel - Appearance Settings */}
+        {/* Left Panel - Color Palette */}
         <div className="space-y-6">
-          {/* Theme Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold" data-testid="text-appearance-title">
-                Appearance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Button
-                  variant={selectedTheme === "light" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setSelectedTheme("light")}
-                  data-testid="button-theme-light"
-                >
-                  Light
-                </Button>
-                <Button
-                  variant={selectedTheme === "dark" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setSelectedTheme("dark")}
-                  data-testid="button-theme-dark"
-                >
-                  Dark
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Color Palette */}
           <Card>
             <CardHeader>
@@ -105,62 +80,54 @@ export default function Appearance() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Selected Colors Display */}
-              <div className="flex gap-3">
-                {colorPalettes.find(p => p.primary === selectedColor) && (
-                  <>
-                    <div className="flex flex-col items-center gap-2">
-                      <div
-                        className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700"
-                        style={{ backgroundColor: colorPalettes.find(p => p.primary === selectedColor)?.primary }}
-                        data-testid="color-preview-primary"
-                      />
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div
-                        className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center"
-                        style={{ backgroundColor: colorPalettes.find(p => p.primary === selectedColor)?.secondary }}
-                        data-testid="color-preview-secondary"
-                      >
-                        <Edit className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Color Picker Area */}
-              <div className="relative">
-                <div className="h-48 w-full rounded-lg bg-gradient-to-br from-orange-400 via-orange-500 to-black relative overflow-hidden border">
-                  {/* Color picker circle */}
+              {/* Color Grid */}
+              <div className="grid grid-cols-4 gap-3">
+                {colorPalettes.map((palette) => (
                   <div 
-                    className="absolute w-4 h-4 border-2 border-white rounded-full shadow-lg cursor-pointer"
-                    style={{ 
-                      top: '45%', 
-                      left: '25%',
-                      transform: 'translate(-50%, -50%)'
-                    }}
-                    data-testid="color-picker-handle"
+                    key={palette.id}
+                    className={`relative cursor-pointer group ${
+                      selectedColor === palette.color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
+                    }`}
+                    onClick={() => setSelectedColor(palette.color)}
+                    data-testid={`color-option-${palette.id}`}
+                  >
+                    <div
+                      className="w-full h-16 rounded-lg border-2 border-gray-200 dark:border-gray-700 transition-all duration-200 group-hover:scale-105"
+                      style={{ backgroundColor: palette.color }}
+                    />
+                    <div className="mt-1 text-xs text-center text-gray-600 dark:text-gray-400">
+                      {palette.name}
+                    </div>
+                    {selectedColor === palette.color && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
+                          <div className="w-2 h-2 bg-gray-800 rounded-full" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Color Info */}
+              <div className="pt-4 border-t">
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700"
+                    style={{ backgroundColor: selectedColor }}
+                    data-testid="color-preview-selected"
                   />
-                </div>
-                
-                {/* Color values */}
-                <div className="flex gap-4 mt-4 text-sm">
-                  <div className="flex flex-col" data-testid="color-hex-section">
-                    <span className="text-gray-500">Hex</span>
-                    <span className="font-mono">#E89623</span>
-                  </div>
-                  <div className="flex flex-col" data-testid="color-rgb-section">
-                    <span className="text-gray-500">R</span>
-                    <span>232</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500">G</span>
-                    <span>150</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500">B</span>
-                    <span>35</span>
+                  <div className="flex gap-4 text-sm">
+                    <div className="flex flex-col" data-testid="color-rgb-section">
+                      <span className="text-gray-500">RGB</span>
+                      <span className="font-mono">{selectedColor}</span>
+                    </div>
+                    <div className="flex flex-col" data-testid="color-hex-section">
+                      <span className="text-gray-500">Hex</span>
+                      <span className="font-mono">
+                        {colorPalettes.find(p => p.color === selectedColor)?.hex || "#16a34a"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -196,7 +163,12 @@ export default function Appearance() {
           <CardContent>
             <div className={`${previewMode === "mobile" ? "max-w-sm mx-auto" : ""} space-y-4`}>
               {/* Restaurant Header Preview */}
-              <div className="relative h-24 rounded-lg overflow-hidden bg-gradient-to-r from-green-600 to-green-700">
+              <div 
+                className="relative h-24 rounded-lg overflow-hidden"
+                style={{ 
+                  background: `linear-gradient(to right, ${selectedColor}, ${selectedColor}dd)` 
+                }}
+              >
                 <img 
                   src="/api/placeholder/400/100" 
                   alt="Restaurant" 
@@ -236,7 +208,11 @@ export default function Appearance() {
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
-                            <span className="text-sm font-semibold text-green-600" data-testid={`text-item-price-${item.id}`}>
+                            <span 
+                              className="text-sm font-semibold" 
+                              style={{ color: selectedColor }}
+                              data-testid={`text-item-price-${item.id}`}
+                            >
                               {item.price}
                             </span>
                             <span className="text-xs text-gray-400 line-through" data-testid={`text-item-original-price-${item.id}`}>
@@ -246,7 +222,8 @@ export default function Appearance() {
                         </div>
                         <Button 
                           size="sm" 
-                          className="w-full bg-green-600 hover:bg-green-700 text-white"
+                          className="w-full text-white hover:opacity-90"
+                          style={{ backgroundColor: selectedColor }}
                           data-testid={`button-add-item-${item.id}`}
                         >
                           Add to Cart
@@ -278,7 +255,11 @@ export default function Appearance() {
                         </p>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-green-600" data-testid={`text-list-item-price-${item.id}`}>
+                            <span 
+                              className="font-semibold"
+                              style={{ color: selectedColor }}
+                              data-testid={`text-list-item-price-${item.id}`}
+                            >
                               {item.price}
                             </span>
                             <span className="text-sm text-gray-400 line-through" data-testid={`text-list-item-original-price-${item.id}`}>
@@ -287,7 +268,8 @@ export default function Appearance() {
                           </div>
                           <Button 
                             size="sm" 
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="text-white hover:opacity-90"
+                            style={{ backgroundColor: selectedColor }}
                             data-testid={`button-add-list-item-${item.id}`}
                           >
                             Add to Cart
