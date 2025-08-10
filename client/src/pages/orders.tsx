@@ -20,6 +20,7 @@ import AddDealsModal from "@/components/add-deals-modal";
 import AddServicesModal from "@/components/add-services-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
+import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import type { MenuItem, Category, Deal, Service } from "@shared/schema";
 
@@ -335,27 +336,15 @@ export default function Orders() {
               <TableHeader>
                 <TableRow>
                   <TableHead>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-2 cursor-pointer group">
-                            <span>Orders</span>
-                            <Search 
-                              className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
-                              onClick={() => {
-                                const searchValue = prompt("Enter search term for orders (order number or table):");
-                                if (searchValue !== null) {
-                                  setSearchTerm(searchValue);
-                                }
-                              }}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Click to search by order number or table</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <div className="flex items-center space-x-2">
+                      <span>Orders</span>
+                      <SearchTooltip
+                        placeholder="Search orders, table..."
+                        onSearch={setSearchTerm}
+                        onClear={() => setSearchTerm('')}
+                        currentValue={searchTerm}
+                      />
+                    </div>
                   </TableHead>
                   <TableHead>Date <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Table No <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -495,27 +484,15 @@ export default function Orders() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center space-x-2 cursor-pointer group">
-                              <span>Item Name</span>
-                              <Search 
-                                className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
-                                onClick={() => {
-                                  const searchValue = prompt("Enter search term for menu items (name or category):");
-                                  if (searchValue !== null) {
-                                    setMenuSearchTerm(searchValue);
-                                  }
-                                }}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Click to search by item name or category</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="flex items-center space-x-2">
+                        <span>Item Name</span>
+                        <SearchTooltip
+                          placeholder="Search menu items..."
+                          onSearch={setMenuSearchTerm}
+                          onClear={() => setMenuSearchTerm('')}
+                          currentValue={menuSearchTerm}
+                        />
+                      </div>
                     </TableHead>
                     <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -602,27 +579,15 @@ export default function Orders() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center space-x-2 cursor-pointer group">
-                              <span>Category Name</span>
-                              <Search 
-                                className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
-                                onClick={() => {
-                                  const searchValue = prompt("Enter search term for categories:");
-                                  if (searchValue !== null) {
-                                    setCategorySearchTerm(searchValue);
-                                  }
-                                }}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Click to search by category name</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="flex items-center space-x-2">
+                        <span>Category Name</span>
+                        <SearchTooltip
+                          placeholder="Search categories..."
+                          onSearch={setCategorySearchTerm}
+                          onClear={() => setCategorySearchTerm('')}
+                          currentValue={categorySearchTerm}
+                        />
+                      </div>
                     </TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -843,27 +808,15 @@ export default function Orders() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center space-x-2 cursor-pointer group">
-                              <span>Deal Name</span>
-                              <Search 
-                                className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
-                                onClick={() => {
-                                  const searchValue = prompt("Enter search term for deals (name or items):");
-                                  if (searchValue !== null) {
-                                    setDealsSearchTerm(searchValue);
-                                  }
-                                }}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Click to search by deal name or items</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="flex items-center space-x-2">
+                        <span>Deal Name</span>
+                        <SearchTooltip
+                          placeholder="Search deals..."
+                          onSearch={setDealsSearchTerm}
+                          onClear={() => setDealsSearchTerm('')}
+                          currentValue={dealsSearchTerm}
+                        />
+                      </div>
                     </TableHead>
                     <TableHead>Items <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
