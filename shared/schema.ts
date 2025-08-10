@@ -172,6 +172,101 @@ export const hourlyOrders = pgTable("hourly_orders", {
   date: text("date").notNull(), // YYYY-MM-DD format
 });
 
+// Enhanced Analytics Tables
+export const salesAnalytics = pgTable("sales_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull(),
+  branchId: varchar("branch_id").references(() => branches.id),
+  orderType: text("order_type").notNull(), // dine-in, takeaway, delivery
+  totalRevenue: integer("total_revenue").notNull(),
+  totalOrders: integer("total_orders").notNull(),
+  averageOrderValue: integer("average_order_value").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const menuPerformance = pgTable("menu_performance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  itemId: varchar("item_id").references(() => menuItems.id),
+  itemName: text("item_name").notNull(),
+  category: text("category").notNull(),
+  totalSales: integer("total_sales").notNull(),
+  orderCount: integer("order_count").notNull(),
+  profitMargin: integer("profit_margin").notNull(), // percentage * 100
+  seasonalRating: integer("seasonal_rating").default(0), // 0-100
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const customerAnalytics = pgTable("customer_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: text("customer_id").notNull(),
+  customerType: text("customer_type").notNull(), // repeat, new
+  totalSpend: integer("total_spend").notNull(),
+  visitCount: integer("visit_count").notNull(),
+  loyaltyPoints: integer("loyalty_points").default(0),
+  lastVisit: timestamp("last_visit"),
+  averageRating: integer("average_rating").default(0), // rating * 100
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const operationalAnalytics = pgTable("operational_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tableId: text("table_id").notNull(),
+  turnoverRate: integer("turnover_rate").notNull(), // times per day * 100
+  averageServiceTime: integer("average_service_time").notNull(), // minutes
+  orderType: text("order_type").notNull(), // dine-in, takeaway, delivery
+  performanceScore: integer("performance_score").notNull(), // 0-100
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const inventoryAnalytics = pgTable("inventory_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ingredientName: text("ingredient_name").notNull(),
+  usageAmount: integer("usage_amount").notNull(),
+  wastageAmount: integer("wastage_amount").default(0),
+  stockLevel: integer("stock_level").notNull(),
+  costPerUnit: integer("cost_per_unit").notNull(), // price in cents
+  reorderLevel: integer("reorder_level").notNull(),
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const staffPerformance = pgTable("staff_performance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => users.id),
+  staffName: text("staff_name").notNull(),
+  role: text("role").notNull(),
+  salesAmount: integer("sales_amount").notNull(),
+  ordersHandled: integer("orders_handled").notNull(),
+  averageHandlingTime: integer("average_handling_time").notNull(), // minutes
+  upsellCount: integer("upsell_count").default(0),
+  customerRating: integer("customer_rating").default(0), // rating * 100
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const revenueBreakdown = pgTable("revenue_breakdown", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull(),
+  subcategory: text("subcategory"),
+  amount: integer("amount").notNull(),
+  percentage: integer("percentage").notNull(), // percentage * 100
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
+export const orderVolumeHeatmap = pgTable("order_volume_heatmap", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  hour: integer("hour").notNull(), // 0-23
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6 (Sunday-Saturday)
+  orderCount: integer("order_count").notNull(),
+  intensity: integer("intensity").notNull(), // 0-100
+  date: text("date").notNull(),
+  restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -220,6 +315,48 @@ export const insertTicketSchema = createInsertSchema(tickets).omit({
   id: true,
   createdAt: true,
 });
+
+export const insertSalesAnalyticsSchema = createInsertSchema(salesAnalytics).omit({
+  id: true,
+});
+
+export const insertMenuPerformanceSchema = createInsertSchema(menuPerformance).omit({
+  id: true,
+});
+
+export const insertCustomerAnalyticsSchema = createInsertSchema(customerAnalytics).omit({
+  id: true,
+});
+
+export const insertOperationalAnalyticsSchema = createInsertSchema(operationalAnalytics).omit({
+  id: true,
+});
+
+export const insertInventoryAnalyticsSchema = createInsertSchema(inventoryAnalytics).omit({
+  id: true,
+});
+
+export const insertStaffPerformanceSchema = createInsertSchema(staffPerformance).omit({
+  id: true,
+});
+
+export const insertRevenueBreakdownSchema = createInsertSchema(revenueBreakdown).omit({
+  id: true,
+});
+
+export const insertOrderVolumeHeatmapSchema = createInsertSchema(orderVolumeHeatmap).omit({
+  id: true,
+});
+
+// Type exports for enhanced analytics
+export type SalesAnalytics = typeof salesAnalytics.$inferSelect;
+export type MenuPerformance = typeof menuPerformance.$inferSelect;
+export type CustomerAnalytics = typeof customerAnalytics.$inferSelect;
+export type OperationalAnalytics = typeof operationalAnalytics.$inferSelect;
+export type InventoryAnalytics = typeof inventoryAnalytics.$inferSelect;
+export type StaffPerformance = typeof staffPerformance.$inferSelect;
+export type RevenueBreakdown = typeof revenueBreakdown.$inferSelect;
+export type OrderVolumeHeatmap = typeof orderVolumeHeatmap.$inferSelect;
 
 export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
   id: true,
