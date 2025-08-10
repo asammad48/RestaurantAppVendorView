@@ -317,8 +317,8 @@ export default function Orders() {
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6">
-          {/* Orders Filter Tabs and Search */}
-          <div className="flex items-center justify-between gap-4">
+          {/* Orders Filter Tabs */}
+          <div className="flex items-center justify-between">
             <Tabs value={orderFilter} onValueChange={setOrderFilter}>
               <TabsList data-testid="order-filter-tabs">
                 <TabsTrigger value="All Orders">All Orders</TabsTrigger>
@@ -327,18 +327,6 @@ export default function Orders() {
                 <TabsTrigger value="Cancelled">Cancelled</TabsTrigger>
               </TabsList>
             </Tabs>
-            
-            {/* Orders Search Input */}
-            <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search orders, table..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                data-testid="input-search-orders"
-              />
-            </div>
           </div>
 
           {/* Orders Table */}
@@ -352,11 +340,19 @@ export default function Orders() {
                         <TooltipTrigger asChild>
                           <div className="flex items-center space-x-2 cursor-pointer group">
                             <span>Orders</span>
-                            <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                            <Search 
+                              className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
+                              onClick={() => {
+                                const searchValue = prompt("Enter search term for orders (order number or table):");
+                                if (searchValue !== null) {
+                                  setSearchTerm(searchValue);
+                                }
+                              }}
+                            />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Search by order number or table</p>
+                          <p>Click to search by order number or table</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -439,8 +435,8 @@ export default function Orders() {
         </TabsContent>
 
         <TabsContent value="menu" className="space-y-6">
-          {/* Menu Filter Tabs and Search */}
-          <div className="flex items-center justify-between gap-4">
+          {/* Menu Filter Tabs */}
+          <div className="flex items-center justify-between">
             <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab}>
               <TabsList className="bg-transparent border-b border-gray-200 rounded-none" data-testid="menu-filter-tabs">
                 <TabsTrigger 
@@ -459,18 +455,6 @@ export default function Orders() {
             </Tabs>
 
             <div className="flex items-center space-x-4">
-              {/* Search Input */}
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={activeMenuTab === "Menu" ? "Search menu items..." : "Search categories..."}
-                  value={activeMenuTab === "Menu" ? menuSearchTerm : categorySearchTerm}
-                  onChange={(e) => activeMenuTab === "Menu" ? setMenuSearchTerm(e.target.value) : setCategorySearchTerm(e.target.value)}
-                  className="pl-10"
-                  data-testid={`input-search-${activeMenuTab.toLowerCase()}`}
-                />
-              </div>
-              
               {activeMenuTab === "Menu" ? (
                 <>
                   <Button 
@@ -516,11 +500,19 @@ export default function Orders() {
                           <TooltipTrigger asChild>
                             <div className="flex items-center space-x-2 cursor-pointer group">
                               <span>Item Name</span>
-                              <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                              <Search 
+                                className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
+                                onClick={() => {
+                                  const searchValue = prompt("Enter search term for menu items (name or category):");
+                                  if (searchValue !== null) {
+                                    setMenuSearchTerm(searchValue);
+                                  }
+                                }}
+                              />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Search by item name or category</p>
+                            <p>Click to search by item name or category</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -615,11 +607,19 @@ export default function Orders() {
                           <TooltipTrigger asChild>
                             <div className="flex items-center space-x-2 cursor-pointer group">
                               <span>Category Name</span>
-                              <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                              <Search 
+                                className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
+                                onClick={() => {
+                                  const searchValue = prompt("Enter search term for categories:");
+                                  if (searchValue !== null) {
+                                    setCategorySearchTerm(searchValue);
+                                  }
+                                }}
+                              />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Search by category name</p>
+                            <p>Click to search by category name</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -817,19 +817,7 @@ export default function Orders() {
         <TabsContent value="deals">
           {/* Deals Tab Content */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              {/* Deals Search Input */}
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search deals..."
-                  value={dealsSearchTerm}
-                  onChange={(e) => setDealsSearchTerm(e.target.value)}
-                  className="pl-10"
-                  data-testid="input-search-deals"
-                />
-              </div>
-              
+            <div className="flex items-center justify-end">
               <div className="flex items-center space-x-2">
                 <Button
                   className="bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -860,11 +848,19 @@ export default function Orders() {
                           <TooltipTrigger asChild>
                             <div className="flex items-center space-x-2 cursor-pointer group">
                               <span>Deal Name</span>
-                              <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                              <Search 
+                                className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" 
+                                onClick={() => {
+                                  const searchValue = prompt("Enter search term for deals (name or items):");
+                                  if (searchValue !== null) {
+                                    setDealsSearchTerm(searchValue);
+                                  }
+                                }}
+                              />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Search by deal name</p>
+                            <p>Click to search by deal name or items</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
