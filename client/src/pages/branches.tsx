@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Search, ArrowLeft } from "lucide-react";
+import { Plus, Search, ArrowLeft, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -116,14 +116,25 @@ export default function Branches() {
             </p>
           </div>
         </div>
-        <Button 
-          onClick={handleAddBranch}
-          className="w-full md:w-auto"
-          data-testid="button-add-branch"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Branch
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => navigate("/appearance")}
+            variant="outline"
+            className="w-full md:w-auto"
+            data-testid="button-appearance"
+          >
+            <Palette className="w-4 h-4 mr-2" />
+            Appearance
+          </Button>
+          <Button 
+            onClick={handleAddBranch}
+            className="w-full md:w-auto"
+            data-testid="button-add-branch"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Branch
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
