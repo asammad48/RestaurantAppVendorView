@@ -63,43 +63,22 @@ export default function Users() {
         </Button>
       </div>
 
-      {/* Role Filters */}
-      <Tabs value={activeRole} onValueChange={setActiveRole} data-testid="role-filters">
-        <TabsList className="bg-white border border-gray-200">
-          {roleFilters.map((filter) => (
-            <TabsTrigger
-              key={filter.value}
-              value={filter.value}
-              className={`data-[state=active]:!bg-green-500 data-[state=active]:!text-white hover:data-[state=active]:!bg-green-600 transition-colors`}
-              data-testid={`filter-${filter.value}`}
-            >
-              {filter.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
 
-      {/* Search and Filters Bar */}
+
+      {/* Filters Bar */}
       <div className="flex items-center justify-between">
-        <div className="search-input max-w-lg">
-          <Search className="search-icon" />
-          <Input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            data-testid="search-users"
-          />
-        </div>
-        
         <div className="flex items-center space-x-4">
           <Button variant="outline" data-testid="button-filters">
             <Filter className="w-4 h-4 mr-2" />
-            Filters
+            Role
           </Button>
-          <Button variant="outline" data-testid="button-date-range">
-            <Calendar className="w-4 h-4 mr-2" />
-            April 11 - April 24
+          <Button variant="outline" data-testid="button-branch-filter">
+            <Filter className="w-4 h-4 mr-2" />
+            Assign Branch
+          </Button>
+          <Button variant="outline" data-testid="button-status-filter">
+            <Filter className="w-4 h-4 mr-2" />
+            Status
           </Button>
         </div>
       </div>

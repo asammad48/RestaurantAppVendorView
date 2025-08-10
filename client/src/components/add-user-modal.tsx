@@ -190,6 +190,41 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             </div>
 
             <div>
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                {...register("email")}
+                className="mt-1"
+                data-testid="input-email"
+                disabled={isEditing}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="username" className="text-sm font-medium">
+                Username
+              </Label>
+              <Input
+                id="username"
+                {...register("username")}
+                className="mt-1"
+                data-testid="input-username"
+                disabled={isEditing}
+              />
+              {errors.username && (
+                <p className="text-sm text-red-600 mt-1">{errors.username.message}</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="phoneNumber" className="text-sm font-medium">
                 Phone Number
               </Label>

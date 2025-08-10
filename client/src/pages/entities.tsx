@@ -66,39 +66,28 @@ export default function Entities() {
             Manage your hotels and restaurants
           </p>
         </div>
-        <Button 
-          onClick={() => setShowAddModal(true)}
-          className="w-full md:w-auto"
-          data-testid="button-add-entity"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Entity
-        </Button>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search entities..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <Button 
+            onClick={() => setShowAddModal(true)}
+            className="bg-green-500 hover:bg-green-600 text-white"
+            data-testid="button-add-entity"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Entity
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search entities by name, type, or address..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-            data-testid="input-search-entities"
-          />
-        </div>
-        <div className="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <Badge variant="outline" data-testid="badge-total-entities">
-            Total: {entities.length}
-          </Badge>
-          <Badge variant="outline" data-testid="badge-hotels">
-            Hotels: {entities.filter(e => e.entityType === "hotel").length}
-          </Badge>
-          <Badge variant="outline" data-testid="badge-restaurants">
-            Restaurants: {entities.filter(e => e.entityType === "restaurant").length}
-          </Badge>
-        </div>
-      </div>
+
 
       {filteredEntities.length === 0 ? (
         <Card>

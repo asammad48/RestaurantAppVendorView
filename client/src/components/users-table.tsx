@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Search } from "lucide-react";
 
 interface User {
   id: string;
@@ -37,11 +37,11 @@ export default function UsersTable({
         <table className="min-w-full divide-y divide-gray-200" data-testid="users-table">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left">
-                <Checkbox data-testid="checkbox-select-all" />
-              </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-name">
-                Name
+                <div className="flex items-center space-x-2 cursor-pointer group">
+                  <span>Name</span>
+                  <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by name" />
+                </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-role">
                 Role
@@ -58,12 +58,7 @@ export default function UsersTable({
                   <ArrowUpDown className="w-4 h-4" />
                 </div>
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-price">
-                <div className="flex items-center space-x-1">
-                  <span>Price</span>
-                  <ArrowUpDown className="w-4 h-4" />
-                </div>
-              </th>
+
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-actions">
                 Actions
               </th>
@@ -72,9 +67,6 @@ export default function UsersTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
               <tr key={user.id} className="table-row" data-testid={`user-row-${user.id}`}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Checkbox data-testid={`checkbox-${user.id}`} />
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-name-${user.id}`}>
                   <div className="text-sm font-medium text-gray-900">{user.username}</div>
                 </td>
@@ -94,13 +86,16 @@ export default function UsersTable({
                     {user.status === 'active' ? 'Active' : 'Inactive'}
                   </Badge>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-price-${user.id}`}>
-                  <div className="text-sm text-gray-900">-</div>
-                </td>
+
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Button variant="ghost" size="icon" data-testid={`button-actions-${user.id}`}>
-                    <MoreHorizontal className="w-5 h-5 text-gray-400" />
-                  </Button>
+                  <div className="flex items-center justify-end space-x-2">
+                    <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300">
+                      Edit
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300">
+                      Delete
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

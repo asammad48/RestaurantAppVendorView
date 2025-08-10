@@ -29,17 +29,6 @@ export default function Header() {
         </h1>
         
         <div className="flex items-center space-x-4">
-          {/* Search */}
-          <div className="relative" data-testid="search-container">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search..."
-              className="w-64 pl-10"
-              data-testid="search-input"
-            />
-          </div>
-          
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative" data-testid="notifications-button">
             <Bell className="h-5 w-5 text-gray-400" />

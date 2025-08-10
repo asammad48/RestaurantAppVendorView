@@ -82,16 +82,8 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="relative">
+        <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">Add Branch</DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 p-0 h-6 w-6"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <Form {...form}>

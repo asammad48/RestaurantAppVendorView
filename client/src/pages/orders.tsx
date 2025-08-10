@@ -284,22 +284,7 @@ export default function Orders() {
           </h1>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search..."
-              className="pl-10 w-64"
-              data-testid="search-input"
-            />
-          </div>
-          <Button variant="ghost" size="sm">
-            <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-          </Button>
-          <Button variant="ghost" size="sm">
-            <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-          </Button>
-        </div>
+
       </div>
 
       {/* Navigation Tabs */}
@@ -326,16 +311,7 @@ export default function Orders() {
               </TabsList>
             </Tabs>
 
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-                data-testid="orders-search"
-              />
-            </div>
+
           </div>
 
           {/* Orders Table */}
@@ -343,8 +319,12 @@ export default function Orders() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Orders <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>
+                    <div className="flex items-center space-x-2 cursor-pointer group">
+                      <span>Orders</span>
+                      <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by order number" />
+                    </div>
+                  </TableHead>
                   <TableHead>Date <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Table No <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Payment <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -355,9 +335,6 @@ export default function Orders() {
               <TableBody>
                 {paginatedOrders.map((order) => (
                   <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
-                    <TableCell>
-                      <input type="checkbox" className="rounded" />
-                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{order.items} Items</div>
@@ -477,17 +454,7 @@ export default function Orders() {
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative w-64">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search"
-              value={activeMenuTab === "Menu" ? menuSearchTerm : categorySearchTerm}
-              onChange={(e) => activeMenuTab === "Menu" ? setMenuSearchTerm(e.target.value) : setCategorySearchTerm(e.target.value)}
-              className="pl-10"
-              data-testid={activeMenuTab === "Menu" ? "menu-search" : "category-search"}
-            />
-          </div>
+
 
           {/* Content Table */}
           <div className="bg-white rounded-lg border">
@@ -495,7 +462,12 @@ export default function Orders() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Item Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>
+                      <div className="flex items-center space-x-2 cursor-pointer group">
+                        <span>Item Name</span>
+                        <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by item name" />
+                      </div>
+                    </TableHead>
                     <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -580,7 +552,12 @@ export default function Orders() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Category Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>
+                      <div className="flex items-center space-x-2 cursor-pointer group">
+                        <span>Category Name</span>
+                        <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by category name" />
+                      </div>
+                    </TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -774,7 +751,7 @@ export default function Orders() {
         <TabsContent value="deals">
           {/* Deals Tab Content */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-end">
               <div className="flex items-center space-x-2">
                 <Button
                   className="bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -782,32 +759,29 @@ export default function Orders() {
                 >
                   Apply Discount
                 </Button>
+                <Button 
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                  onClick={() => setShowAddDealsModal(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Deals
+                </Button>
               </div>
-              <Button 
-                className="bg-green-500 hover:bg-green-600 text-white"
-                onClick={() => setShowAddDealsModal(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Deals
-              </Button>
             </div>
 
             {/* Mock Deals Table */}
             <div className="bg-white rounded-lg border">
-              <div className="p-4">
-                <div className="relative mb-4">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <Input
-                    placeholder="Search"
-                    className="pl-10 w-64"
-                  />
-                </div>
-              </div>
+
               
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Deal Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>
+                      <div className="flex items-center space-x-2 cursor-pointer group">
+                        <span>Deal Name</span>
+                        <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by deal name" />
+                      </div>
+                    </TableHead>
                     <TableHead>Items <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
