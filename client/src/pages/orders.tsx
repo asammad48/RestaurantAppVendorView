@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
@@ -531,14 +532,28 @@ export default function Orders() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-gray-600 hover:text-gray-800"
-                            data-testid={`button-menu-options-${item.id}`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-gray-600 hover:text-gray-800"
+                                data-testid={`button-menu-options-${item.id}`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Menu Item
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Menu Item
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))
@@ -573,14 +588,28 @@ export default function Orders() {
                           {category.name}
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-gray-600 hover:text-gray-800"
-                            data-testid={`button-category-options-${category.id}`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-gray-600 hover:text-gray-800"
+                                data-testid={`button-category-options-${category.id}`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Category
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Category
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))
@@ -630,7 +659,7 @@ export default function Orders() {
           {/* Add Table Button */}
           <div className="flex justify-end">
             <Button 
-              className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50" 
+              className="bg-green-500 hover:bg-green-600 text-white" 
               onClick={() => setShowAddTableModal(true)}
               data-testid="button-add-table"
             >
@@ -753,7 +782,6 @@ export default function Orders() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12"></TableHead>
                     <TableHead>Deal Name <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Items <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
@@ -763,9 +791,6 @@ export default function Orders() {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell>
-                      <input type="checkbox" className="rounded" />
-                    </TableCell>
                     <TableCell className="font-medium">Family Feast Deal</TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-600">
@@ -777,17 +802,28 @@ export default function Orders() {
                     </TableCell>
                     <TableCell className="font-medium">$10.62</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Deal
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Deal
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                   {/* Repeat for more mock deals */}
                   {[...Array(4)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell>
-                        <input type="checkbox" className="rounded" />
-                      </TableCell>
                       <TableCell className="font-medium">Family Feast Deal</TableCell>
                       <TableCell>
                         <div className="text-sm text-gray-600">
@@ -799,9 +835,23 @@ export default function Orders() {
                       </TableCell>
                       <TableCell className="font-medium">$10.62</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Deal
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete Deal
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -876,16 +926,6 @@ export default function Orders() {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">{service.description}</p>
-                    {service.type.startsWith('Paid') && (
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}

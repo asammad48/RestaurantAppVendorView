@@ -102,15 +102,6 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" data-testid="modal-apply-discount">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">Apply Discount</DialogTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4"
-            onClick={onClose}
-            data-testid="button-close-modal"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

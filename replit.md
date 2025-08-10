@@ -39,9 +39,13 @@ Technical preferences:
 - Remove API endpoints and render data directly from React components
 - UI styling: Order buttons should have gray background matching tables
 - Services: "Free Services" should be labeled as "Services"
-- Remove edit/delete buttons from free services cards
+- Remove edit/delete buttons from all service cards (including paid services) 
 - Table modals: Fix duplicate close buttons, edit modal should only allow editing seating capacity and assignee
 - Menu section: Menu and category buttons should have gray background, only down border, highlighted items have green border
+- Add Table button should be green
+- Deals table: Remove checkboxes, add edit/delete context menu functionality
+- Apply Discount modal: Should have only one close button
+- Menu and category context menus: Add edit/delete buttons with proper functionality
 
 ## System Architecture
 
