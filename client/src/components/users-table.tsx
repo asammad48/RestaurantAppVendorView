@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoreHorizontal, ArrowUpDown, Search } from "lucide-react";
+import { SearchTooltip } from "@/components/SearchTooltip";
+import { FilterTooltip } from "@/components/FilterTooltip";
 
 interface User {
   id: string;
@@ -21,6 +23,18 @@ interface UsersTableProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (itemsPerPage: number) => void;
+  onNameSearch?: (value: string) => void;
+  onNameSearchClear?: () => void;
+  onRoleFilter?: (roles: string[]) => void;
+  onRoleFilterClear?: () => void;
+  onBranchFilter?: (branch: string) => void;
+  onBranchFilterClear?: () => void;
+  onStatusFilter?: (statuses: string[]) => void;
+  onStatusFilterClear?: () => void;
+  nameSearchValue?: string;
+  roleFilterValues?: string[];
+  branchFilterValue?: string;
+  statusFilterValues?: string[];
 }
 
 export default function UsersTable({
@@ -30,7 +44,30 @@ export default function UsersTable({
   itemsPerPage,
   onPageChange,
   onItemsPerPageChange,
+  onNameSearch = () => {},
+  onNameSearchClear = () => {},
+  onRoleFilter = () => {},
+  onRoleFilterClear = () => {},
+  onBranchFilter = () => {},
+  onBranchFilterClear = () => {},
+  onStatusFilter = () => {},
+  onStatusFilterClear = () => {},
+  nameSearchValue = '',
+  roleFilterValues = [],
+  branchFilterValue = '',
+  statusFilterValues = [],
 }: UsersTableProps) {
+  
+  const roleOptions = [
+    { value: 'manager', label: 'Manager' },
+    { value: 'waiter', label: 'Waiter' },
+    { value: 'chef', label: 'Chef' },
+  ];
+
+  const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
   return (
     <Card className="bg-white border border-gray-100 overflow-hidden" data-testid="users-table-card">
       <div className="overflow-x-auto">
@@ -38,24 +75,56 @@ export default function UsersTable({
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-name">
-                <div className="flex items-center space-x-2 cursor-pointer group">
+                <div className="flex items-center space-x-2">
                   <span>Name</span>
-                  <Search className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" title="Search by name" />
+                  <SearchTooltip
+                    placeholder="Search by name..."
+                    onSearch={onNameSearch}
+                    onClear={onNameSearchClear}
+                    currentValue={nameSearchValue}
+                  />
                 </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-role">
-                Role
+                <div className="flex items-center space-x-2">
+                  <span>Role</span>
+                  <FilterTooltip
+                    filterType="checkbox"
+                    title="Role"
+                    options={roleOptions}
+                    onApply={onRoleFilter}
+                    onClear={onRoleFilterClear}
+                    currentValue={roleFilterValues}
+                  />
+                </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-table">
                 Assign Table
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-branch">
-                Assign Branch
+                <div className="flex items-center space-x-2">
+                  <span>Assign Branch</span>
+                  <FilterTooltip
+                    filterType="input"
+                    title="Branch"
+                    placeholder="Filter by branch..."
+                    onApply={onBranchFilter}
+                    onClear={onBranchFilterClear}
+                    currentValue={branchFilterValue}
+                  />
+                </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-status">
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-2">
                   <span>Status</span>
-                  <ArrowUpDown className="w-4 h-4" />
+                  <FilterTooltip
+                    filterType="checkbox"
+                    title="Status"
+                    options={statusOptions}
+                    onApply={onStatusFilter}
+                    onClear={onStatusFilterClear}
+                    currentValue={statusFilterValues}
+                  />
                 </div>
               </th>
 

@@ -21,16 +21,38 @@ export default function Users() {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  
+  // Filter states
+  const [nameSearchTerm, setNameSearchTerm] = useState("");
+  const [roleFilters, setRoleFilters] = useState<string[]>([]);
+  const [branchFilter, setBranchFilter] = useState("");
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
 
   const { data: users, isLoading } = useQuery({
     queryKey: activeRole === "all" ? ["/api/users"] : ["/api/users", { role: activeRole }],
   });
 
   const filteredUsers = Array.isArray(users) 
-    ? users.filter((user: any) =>
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ? users.filter((user: any) => {
+        // Name search filter
+        const matchesNameSearch = nameSearchTerm === "" || 
+          user.username?.toLowerCase().includes(nameSearchTerm.toLowerCase()) ||
+          user.email?.toLowerCase().includes(nameSearchTerm.toLowerCase());
+        
+        // Role filter
+        const matchesRoleFilter = roleFilters.length === 0 || 
+          roleFilters.includes(user.role?.toLowerCase());
+        
+        // Branch filter
+        const matchesBranchFilter = branchFilter === "" || 
+          user.assignedBranch?.toLowerCase().includes(branchFilter.toLowerCase());
+        
+        // Status filter
+        const matchesStatusFilter = statusFilters.length === 0 || 
+          statusFilters.includes(user.status?.toLowerCase());
+        
+        return matchesNameSearch && matchesRoleFilter && matchesBranchFilter && matchesStatusFilter;
+      })
     : [];
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -65,23 +87,32 @@ export default function Users() {
 
 
 
-      {/* Filters Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" data-testid="button-filters">
-            <Filter className="w-4 h-4 mr-2" />
-            Role
-          </Button>
-          <Button variant="outline" data-testid="button-branch-filter">
-            <Filter className="w-4 h-4 mr-2" />
-            Assign Branch
-          </Button>
-          <Button variant="outline" data-testid="button-status-filter">
-            <Filter className="w-4 h-4 mr-2" />
-            Status
-          </Button>
+      {/* Active Filters Display */}
+      {(nameSearchTerm || roleFilters.length > 0 || branchFilter || statusFilters.length > 0) && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span>Active filters:</span>
+          {nameSearchTerm && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
+              Name: "{nameSearchTerm}"
+            </span>
+          )}
+          {roleFilters.length > 0 && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
+              Role: {roleFilters.join(", ")}
+            </span>
+          )}
+          {branchFilter && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
+              Branch: "{branchFilter}"
+            </span>
+          )}
+          {statusFilters.length > 0 && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
+              Status: {statusFilters.join(", ")}
+            </span>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Users Table */}
       <UsersTable 
@@ -94,6 +125,18 @@ export default function Users() {
           setItemsPerPage(newItemsPerPage);
           setCurrentPage(1);
         }}
+        onNameSearch={setNameSearchTerm}
+        onNameSearchClear={() => setNameSearchTerm("")}
+        onRoleFilter={setRoleFilters}
+        onRoleFilterClear={() => setRoleFilters([])}
+        onBranchFilter={setBranchFilter}
+        onBranchFilterClear={() => setBranchFilter("")}
+        onStatusFilter={setStatusFilters}
+        onStatusFilterClear={() => setStatusFilters([])}
+        nameSearchValue={nameSearchTerm}
+        roleFilterValues={roleFilters}
+        branchFilterValue={branchFilter}
+        statusFilterValues={statusFilters}
       />
 
       {/* Add User Modal */}
