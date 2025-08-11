@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -62,30 +62,39 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     formState: { errors, isSubmitting },
   } = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
-    defaultValues: isEditing
-      ? {
-          name: editingUser.name || "",
-          phoneNumber: editingUser.phoneNumber || "",
-          role: editingUser.role || "",
-          assignedBranch: editingUser.assignedBranch || "",
-          address: editingUser.address || "",
-          image: editingUser.image || "",
-          username: editingUser.username || "",
-          email: editingUser.email || "",
-          password: "existing-password",
-        }
-      : {
-          name: "",
-          phoneNumber: "",
-          role: "",
-          assignedBranch: "",
-          address: "",
-          image: "",
-          username: "",
-          email: "",
-          password: "",
-        },
   });
+
+  // Reset form when modal opens/closes or when editingUser changes
+  React.useEffect(() => {
+    if (isOpen) {
+      const defaultValues = isEditing && editingUser
+        ? {
+            name: editingUser.username || "", // Using username as display name
+            phoneNumber: editingUser.phoneNumber || "",
+            role: editingUser.role || "",
+            assignedBranch: editingUser.assignedBranch || "",
+            address: editingUser.address || "",
+            image: editingUser.image || "",
+            username: editingUser.username || "",
+            email: editingUser.email || "",
+            password: "existing-password",
+          }
+        : {
+            name: "",
+            phoneNumber: "",
+            role: "",
+            assignedBranch: "",
+            address: "",
+            image: "",
+            username: "",
+            email: "",
+            password: "",
+          };
+      
+      reset(defaultValues);
+      setImageFile(editingUser?.image || "");
+    }
+  }, [isOpen, editingUser, isEditing, reset]);
 
   const roleValue = watch("role");
   const branchValue = watch("assignedBranch");
