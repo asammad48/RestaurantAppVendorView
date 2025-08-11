@@ -2,9 +2,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoreHorizontal, ArrowUpDown, Search } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { FilterTooltip } from "@/components/FilterTooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface User {
   id: string;
@@ -35,6 +48,8 @@ interface UsersTableProps {
   roleFilterValues?: string[];
   branchFilterValue?: string;
   statusFilterValues?: string[];
+  onEditUser?: (user: User) => void;
+  onDeleteUser?: (user: User) => void;
 }
 
 export default function UsersTable({
@@ -56,6 +71,8 @@ export default function UsersTable({
   roleFilterValues = [],
   branchFilterValue = '',
   statusFilterValues = [],
+  onEditUser = () => {},
+  onDeleteUser = () => {},
 }: UsersTableProps) {
   
   const roleOptions = [
@@ -157,14 +174,35 @@ export default function UsersTable({
                 </td>
 
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
-                    <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300">
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300">
-                      Delete
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-600 hover:text-gray-800"
+                        data-testid={`user-actions-${user.id}`}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => onEditUser(user)}
+                        data-testid={`edit-user-${user.id}`}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit User
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => onDeleteUser(user)}
+                        data-testid={`delete-user-${user.id}`}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete User
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UsersTable from "@/components/users-table";
 import AddUserModal from "@/components/add-user-modal";
+import DeleteUserModal from "@/components/delete-user-modal";
 
 const roleFilters = [
   { value: "all", label: "All Users" },
@@ -20,13 +21,17 @@ export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
   
   // Filter states
   const [nameSearchTerm, setNameSearchTerm] = useState("");
   const [roleFilters, setRoleFilters] = useState<string[]>([]);
   const [branchFilter, setBranchFilter] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
 
   const { data: users, isLoading } = useQuery({
     queryKey: activeRole === "all" ? ["/api/users"] : ["/api/users", { role: activeRole }],
@@ -180,6 +185,14 @@ export default function Users() {
         roleFilterValues={roleFilters}
         branchFilterValue={branchFilter}
         statusFilterValues={statusFilters}
+        onEditUser={(user) => {
+          setEditingUser(user);
+          setIsAddUserModalOpen(true);
+        }}
+        onDeleteUser={(user) => {
+          setUserToDelete(user);
+          setIsDeleteModalOpen(true);
+        }}
       />
 
       {/* Add User Modal */}
@@ -190,6 +203,22 @@ export default function Users() {
           setEditingUser(null);
         }}
         editingUser={editingUser}
+      />
+
+      {/* Delete User Modal */}
+      <DeleteUserModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setUserToDelete(null);
+        }}
+        user={userToDelete}
+        onConfirm={() => {
+          // Handle delete logic here
+          console.log("Deleting user:", userToDelete);
+          setIsDeleteModalOpen(false);
+          setUserToDelete(null);
+        }}
       />
     </div>
   );
