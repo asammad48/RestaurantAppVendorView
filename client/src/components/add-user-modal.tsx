@@ -110,10 +110,10 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const entityValue = watch("entityId");
   const branchValue = watch("assignedBranch");
 
-  // Filter branches based on selected entity
-  const filteredBranches = Array.isArray(branches) ? branches.filter((branch: any) => 
-    !entityValue || branch.entityId === entityValue
-  ) : [];
+  // For now, show all branches since the data structure is transitioning from restaurant-based to entity-based
+  // The branches table still uses restaurantId, but we're selecting based on entityId
+  // Until this is unified, we'll show all available branches
+  const filteredBranches = Array.isArray(branches) ? branches : [];
 
   const createUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
@@ -320,10 +320,9 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             <Select 
               value={branchValue} 
               onValueChange={(value) => setValue("assignedBranch", value)}
-              disabled={!entityValue}
             >
               <SelectTrigger className="mt-1" data-testid="select-branch">
-                <SelectValue placeholder={entityValue ? "Select branch" : "Select entity first"} />
+                <SelectValue placeholder="Select branch" />
               </SelectTrigger>
               <SelectContent>
                 {filteredBranches.map((branch: any) => (
