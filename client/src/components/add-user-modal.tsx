@@ -182,7 +182,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto" data-testid="add-user-modal">
       <div className="min-h-screen w-full flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-6 bg-white relative my-8">
+        <Card className="w-full max-w-md p-6 bg-white relative my-8 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"

@@ -78,15 +78,6 @@ export default function AddCategoryModal({ isOpen, onClose, restaurantId, editCa
       <DialogContent className="max-w-md" data-testid="modal-add-category">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">{isEditMode ? 'Edit Category' : 'Add Category'}</DialogTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4"
-            onClick={onClose}
-            data-testid="button-close-modal"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

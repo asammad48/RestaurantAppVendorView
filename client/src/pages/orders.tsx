@@ -154,6 +154,14 @@ export default function Orders() {
   const [orderFilter, setOrderFilter] = useState("All Orders");
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Pagination states for different tables
+  const [menuCurrentPage, setMenuCurrentPage] = useState(1);
+  const [categoryCurrentPage, setCategoryCurrentPage] = useState(1);
+  const [dealsCurrentPage, setDealsCurrentPage] = useState(1);
+  const [menuItemsPerPage] = useState(6);
+  const [categoryItemsPerPage] = useState(6);
+  const [dealsItemsPerPage] = useState(6);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
@@ -276,10 +284,20 @@ export default function Orders() {
     item.category.toLowerCase().includes(menuSearchTerm.toLowerCase())
   );
 
+  // Menu pagination
+  const menuTotalPages = Math.ceil(filteredMenuItems.length / menuItemsPerPage);
+  const menuStartIndex = (menuCurrentPage - 1) * menuItemsPerPage;
+  const paginatedMenuItems = filteredMenuItems.slice(menuStartIndex, menuStartIndex + menuItemsPerPage);
+
   // Filter categories based on search
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
+
+  // Category pagination
+  const categoryTotalPages = Math.ceil(filteredCategories.length / categoryItemsPerPage);
+  const categoryStartIndex = (categoryCurrentPage - 1) * categoryItemsPerPage;
+  const paginatedCategories = filteredCategories.slice(categoryStartIndex, categoryStartIndex + categoryItemsPerPage);
 
   // Mock deals data
   const mockDeals = [
@@ -295,6 +313,11 @@ export default function Orders() {
     deal.name.toLowerCase().includes(dealsSearchTerm.toLowerCase()) ||
     deal.items.toLowerCase().includes(dealsSearchTerm.toLowerCase())
   );
+
+  // Deals pagination
+  const dealsTotalPages = Math.ceil(filteredDeals.length / dealsItemsPerPage);
+  const dealsStartIndex = (dealsCurrentPage - 1) * dealsItemsPerPage;
+  const paginatedDeals = filteredDeals.slice(dealsStartIndex, dealsStartIndex + dealsItemsPerPage);
 
   // Format price from cents to rupees
   const formatPrice = (priceInCents: number) => {
@@ -532,7 +555,7 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredMenuItems.map((item) => (
+                    paginatedMenuItems.map((item) => (
                       <TableRow key={item.id} data-testid={`menu-item-row-${item.id}`}>
                         <TableCell className="font-medium" data-testid={`menu-item-name-${item.id}`}>
                           {item.name}
@@ -623,7 +646,7 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCategories.map((category) => (
+                    paginatedCategories.map((category) => (
                       <TableRow key={category.id} data-testid={`category-row-${category.id}`}>
                         <TableCell className="font-medium" data-testid={`category-name-${category.id}`}>
                           {category.name}
@@ -669,12 +692,12 @@ export default function Orders() {
             )}
           </div>
 
-          {/* Pagination for Menu */}
-          <div className="flex items-center justify-between">
+          {/* Menu/Category Pagination */}
+          <div className="flex items-center justify-between p-4 border-t bg-gray-50">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">Show result:</span>
-              <Select value="6">
-                <SelectTrigger className="w-20">
+              <Select defaultValue="6">
+                <SelectTrigger className="w-16">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -686,20 +709,45 @@ export default function Orders() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                Previous
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={activeMenuTab === "Menu" ? menuCurrentPage === 1 : categoryCurrentPage === 1}
+                onClick={() => {
+                  if (activeMenuTab === "Menu") {
+                    setMenuCurrentPage(Math.max(1, menuCurrentPage - 1));
+                  } else {
+                    setCategoryCurrentPage(Math.max(1, categoryCurrentPage - 1));
+                  }
+                }}
+              >
+                &lt;
               </Button>
-              <Button className="bg-green-500 hover:bg-green-600" size="sm">
-                1
+              
+              {/* Current page indicator */}
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="bg-green-500 hover:bg-green-600"
+              >
+                {activeMenuTab === "Menu" ? menuCurrentPage : categoryCurrentPage}
               </Button>
-              <Button variant="outline" size="sm">
-                2
-              </Button>
-              <Button variant="outline" size="sm">
-                20
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={activeMenuTab === "Menu" ? menuCurrentPage === menuTotalPages : categoryCurrentPage === categoryTotalPages}
+                onClick={() => {
+                  if (activeMenuTab === "Menu") {
+                    const maxPage = menuTotalPages || 1;
+                    setMenuCurrentPage(Math.min(maxPage, menuCurrentPage + 1));
+                  } else {
+                    const maxPage = categoryTotalPages || 1;
+                    setCategoryCurrentPage(Math.min(maxPage, categoryCurrentPage + 1));
+                  }
+                }}
+              >
+                &gt;
               </Button>
             </div>
           </div>
@@ -850,7 +898,7 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredDeals.map((deal) => (
+                    paginatedDeals.map((deal) => (
                       <TableRow key={deal.id} data-testid={`deal-row-${deal.id}`}>
                         <TableCell className="font-medium" data-testid={`deal-name-${deal.id}`}>
                           {deal.name}
@@ -897,8 +945,8 @@ export default function Orders() {
                 </TableBody>
               </Table>
               
-              {/* Pagination */}
-              <div className="flex items-center justify-between p-4 border-t">
+              {/* Deals Pagination */}
+              <div className="flex items-center justify-between p-4 border-t bg-gray-50">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">Show result:</span>
                   <Select defaultValue="6">
@@ -907,19 +955,36 @@ export default function Orders() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="6">6</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
                       <SelectItem value="20">20</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" disabled>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={dealsCurrentPage === 1}
+                    onClick={() => setDealsCurrentPage(Math.max(1, dealsCurrentPage - 1))}
+                  >
                     &lt;
                   </Button>
-                  <Button variant="default" size="sm" className="bg-green-500 hover:bg-green-600">1</Button>
-                  <Button variant="outline" size="sm">2</Button>
-                  <Button variant="outline" size="sm">4</Button>
-                  <span className="text-sm text-gray-500">20</span>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    {dealsCurrentPage}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={dealsCurrentPage === dealsTotalPages}
+                    onClick={() => {
+                      const maxPage = dealsTotalPages || 1;
+                      setDealsCurrentPage(Math.min(maxPage, dealsCurrentPage + 1));
+                    }}
+                  >
                     &gt;
                   </Button>
                 </div>
