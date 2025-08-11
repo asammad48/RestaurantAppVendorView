@@ -36,9 +36,16 @@ export function useAuthState() {
   useEffect(() => {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem("user");
+    console.log("Stored user from localStorage:", storedUser); // Debug log
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        // Convert createdAt string back to Date object if needed
+        if (parsedUser.createdAt && typeof parsedUser.createdAt === 'string') {
+          parsedUser.createdAt = new Date(parsedUser.createdAt);
+        }
+        console.log("Parsed user:", parsedUser); // Debug log
+        setUser(parsedUser);
       } catch (error) {
         console.error("Error parsing stored user:", error);
         localStorage.removeItem("user");
@@ -70,7 +77,13 @@ export function useAuthState() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setUser(dummyUser);
-      localStorage.setItem("user", JSON.stringify(dummyUser));
+      // Convert Date objects to strings for localStorage storage
+      const userToStore = {
+        ...dummyUser,
+        createdAt: dummyUser.createdAt.toISOString()
+      };
+      localStorage.setItem("user", JSON.stringify(userToStore));
+      console.log("User stored in localStorage during login:", JSON.stringify(userToStore));
     } catch (error) {
       throw error;
     } finally {
