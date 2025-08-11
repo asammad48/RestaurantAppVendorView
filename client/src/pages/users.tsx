@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Filter, Calendar } from "lucide-react";
+import { Plus, Search, Filter, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,28 +89,71 @@ export default function Users() {
 
       {/* Active Filters Display */}
       {(nameSearchTerm || roleFilters.length > 0 || branchFilter || statusFilters.length > 0) && (
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
           <span>Active filters:</span>
           {nameSearchTerm && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
+            <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
               Name: "{nameSearchTerm}"
+              <button
+                onClick={() => setNameSearchTerm("")}
+                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                title="Remove name filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </span>
           )}
-          {roleFilters.length > 0 && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
-              Role: {roleFilters.join(", ")}
+          {roleFilters.map((role) => (
+            <span key={role} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
+              Role: {role}
+              <button
+                onClick={() => setRoleFilters(roleFilters.filter(r => r !== role))}
+                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                title={`Remove ${role} role filter`}
+              >
+                <X className="w-3 h-3" />
+              </button>
             </span>
-          )}
+          ))}
           {branchFilter && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
+            <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
               Branch: "{branchFilter}"
+              <button
+                onClick={() => setBranchFilter("")}
+                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                title="Remove branch filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </span>
           )}
-          {statusFilters.length > 0 && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md">
-              Status: {statusFilters.join(", ")}
+          {statusFilters.map((status) => (
+            <span key={status} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
+              Status: {status}
+              <button
+                onClick={() => setStatusFilters(statusFilters.filter(s => s !== status))}
+                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                title={`Remove ${status} status filter`}
+              >
+                <X className="w-3 h-3" />
+              </button>
             </span>
-          )}
+          ))}
+          {/* Clear All Filters Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setNameSearchTerm("");
+              setRoleFilters([]);
+              setBranchFilter("");
+              setStatusFilters([]);
+            }}
+            className="ml-2 text-gray-600 border-gray-300 hover:bg-gray-50"
+          >
+            <X className="w-3 h-3 mr-1" />
+            Clear All
+          </Button>
         </div>
       )}
 
