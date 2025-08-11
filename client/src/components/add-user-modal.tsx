@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ const userFormSchema = insertUserSchema.extend({
   name: z.string().min(1, "Name is required"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   role: z.string().min(1, "Role is required"),
+  entityId: z.string().min(1, "Entity is required"),
   assignedBranch: z.string().min(1, "Assigned branch is required"),
   address: z.string().optional(),
   image: z.string().optional(),
@@ -41,17 +42,24 @@ const USER_ROLES = [
   { value: "chef", label: "Chef" },
 ];
 
-const BRANCHES = [
-  { value: "branch-1", label: "Main Branch" },
-  { value: "branch-2", label: "Downtown Branch" },
-  { value: "branch-3", label: "Mall Branch" },
-];
+// Remove static BRANCHES array as we'll fetch from API
 
 export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserModalProps) {
   const [imageFile, setImageFile] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEditing = !!editingUser;
+
+  // Fetch entities and branches
+  const { data: entities } = useQuery({
+    queryKey: ["/api/entities"],
+    enabled: isOpen,
+  });
+
+  const { data: branches } = useQuery({
+    queryKey: ["/api/branches"],
+    enabled: isOpen,
+  });
 
   const {
     register,
@@ -72,6 +80,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             name: editingUser.username || "", // Using username as display name
             phoneNumber: editingUser.phoneNumber || "",
             role: editingUser.role || "",
+            entityId: editingUser.entityId || "",
             assignedBranch: editingUser.assignedBranch || "",
             address: editingUser.address || "",
             image: editingUser.image || "",
@@ -83,6 +92,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             name: "",
             phoneNumber: "",
             role: "",
+            entityId: "",
             assignedBranch: "",
             address: "",
             image: "",
@@ -97,7 +107,13 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   }, [isOpen, editingUser, isEditing, reset]);
 
   const roleValue = watch("role");
+  const entityValue = watch("entityId");
   const branchValue = watch("assignedBranch");
+
+  // Filter branches based on selected entity
+  const filteredBranches = Array.isArray(branches) ? branches.filter((branch: any) => 
+    !entityValue || branch.entityId === entityValue
+  ) : [];
 
   const createUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
@@ -272,25 +288,54 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             </div>
 
             <div>
-              <Label htmlFor="assignedBranch" className="text-sm font-medium">
-                Assigned Branch
+              <Label htmlFor="entityId" className="text-sm font-medium">
+                Entity
               </Label>
-              <Select value={branchValue} onValueChange={(value) => setValue("assignedBranch", value)}>
-                <SelectTrigger className="mt-1" data-testid="select-branch">
-                  <SelectValue placeholder="Select branch" />
+              <Select value={entityValue} onValueChange={(value) => {
+                setValue("entityId", value);
+                // Clear branch selection when entity changes
+                setValue("assignedBranch", "");
+              }}>
+                <SelectTrigger className="mt-1" data-testid="select-entity">
+                  <SelectValue placeholder="Select entity" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BRANCHES.map((branch) => (
-                    <SelectItem key={branch.value} value={branch.value} data-testid={`option-branch-${branch.value}`}>
-                      {branch.label}
+                  {Array.isArray(entities) && entities.map((entity: any) => (
+                    <SelectItem key={entity.id} value={entity.id} data-testid={`option-entity-${entity.id}`}>
+                      {entity.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.assignedBranch && (
-                <p className="text-sm text-red-600 mt-1">{errors.assignedBranch.message}</p>
+              {errors.entityId && (
+                <p className="text-sm text-red-600 mt-1">{errors.entityId.message}</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="assignedBranch" className="text-sm font-medium">
+              Assigned Branch
+            </Label>
+            <Select 
+              value={branchValue} 
+              onValueChange={(value) => setValue("assignedBranch", value)}
+              disabled={!entityValue}
+            >
+              <SelectTrigger className="mt-1" data-testid="select-branch">
+                <SelectValue placeholder={entityValue ? "Select branch" : "Select entity first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredBranches.map((branch: any) => (
+                  <SelectItem key={branch.id} value={branch.id} data-testid={`option-branch-${branch.id}`}>
+                    {branch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.assignedBranch && (
+              <p className="text-sm text-red-600 mt-1">{errors.assignedBranch.message}</p>
+            )}
           </div>
 
           <div>
