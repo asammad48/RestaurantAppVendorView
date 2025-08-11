@@ -27,7 +27,7 @@ export default function Login() {
         title: "Success",
         description: "Successfully logged in!",
       });
-      setLocation("/entities");
+      setLocation("/dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
