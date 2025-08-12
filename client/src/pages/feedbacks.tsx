@@ -47,7 +47,7 @@ function FeedbackCard({ feedback }: { feedback: Feedback }) {
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              <span>{format(new Date(feedback.feedbackDate), "MMM dd, yyyy HH:mm")}</span>
+              <span>{format(new Date(feedback.feedbackDate || feedback.createdAt), "MMM dd, yyyy HH:mm")}</span>
             </div>
           </div>
         </div>

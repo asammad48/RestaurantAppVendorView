@@ -331,8 +331,9 @@ export const mockFeedbacks = [
     customerName: "John Smith",
     customerImage: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzM3M2RjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SlM8L3RleHQ+PC9zdmc+",
     rating: 5,
-    feedback: "Excellent food and service! Will definitely come back.",
+    comment: "Excellent food and service! Will definitely come back.",
     orderNumber: "ORD-001",
+    feedbackDate: new Date("2024-08-12T14:30:00"),
     createdAt: new Date("2024-08-12T14:30:00"),
   },
   {
@@ -340,8 +341,9 @@ export const mockFeedbacks = [
     customerName: "Emily Johnson",
     customerImage: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMTBiOTgxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+RUo8L3RleHQ+PC9zdmc+",
     rating: 4,
-    feedback: "Great atmosphere, food was good but could be better.",
+    comment: "Great atmosphere, food was good but could be better.",
     orderNumber: "ORD-002",
+    feedbackDate: new Date("2024-08-12T15:45:00"),
     createdAt: new Date("2024-08-12T15:45:00"),
   },
 ];
