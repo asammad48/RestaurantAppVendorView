@@ -1,8 +1,8 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { User } from "@shared/schema";
+import { mockLogin, mockSignup, getCurrentUser, logout as logoutUser } from "./queryClient";
 
 interface AuthContextType {
-  user: Omit<User, 'password'> | null;
+  user: any | null;
   login: (username: string, password: string) => Promise<void>;
   signup: (userData: any) => Promise<void>;
   logout: () => void;
@@ -30,61 +30,31 @@ export function useAuth() {
 }
 
 export function useAuthState() {
-  const [user, setUser] = useState<Omit<User, 'password'> | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem("user");
-    console.log("Stored user from localStorage:", storedUser); // Debug log
-    if (storedUser) {
+    const loadUser = async () => {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        // Convert createdAt string back to Date object if needed
-        if (parsedUser.createdAt && typeof parsedUser.createdAt === 'string') {
-          parsedUser.createdAt = new Date(parsedUser.createdAt);
-        }
-        console.log("Parsed user:", parsedUser); // Debug log
-        setUser(parsedUser);
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
       } catch (error) {
-        console.error("Error parsing stored user:", error);
-        localStorage.removeItem("user");
+        console.error("Error loading current user:", error);
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    
+    loadUser();
   }, []);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // Dummy authentication - accept any credentials
-      const dummyUser = {
-        id: "1",
-        username: username,
-        email: `${username}@example.com`,
-        name: "John Doe",
-        phoneNumber: "+1234567890",
-        address: null,
-        image: null,
-        role: "manager",
-        assignedTable: null,
-        assignedBranch: null,
-        status: "active",
-        createdAt: new Date(),
-      };
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setUser(dummyUser);
-      // Convert Date objects to strings for localStorage storage
-      const userToStore = {
-        ...dummyUser,
-        createdAt: dummyUser.createdAt.toISOString()
-      };
-      localStorage.setItem("user", JSON.stringify(userToStore));
-      console.log("User stored in localStorage during login:", JSON.stringify(userToStore));
+      const loggedInUser = await mockLogin(username, password);
+      setUser(loggedInUser);
     } catch (error) {
+      console.error("Login error:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -94,28 +64,10 @@ export function useAuthState() {
   const signup = async (userData: any) => {
     setIsLoading(true);
     try {
-      // Dummy signup - accept any data
-      const dummyUser = {
-        id: "1",
-        username: userData.username,
-        email: userData.email,
-        name: userData.username,
-        phoneNumber: userData.phone,
-        address: null,
-        image: null,
-        role: "manager",
-        assignedTable: null,
-        assignedBranch: null,
-        status: "active",
-        createdAt: new Date(),
-      };
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setUser(dummyUser);
-      localStorage.setItem("user", JSON.stringify(dummyUser));
+      const newUser = await mockSignup(userData);
+      setUser(newUser);
     } catch (error) {
+      console.error("Signup error:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -123,8 +75,8 @@ export function useAuthState() {
   };
 
   const logout = () => {
+    logoutUser();
     setUser(null);
-    localStorage.removeItem("user");
   };
 
   return {
