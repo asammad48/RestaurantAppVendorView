@@ -450,45 +450,20 @@ export const STORAGE_KEYS = {
   CURRENT_USER: 'restaurant_current_user',
 };
 
-// Initialize local storage with mock data if not exists
+// Initialize local storage with mock data - force refresh to ensure latest data
 export function initializeLocalStorage() {
-  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(mockUsers));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.ENTITIES)) {
-    localStorage.setItem(STORAGE_KEYS.ENTITIES, JSON.stringify(mockEntities));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.RESTAURANTS)) {
-    localStorage.setItem(STORAGE_KEYS.RESTAURANTS, JSON.stringify(mockRestaurants));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.BRANCHES)) {
-    localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(mockBranches));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.ANALYTICS)) {
-    localStorage.setItem(STORAGE_KEYS.ANALYTICS, JSON.stringify(mockAnalytics));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.CATEGORIES)) {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(mockCategories));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.MENU_ITEMS)) {
-    localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(mockMenuItems));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.TABLES)) {
-    localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(mockTables));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.DEALS)) {
-    localStorage.setItem(STORAGE_KEYS.DEALS, JSON.stringify(mockDeals));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.SERVICES)) {
-    localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(mockServices));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.FEEDBACKS)) {
-    localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(mockFeedbacks));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.TICKETS)) {
-    localStorage.setItem(STORAGE_KEYS.TICKETS, JSON.stringify(mockTickets));
-  }
+  // Always refresh with latest mock data
+  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(mockUsers));
+  localStorage.setItem(STORAGE_KEYS.ENTITIES, JSON.stringify(mockEntities));
+  localStorage.setItem(STORAGE_KEYS.RESTAURANTS, JSON.stringify(mockRestaurants));
+  localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(mockBranches));
+  localStorage.setItem(STORAGE_KEYS.ANALYTICS, JSON.stringify(mockAnalytics));
+  localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(mockCategories));
+  localStorage.setItem(STORAGE_KEYS.MENU_ITEMS, JSON.stringify(mockMenuItems));
+  localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
+  localStorage.setItem(STORAGE_KEYS.TABLES, JSON.stringify(mockTables));
+  localStorage.setItem(STORAGE_KEYS.DEALS, JSON.stringify(mockDeals));
+  localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(mockServices));
+  localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(mockFeedbacks));
+  localStorage.setItem(STORAGE_KEYS.TICKETS, JSON.stringify(mockTickets));
 }

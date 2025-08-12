@@ -151,7 +151,7 @@ export const queryClient = new QueryClient({
         // Map API URLs to localStorage keys
         if (url.includes('/api/users')) {
           const users = await getLocalData(STORAGE_KEYS.USERS);
-          return users.map(({ password, ...user }) => user);
+          return users.map(({ password, ...user }: any) => user);
         }
         if (url.includes('/api/entities')) {
           return await getLocalData(STORAGE_KEYS.ENTITIES);
