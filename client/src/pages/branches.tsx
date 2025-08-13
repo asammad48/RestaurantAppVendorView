@@ -34,7 +34,7 @@ export default function Branches() {
 
   const { data: branches = [], isLoading } = useQuery<Branch[]>({
     queryKey: ["/api/branches", entityId],
-    queryFn: () => fetch(`/api/branches?restaurantId=${entityId}`).then(res => res.json()),
+    queryFn: () => fetch(`/api/branches?entityId=${entityId}`).then(res => res.json()),
     enabled: !!entityId,
   });
 
