@@ -24,8 +24,11 @@ export default function Branches() {
   const [isTrialUser, setIsTrialUser] = useState(true); // Assume trial for demo
   
   // Extract entity ID from URL query params
-  const entityId = new URLSearchParams(window.location.search).get('entityId');
+  const rawEntityId = new URLSearchParams(window.location.search).get('entityId');
   const entityType = new URLSearchParams(window.location.search).get('entityType');
+  
+  // Convert frontend entityId format (entity-X) to backend format (X)
+  const entityId = rawEntityId?.startsWith('entity-') ? rawEntityId.replace('entity-', '') : rawEntityId;
 
   const { data: entity } = useQuery<Entity>({
     queryKey: ["/api/entities", entityId],
@@ -54,7 +57,7 @@ export default function Branches() {
     // Always navigate to the management page - pricing modal will show there for trial users
     const managementPath = entityType === "hotel" ? "/hotel-management" : "/restaurant-management";
     const queryParams = new URLSearchParams({
-      entityId: entityId || "",
+      entityId: rawEntityId || "",
       branchId: branch.id,
       entityType: entityType || "restaurant",
       showPricing: isTrialUser ? "true" : "false"
