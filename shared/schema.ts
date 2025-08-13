@@ -53,6 +53,7 @@ export const branches = pgTable("branches", {
   facebook: text("facebook").default("").notNull(),
   googleMap: text("google_map").default("").notNull(),
   restaurantId: varchar("restaurant_id").references(() => restaurants.id),
+  entityId: varchar("entity_id").references(() => entities.id),
   status: text("status").notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -252,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let branches;
       
       if (entityId && typeof entityId === "string") {
-        branches = await storage.getBranchesByRestaurant(entityId);
+        branches = await storage.getBranchesByEntity(entityId);
       } else if (restaurantId && typeof restaurantId === "string") {
         branches = await storage.getBranchesByRestaurant(restaurantId);
       } else {

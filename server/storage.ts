@@ -33,6 +33,7 @@ export interface IStorage {
   deleteBranch(id: string): Promise<boolean>;
   getAllBranches(): Promise<Branch[]>;
   getBranchesByRestaurant(restaurantId: string): Promise<Branch[]>;
+  getBranchesByEntity(entityId: string): Promise<Branch[]>;
 
   // Analytics
   getAnalytics(date?: string): Promise<Analytics[]>;
@@ -343,6 +344,7 @@ export class MemStorage implements IStorage {
         facebook: "BurgerHouseMain",
         googleMap: "https://maps.google.com/burgerhousemain",
         restaurantId: "1",
+        entityId: "2",
         status: "active",
         createdAt: new Date(),
       },
@@ -358,6 +360,7 @@ export class MemStorage implements IStorage {
         facebook: "PizzaPalaceNorth",
         googleMap: "https://maps.google.com/pizzapalacenorth",
         restaurantId: "2",
+        entityId: "4",
         status: "active",
         createdAt: new Date(),
       },
@@ -373,6 +376,7 @@ export class MemStorage implements IStorage {
         facebook: "riverside.grand",
         googleMap: "https://maps.google.com/riversidegrand",
         restaurantId: "7",
+        entityId: "5",
         status: "active",
         createdAt: new Date(),
       },
@@ -388,6 +392,7 @@ export class MemStorage implements IStorage {
         facebook: "bellavista.marina",
         googleMap: "https://maps.google.com/bellavistamarina",
         restaurantId: "8",
+        entityId: "6",
         status: "active",
         createdAt: new Date(),
       },
@@ -403,6 +408,40 @@ export class MemStorage implements IStorage {
         facebook: "bellavista.garden",
         googleMap: "https://maps.google.com/bellavistagarden",
         restaurantId: "8",
+        entityId: "6",
+        status: "active",
+        createdAt: new Date(),
+      },
+      // Hotel branches
+      {
+        id: "6",
+        name: "Downtown Plaza Branch",
+        restaurantType: "luxury-dining",
+        contactNo: "+1234567898",
+        address: "123 Grand Avenue, Downtown City",
+        restaurantLogo: "grand_plaza_logo.png",
+        instagram: "@grandplaza_downtown",
+        whatsapp: "+1234567898",
+        facebook: "grandplaza.downtown",
+        googleMap: "https://maps.google.com/grandplazadowntown",
+        restaurantId: "1",
+        entityId: "1",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "7",
+        name: "Spa Restaurant Branch",
+        restaurantType: "wellness-dining",
+        contactNo: "+1234567899",
+        address: "789 Beach Road, Coastal Area",
+        restaurantLogo: "luxury_resort_logo.png",
+        instagram: "@luxuryresort_spa",
+        whatsapp: "+1234567899",
+        facebook: "luxuryresort.spa",
+        googleMap: "https://maps.google.com/luxuryresortspa",
+        restaurantId: "3",
+        entityId: "3",
         status: "active",
         createdAt: new Date(),
       },
@@ -773,6 +812,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       status: insertBranch.status || "active",
       restaurantId: insertBranch.restaurantId || null,
+      entityId: insertBranch.entityId || null,
       restaurantLogo: insertBranch.restaurantLogo || "",
       instagram: insertBranch.instagram || "",
       whatsapp: insertBranch.whatsapp || "",
@@ -802,6 +842,10 @@ export class MemStorage implements IStorage {
 
   async getBranchesByRestaurant(restaurantId: string): Promise<Branch[]> {
     return Array.from(this.branches.values()).filter(branch => branch.restaurantId === restaurantId);
+  }
+
+  async getBranchesByEntity(entityId: string): Promise<Branch[]> {
+    return Array.from(this.branches.values()).filter(branch => branch.entityId === entityId);
   }
 
   // Category methods
