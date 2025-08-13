@@ -239,6 +239,18 @@ export class MemStorage implements IStorage {
         status: "active",
         createdAt: new Date(),
       },
+      {
+        id: "5",
+        name: "Grand Restaurant",
+        phone: "+1234567894",
+        address: "123 Food Street, City Center",
+        certificateUrl: "https://example.com/certificates/grand-restaurant.pdf",
+        certificatePicture: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+        profilePicture: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        entityType: "restaurant",
+        status: "active",
+        createdAt: new Date(),
+      },
     ];
 
     seedEntities.forEach(entity => this.entities.set(entity.id, entity));
@@ -287,6 +299,13 @@ export class MemStorage implements IStorage {
         status: "active",
         createdAt: new Date(),
       },
+      {
+        id: "7",
+        name: "Grand Restaurant",
+        imageUrl: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        status: "active",
+        createdAt: new Date(),
+      },
     ];
 
     seedRestaurants.forEach(restaurant => this.restaurants.set(restaurant.id, restaurant));
@@ -320,6 +339,21 @@ export class MemStorage implements IStorage {
         facebook: "PizzaPalaceNorth",
         googleMap: "https://maps.google.com/pizzapalacenorth",
         restaurantId: "2",
+        status: "active",
+        createdAt: new Date(),
+      },
+      {
+        id: "3",
+        name: "Riverside Branch",
+        restaurantType: "fine-dining",
+        contactNo: "+1234567895",
+        address: "789 Riverside Drive, Waterfront District",
+        restaurantLogo: "grand_restaurant_logo.png",
+        instagram: "@riverside_grand",
+        whatsapp: "+1234567895",
+        facebook: "riverside.grand",
+        googleMap: "https://maps.google.com/riversidegrand",
+        restaurantId: "7",
         status: "active",
         createdAt: new Date(),
       },
