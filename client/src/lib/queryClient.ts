@@ -51,31 +51,57 @@ export async function mockLogin(username: string, password: string) {
 }
 
 export async function mockSignup(userData: any) {
-  const users = await getLocalData(STORAGE_KEYS.USERS);
-  const existingUser = users.find((u: any) => 
-    u.username === userData.username || u.email === userData.email
-  );
-  
-  if (existingUser) {
-    throw new Error('User already exists');
+  try {
+    // Call external API for signup
+    const response = await fetch('https://81w6jsg0-7261.inc1.devtunnels.ms/api/User/restaurant-owner', {
+      method: 'POST',
+      headers: {
+        'accept': '*/*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: userData.email,
+        name: userData.username,
+        password: userData.password,
+        mobileNumber: userData.phone,
+        Name: "Owner"
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`Signup failed: ${errorData}`);
+    }
+
+    const externalUser = await response.json();
+    
+    // Create local user object with external API response data
+    const newUser = {
+      id: externalUser.id,
+      username: userData.username,
+      email: externalUser.email,
+      name: externalUser.name,
+      phoneNumber: externalUser.mobileNumber || userData.phone,
+      profilePicture: externalUser.profilePicture,
+      role: "manager", // Set as manager for restaurant owners
+      assignedTable: null,
+      assignedBranch: null,
+      status: "active",
+      createdAt: new Date(),
+      externalId: externalUser.id, // Store external API ID for reference
+    };
+    
+    // Store user locally for session management
+    await addLocalData(STORAGE_KEYS.USERS, newUser);
+    const userWithoutPassword = newUser;
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userWithoutPassword));
+    return userWithoutPassword;
+    
+  } catch (error) {
+    // If external API fails, show specific error
+    console.error('External API signup error:', error);
+    throw new Error(`Signup failed: ${error instanceof Error ? error.message : 'Unable to connect to signup service'}`);
   }
-  
-  const newUser = {
-    ...userData,
-    id: `user-${Date.now()}`,
-    name: userData.username,
-    phoneNumber: "0000000000",
-    role: "waiter",
-    assignedTable: null,
-    assignedBranch: null,
-    status: "active",
-    createdAt: new Date(),
-  };
-  
-  await addLocalData(STORAGE_KEYS.USERS, newUser);
-  const { password: _, ...userWithoutPassword } = newUser;
-  localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userWithoutPassword));
-  return userWithoutPassword;
 }
 
 export async function getCurrentUser() {
@@ -103,11 +129,20 @@ export async function apiRequest(
   }
   
   if (url.includes('/auth/signup')) {
-    const result = await mockSignup(data);
-    return new Response(JSON.stringify({ user: result }), { 
-      status: 201,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    try {
+      const result = await mockSignup(data);
+      return new Response(JSON.stringify({ user: result }), { 
+        status: 201,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ 
+        message: error instanceof Error ? error.message : 'Signup failed' 
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
   }
   
   // Handle other API calls by mapping URLs to storage operations
