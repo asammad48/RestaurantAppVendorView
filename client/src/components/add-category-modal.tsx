@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import type { InsertCategory } from "@shared/schema";
+import type { InsertCategory } from "@/types/schema";
 
 const addCategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),

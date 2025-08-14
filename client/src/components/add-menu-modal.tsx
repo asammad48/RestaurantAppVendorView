@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { InsertMenuItem } from "@shared/schema";
+import type { InsertMenuItem } from "@/types/schema";
 
 const addMenuSchema = z.object({
   name: z.string().min(1, "Name is required"),

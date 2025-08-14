@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings, Edit, Trash2, MapPin, Phone, Mail, Building } from "lucide-react";
-import type { Entity } from "@shared/schema";
+import type { Entity } from "@/types/schema";
 
 interface EntityCardProps {
   entity: Entity;

@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings, MapPin, Phone, Edit, Trash2, Store, Clock } from "lucide-react";
-import type { Branch } from "@shared/schema";
+import type { Branch } from "@/types/schema";
 
 interface BranchCardProps {
   branch: Branch;

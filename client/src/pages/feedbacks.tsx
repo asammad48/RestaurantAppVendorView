@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Star, ChevronLeft, ChevronRight, Calendar, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import type { Feedback } from "@shared/schema";
+import type { Feedback } from "@/types/schema";
 
 function StarRating({ rating }: { rating: number }) {
   return (
