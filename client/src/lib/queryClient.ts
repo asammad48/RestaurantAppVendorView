@@ -52,28 +52,16 @@ export async function mockLogin(username: string, password: string) {
 
 export async function mockSignup(userData: any) {
   try {
-    // Call external API for signup
-    const response = await fetch('https://81w6jsg0-7261.inc1.devtunnels.ms/api/User/restaurant-owner', {
-      method: 'POST',
-      headers: {
-        'accept': '*/*',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: userData.email,
-        name: userData.username,
-        password: userData.password,
-        mobileNumber: userData.phone,
-        Name: "Owner"
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Signup failed: ${errorData}`);
+    // Use the AuthService for signup
+    const { AuthService } = await import('../services/userService');
+    
+    const result = await AuthService.signup(userData);
+    
+    if (result.error) {
+      throw new Error(result.error);
     }
 
-    const externalUser = await response.json();
+    const externalUser = result.user;
     
     // Create local user object with external API response data
     const newUser = {
