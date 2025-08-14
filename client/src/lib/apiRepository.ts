@@ -165,7 +165,18 @@ export class ApiRepository {
             // Try to parse JSON error response
             try {
               const parsedError = JSON.parse(errorData);
-              errorMessage = parsedError.message || parsedError.error || errorData;
+              
+              // Handle 422 validation errors specifically
+              if (response.status === 422 && parsedError.errors && parsedError.errors['Validation Error']) {
+                const validationErrors = parsedError.errors['Validation Error'];
+                if (Array.isArray(validationErrors)) {
+                  errorMessage = validationErrors.join('. ');
+                } else {
+                  errorMessage = validationErrors;
+                }
+              } else {
+                errorMessage = parsedError.message || parsedError.error || parsedError.title || errorData;
+              }
             } catch {
               errorMessage = errorData;
             }
@@ -188,6 +199,21 @@ export class ApiRepository {
             break;
           case 404:
             console.error('Not Found:', errorMessage);
+            break;
+          case 422:
+            console.error('Validation Error:', errorMessage);
+            // Handle 422 validation errors with array processing
+            try {
+              const errorData = await response.clone().json();
+              if (errorData.errors && errorData.errors['Validation Error']) {
+                const validationErrors = errorData.errors['Validation Error'];
+                if (Array.isArray(validationErrors)) {
+                  errorMessage = validationErrors.join('. ');
+                }
+              }
+            } catch {
+              // Use default error message if JSON parsing fails
+            }
             break;
           case 500:
             console.error('Internal Server Error:', errorMessage);

@@ -61,6 +61,8 @@ export function getErrorMessage(response: ApiResponse<any>): string {
       return 'Access forbidden. You don\'t have permission for this action.';
     case 404:
       return 'Resource not found.';
+    case 422:
+      return 'Validation failed. Please check your input.';
     case 500:
       return 'Server error. Please try again later.';
     default:

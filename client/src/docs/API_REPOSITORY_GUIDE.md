@@ -132,6 +132,7 @@ The system automatically handles common HTTP status codes:
 - **401 Unauthorized**: Automatically refreshes tokens and retries
 - **403 Forbidden**: Shows permission error
 - **404 Not Found**: Shows resource not found error
+- **422 Unprocessable Entity**: Processes validation error arrays and joins them with ". "
 - **500 Server Error**: Shows server error message
 
 ### Custom Error Handling
