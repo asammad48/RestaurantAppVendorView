@@ -10,7 +10,7 @@ import { useAuthState } from "@/lib/auth";
 export default function Login() {
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password);
+      await login(formData.email, formData.password);
       toast({
         title: "Success",
         description: "Successfully logged in!",
@@ -58,14 +58,14 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
             <div>
               <Input
-                type="text"
-                name="username"
-                placeholder="Email or username"
-                value={formData.username}
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
                 onChange={handleInputChange}
                 className="form-input"
                 required
-                data-testid="input-username"
+                data-testid="input-email"
               />
             </div>
             <div>

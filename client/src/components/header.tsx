@@ -50,13 +50,22 @@ export default function Header() {
               data-testid="profile-button"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&h=150" />
-                <AvatarFallback data-testid="avatar-fallback">
-                  <User className="h-4 w-4" />
+                {user?.profilePicture && (
+                  <AvatarImage src={user.profilePicture} alt={user.fullName || user.name} />
+                )}
+                <AvatarFallback 
+                  data-testid="avatar-fallback"
+                  className="bg-green-500 text-white font-medium"
+                >
+                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : 
+                   user?.name ? user.name.charAt(0).toUpperCase() : 
+                   <User className="h-4 w-4" />}
                 </AvatarFallback>
               </Avatar>
               {user && (
-                <span className="hidden md:block" data-testid="user-name">{user.username}</span>
+                <span className="hidden md:block" data-testid="user-name">
+                  {user.fullName || user.name || user.email}
+                </span>
               )}
             </Button>
           </div>

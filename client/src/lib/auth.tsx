@@ -3,7 +3,7 @@ import { mockLogin, mockSignup, getCurrentUser, logout as logoutUser } from "./q
 
 interface AuthContextType {
   user: any | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   signup: (userData: any) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -48,10 +48,10 @@ export function useAuthState() {
     loadUser();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loggedInUser = await mockLogin(username, password);
+      const loggedInUser = await mockLogin(email, password);
       setUser(loggedInUser);
     } catch (error) {
       console.error("Login error:", error);

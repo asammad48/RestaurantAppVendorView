@@ -36,18 +36,54 @@ export async function deleteLocalData(key: string, id: string): Promise<void> {
   await setLocalData(key, filteredData);
 }
 
-// Mock API functions for authentication
-export async function mockLogin(username: string, password: string) {
-  const users = await getLocalData(STORAGE_KEYS.USERS);
-  const user = users.find((u: any) => u.username === username && u.password === password);
-  
-  if (!user) {
-    throw new Error('Invalid credentials');
+// Real API functions for authentication
+export async function mockLogin(email: string, password: string) {
+  try {
+    const response = await fetch('https://81w6jsg0-7261.inc1.devtunnels.ms/api/User/login', {
+      method: 'POST',
+      headers: {
+        'accept': '*/*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Invalid credentials');
+    }
+
+    const data = await response.json();
+    
+    // Store all user data in localStorage
+    const userData = {
+      token: data.token,
+      email: data.email,
+      mobileNumber: data.mobileNumber,
+      fullName: data.fullName,
+      profilePicture: data.profilePicture,
+      roles: data.roles,
+      // Keep compatibility with existing code
+      username: data.email,
+      name: data.fullName,
+      id: data.roles[0]?.roleId || Date.now().toString()
+    };
+    
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userData));
+    localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('user_email', data.email);
+    localStorage.setItem('user_mobile', data.mobileNumber);
+    localStorage.setItem('user_fullname', data.fullName);
+    localStorage.setItem('user_profile_picture', data.profilePicture || '');
+    localStorage.setItem('user_roles', JSON.stringify(data.roles));
+    
+    return userData;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw new Error('Login failed. Please check your credentials.');
   }
-  
-  const { password: _, ...userWithoutPassword } = user;
-  localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userWithoutPassword));
-  return userWithoutPassword;
 }
 
 export async function mockSignup(userData: any) {
@@ -98,7 +134,14 @@ export async function getCurrentUser() {
 }
 
 export async function logout() {
+  // Clear all authentication related data from localStorage
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_email');
+  localStorage.removeItem('user_mobile');
+  localStorage.removeItem('user_fullname');
+  localStorage.removeItem('user_profile_picture');
+  localStorage.removeItem('user_roles');
 }
 
 // API request function for mutations
