@@ -32,10 +32,16 @@ export type Entity = InsertEntity & { id: string; createdAt: Date; };
 export const insertBranchSchema = z.object({
   name: z.string().min(1, "Branch name is required"),
   entityId: z.string().min(1, "Entity is required"),
+  restaurantType: z.string().min(1, "Restaurant type is required"),
+  contactNo: z.string().optional(),
   address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
+  restaurantLogo: z.string().optional(),
+  instagram: z.string().optional(),
+  whatsapp: z.string().optional(),
+  facebook: z.string().optional(),
+  googleMap: z.string().optional(),
   status: z.string().default("active"),
+  restaurantId: z.string().optional(),
 });
 
 export type InsertBranch = z.infer<typeof insertBranchSchema>;

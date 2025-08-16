@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import BranchCard from "../components/branch-card";
 import AddBranchModal from "@/components/add-branch-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
-import type { Branch, Entity } from "@shared/schema";
+import type { Branch, Entity } from "@/types/schema";
 
 export default function Branches() {
   const [location, navigate] = useLocation();
@@ -49,8 +50,8 @@ export default function Branches() {
 
   const filteredBranches = Array.isArray(branches) ? branches.filter((branch) =>
     branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.restaurantType.toLowerCase().includes(searchTerm.toLowerCase())
+    (branch.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (branch.restaurantType || '').toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
   const handleManage = (branch: Branch) => {
@@ -218,23 +219,43 @@ export default function Branches() {
       )}
 
       {showDeleteModal && selectedBranch && (
-        <DeleteConfirmationModal
-          open={showDeleteModal}
-          onOpenChange={(open) => {
-            if (!open) {
-              setShowDeleteModal(false);
-              setSelectedBranch(null);
-            }
-          }}
-          onConfirm={() => {
-            // Handle delete logic here
-            console.log("Deleting branch:", selectedBranch.id);
+        <Dialog open={showDeleteModal} onOpenChange={(open) => {
+          if (!open) {
             setShowDeleteModal(false);
             setSelectedBranch(null);
-          }}
-          title="Delete Branch"
-          description={`Are you sure you want to delete "${selectedBranch.name}"? This action cannot be undone.`}
-        />
+          }
+        }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Branch</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{selectedBranch.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedBranch(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  // Handle delete logic here
+                  console.log("Deleting branch:", selectedBranch.id);
+                  setShowDeleteModal(false);
+                  setSelectedBranch(null);
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {showPricingModal && (

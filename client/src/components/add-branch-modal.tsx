@@ -28,6 +28,7 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
     resolver: zodResolver(insertBranchSchema),
     defaultValues: {
       name: "",
+      entityId: entityId,
       restaurantType: "",
       contactNo: "",
       address: "",
@@ -36,8 +37,8 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
       whatsapp: "",
       facebook: "",
       googleMap: "",
-      restaurantId: entityId,
       status: "active",
+      restaurantId: entityId,
     },
   });
 
