@@ -199,11 +199,11 @@ export default function Branches() {
         </div>
       )}
 
-      {showAddModal && currentEntity && (
+      {showAddModal && entityId && (
         <AddBranchModal
           open={showAddModal}
           onClose={() => setShowAddModal(false)}
-          entityId={currentEntity.id}
+          entityId={entityId}
         />
       )}
 
