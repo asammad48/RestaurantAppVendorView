@@ -311,6 +311,26 @@ export class ApiRepository {
   isAuthenticated(): boolean {
     return !!this.accessToken;
   }
+
+  // GET request
+  async get(endpoint: string) {
+    return this.call(endpoint, 'GET');
+  }
+
+  // POST request with FormData
+  async postFormData(endpoint: string, formData: FormData) {
+    return this.call(endpoint, 'POST', formData);
+  }
+
+  // PUT request with FormData
+  async putFormData(endpoint: string, formData: FormData) {
+    return this.call(endpoint, 'PUT', formData);
+  }
+
+  // DELETE request
+  async delete(endpoint: string) {
+    return this.call(endpoint, 'DELETE');
+  }
 }
 
 // API Base URL and Endpoints
@@ -327,8 +347,9 @@ export const API_ENDPOINTS = {
   ENTITY_BY_ID: '/api/Entity/{id}',
   
   // Branch endpoints
-  BRANCHES: '/api/branches',
-  BRANCH_BY_ID: '/api/branches/{id}',
+  BRANCHES: '/api/Branch',
+  BRANCH_BY_ID: '/api/Branch/{id}',
+  BRANCHES_BY_ENTITY: '/api/Branch/entity/{entityId}',
   
   // Menu endpoints
   MENU_ITEMS: '/api/menu-items',
@@ -366,6 +387,8 @@ export const defaultApiConfig: ApiConfig = {
     
     // Branch endpoints
     getBranches: API_ENDPOINTS.BRANCHES,
+    getBranchesByEntity: API_ENDPOINTS.BRANCHES_BY_ENTITY,
+    getBranchById: API_ENDPOINTS.BRANCH_BY_ID,
     createBranch: API_ENDPOINTS.BRANCHES,
     updateBranch: API_ENDPOINTS.BRANCH_BY_ID,
     deleteBranch: API_ENDPOINTS.BRANCH_BY_ID,
@@ -391,3 +414,70 @@ export const defaultApiConfig: ApiConfig = {
 
 // Create singleton instance
 export const apiRepository = new ApiRepository(defaultApiConfig);
+
+// Branch API Helper Functions
+export const branchApi = {
+  // Get all branches by entity ID
+  getBranchesByEntity: async (entityId: number) => {
+    const response = await apiRepository.call('getBranchesByEntity', 'GET', undefined, {}, true, { entityId });
+    return response.data || [];
+  },
+
+  // Get branch by ID
+  getBranchById: async (branchId: number) => {
+    const response = await apiRepository.call('getBranchById', 'GET', undefined, {}, true, { id: branchId });
+    return response.data;
+  },
+
+  // Create new branch with FormData
+  createBranch: async (branchData: any, logoFile?: File, bannerFile?: File) => {
+    const formData = new FormData();
+    
+    // Add text fields
+    Object.keys(branchData).forEach(key => {
+      if (branchData[key] !== undefined && branchData[key] !== null) {
+        formData.append(key, branchData[key].toString());
+      }
+    });
+
+    // Add files if provided
+    if (logoFile) {
+      formData.append('RestaurantLogo', logoFile);
+    }
+    if (bannerFile) {
+      formData.append('RestaurantBanner', bannerFile);
+    }
+
+    const response = await apiRepository.call('createBranch', 'POST', formData);
+    return response.data;
+  },
+
+  // Update branch with FormData
+  updateBranch: async (branchId: number, branchData: any, logoFile?: File, bannerFile?: File) => {
+    const formData = new FormData();
+    
+    // Add text fields
+    Object.keys(branchData).forEach(key => {
+      if (branchData[key] !== undefined && branchData[key] !== null) {
+        formData.append(key, branchData[key].toString());
+      }
+    });
+
+    // Add files if provided
+    if (logoFile) {
+      formData.append('RestaurantLogo', logoFile);
+    }
+    if (bannerFile) {
+      formData.append('RestaurantBanner', bannerFile);
+    }
+
+    const response = await apiRepository.call('updateBranch', 'PUT', formData, {}, true, { id: branchId });
+    return response.data;
+  },
+
+  // Delete branch
+  deleteBranch: async (branchId: number) => {
+    const response = await apiRepository.call('deleteBranch', 'DELETE', undefined, {}, true, { id: branchId });
+    return response.data;
+  },
+};

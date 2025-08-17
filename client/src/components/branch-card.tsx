@@ -17,23 +17,20 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
     <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-branch-${branch.id}`}>
       <div className="relative">
         <img 
-          src={getBranchImageUrl(branch.restaurantLogo)} 
-          alt={`${branch.name} logo`} 
+          src={getBranchImageUrl(branch.RestaurantLogo)} 
+          alt={`${branch.Name} logo`} 
           className="w-full h-48 object-cover bg-gray-100 transition-transform duration-300 group-hover:scale-105"
           data-testid={`branch-image-${branch.id}`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute top-4 right-4">
           <Badge 
-            className={branch.status === 'active' 
-              ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg' 
-              : 'bg-gray-500 hover:bg-gray-600 text-white shadow-lg'
-            }
+            className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
             data-testid={`branch-status-${branch.id}`}
           >
             <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${branch.status === 'active' ? 'bg-white' : 'bg-gray-300'}`} />
-              {branch.status === 'active' ? 'Active' : 'Inactive'}
+              <div className="w-2 h-2 rounded-full bg-white" />
+              Active
             </div>
           </Badge>
         </div>
@@ -44,12 +41,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
             data-testid={`branch-type-${branch.id}`}
           >
             <Store className="w-3 h-3 mr-1" />
-            {branch.restaurantType.toUpperCase()}
+            BRANCH
           </Badge>
         </div>
         <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg" data-testid={`branch-name-${branch.id}`}>
-            {branch.name}
+            {branch.Name}
           </h3>
         </div>
       </div>
@@ -58,11 +55,11 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
         <div className="space-y-3 mb-6">
           <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
             <MapPin className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" />
-            <span className="line-clamp-2">{branch.address}</span>
+            <span className="line-clamp-2">{branch.Address}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-            <span>{branch.contactNo}</span>
+            <span>Contact Available</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <Clock className="w-4 h-4 text-orange-500 flex-shrink-0" />

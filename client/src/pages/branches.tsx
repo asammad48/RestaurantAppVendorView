@@ -12,6 +12,7 @@ import AddBranchModal from "@/components/add-branch-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
 import type { Branch, Entity } from "@/types/schema";
+import { branchApi } from "@/lib/apiRepository";
 
 export default function Branches() {
   const [location, navigate] = useLocation();
@@ -29,16 +30,17 @@ export default function Branches() {
   const entityType = new URLSearchParams(window.location.search).get('entityType');
   
   // Convert frontend entityId format (entity-X) to backend format (X)
-  const entityId = rawEntityId?.startsWith('entity-') ? rawEntityId.replace('entity-', '') : rawEntityId;
+  const entityIdStr = rawEntityId?.startsWith('entity-') ? rawEntityId.replace('entity-', '') : rawEntityId;
+  const entityId = entityIdStr ? parseInt(entityIdStr, 10) : null;
 
   const { data: entity } = useQuery<Entity>({
-    queryKey: ["/api/entities", entityId],
+    queryKey: ["entities", entityId],
     enabled: !!entityId,
   });
 
   const { data: branches = [], isLoading } = useQuery<Branch[]>({
-    queryKey: ["/api/branches", entityId],
-    queryFn: () => fetch(`/api/branches?entityId=${entityId}`).then(res => res.json()),
+    queryKey: ["branches", entityId],
+    queryFn: () => entityId ? branchApi.getBranchesByEntity(entityId) : Promise.resolve([]),
     enabled: !!entityId,
   });
 
@@ -59,7 +61,7 @@ export default function Branches() {
     const managementPath = entityType === "hotel" ? "/hotel-management" : "/restaurant-management";
     const queryParams = new URLSearchParams({
       entityId: rawEntityId || "",
-      branchId: branch.id,
+      branchId: branch.id.toString(),
       entityType: entityType || "restaurant",
       showPricing: isTrialUser ? "true" : "false"
     });
@@ -214,7 +216,7 @@ export default function Branches() {
             setShowEditModal(false);
             setSelectedBranch(null);
           }}
-          entityId={currentEntity?.id || ""}
+          entityId={currentEntity?.id || 0}
         />
       )}
 
@@ -229,7 +231,7 @@ export default function Branches() {
             <DialogHeader>
               <DialogTitle>Delete Branch</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{selectedBranch.name}"? This action cannot be undone.
+                Are you sure you want to delete "{selectedBranch.Name}"? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-3 mt-6">

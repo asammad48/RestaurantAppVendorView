@@ -53,24 +53,42 @@ export const transformEntityForUI = (apiEntity: Entity): Entity => ({
   image: apiEntity.profilePictureUrl,
 });
 
-// Branch types
+// Branch types (matching API response)
+export type Branch = {
+  id: number;
+  EntityId: number;
+  userId: number;
+  Name: string;
+  Address: string;
+  SubscriptionId: number;
+  trialEndDate: string;
+  gracePeriodEndDate: string;
+  billingStartDate: string;
+  RestaurantLogo: string;
+  RestaurantBanner: string;
+  InstagramLink: string;
+  WhatsappLink: string;
+  FacebookLink: string;
+  GoogleMapsLink: string;
+  // UI helper properties
+  contactNo?: string;
+  restaurantType?: string;
+  status?: string;
+};
+
+// Branch creation/update schema for forms
 export const insertBranchSchema = z.object({
-  name: z.string().min(1, "Branch name is required"),
-  entityId: z.string().min(1, "Entity is required"),
-  restaurantType: z.string().min(1, "Restaurant type is required"),
-  contactNo: z.string().optional(),
-  address: z.string().optional(),
-  restaurantLogo: z.string().optional(),
-  instagram: z.string().optional(),
-  whatsapp: z.string().optional(),
-  facebook: z.string().optional(),
-  googleMap: z.string().optional(),
-  status: z.string().default("active"),
-  restaurantId: z.string().optional(),
+  Name: z.string().min(1, "Branch name is required"),
+  Address: z.string().min(1, "Address is required"),
+  EntityId: z.number().min(1, "Entity ID is required"),
+  SubscriptionId: z.number().default(1),
+  InstagramLink: z.string().optional(),
+  WhatsappLink: z.string().optional(),
+  FacebookLink: z.string().optional(),
+  GoogleMapsLink: z.string().optional(),
 });
 
 export type InsertBranch = z.infer<typeof insertBranchSchema>;
-export type Branch = InsertBranch & { id: string; createdAt: Date; };
 
 // Menu item types
 export const insertMenuItemSchema = z.object({

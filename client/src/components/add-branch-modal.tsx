@@ -1,66 +1,69 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertBranchSchema, type InsertBranch } from "@/types/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { branchApi } from "@/lib/apiRepository";
 
 interface AddBranchModalProps {
   open: boolean;
   onClose: () => void;
-  entityId: string;
+  entityId: number;
 }
 
 export default function AddBranchModal({ open, onClose, entityId }: AddBranchModalProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [bannerPreview, setBannerPreview] = useState<string>("");
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const form = useForm<InsertBranch>({
     resolver: zodResolver(insertBranchSchema),
     defaultValues: {
-      name: "",
-      entityId: entityId,
-      restaurantType: "",
-      contactNo: "",
-      address: "",
-      restaurantLogo: "",
-      instagram: "",
-      whatsapp: "",
-      facebook: "",
-      googleMap: "",
-      status: "active",
-      restaurantId: entityId,
+      Name: "",
+      Address: "",
+      EntityId: entityId,
+      SubscriptionId: 1,
+      InstagramLink: "",
+      WhatsappLink: "",
+      FacebookLink: "",
+      GoogleMapsLink: "",
     },
   });
 
   const createBranchMutation = useMutation({
     mutationFn: async (data: InsertBranch) => {
-      return await apiRequest("POST", "/api/branches", data);
+      return await branchApi.createBranch(data, logoFile || undefined, bannerFile || undefined);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/branches"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/branches", entityId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["branches", entityId] });
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
         title: "Success",
         description: "Branch added successfully",
       });
       form.reset();
-      setSelectedFile(null);
+      setLogoFile(null);
+      setBannerFile(null);
+      setLogoPreview("");
+      setBannerPreview("");
       onClose();
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: "Error", 
         description: error.message || "Failed to add branch",
         variant: "destructive",
       });
@@ -71,12 +74,23 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
     createBranchMutation.mutate(data);
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
-      // For demo purposes, we'll just set a placeholder URL
-      form.setValue("restaurantLogo", `logo_${file.name}`);
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setLogoPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBannerFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setBannerPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -91,10 +105,10 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-1">
             <FormField
               control={form.control}
-              name="name"
+              name="Name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Name</FormLabel>
+                  <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Branch Name</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -108,64 +122,14 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="restaurantType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">
-                      Restaurant Type
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-restaurant-type">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="fast-food">Fast Food</SelectItem>
-                        <SelectItem value="casual-dining">Casual Dining</SelectItem>
-                        <SelectItem value="fine-dining">Fine Dining</SelectItem>
-                        <SelectItem value="cafe">Cafe</SelectItem>
-                        <SelectItem value="buffet">Buffet</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="contactNo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">
-                      Contact No
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter contact number"
-                        className="w-full"
-                        data-testid="input-contact"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
-              name="address"
+              name="Address"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Address</FormLabel>
                   <FormControl>
-                    <Input
+                    <Textarea
                       {...field}
                       placeholder="Enter branch address"
                       className="w-full"
@@ -177,120 +141,201 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
               )}
             />
 
+            {/* Logo Upload */}
             <div>
               <Label className="text-sm font-medium text-gray-900 dark:text-white">Restaurant Logo</Label>
-              <div className="flex mt-1">
-                <Input
+              <div className="mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <input
+                  ref={logoInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleFileSelect}
+                  onChange={handleLogoSelect}
                   className="hidden"
-                  id="logo-upload"
-                  data-testid="input-logo-file"
+                  data-testid="input-logo"
                 />
-                <div className="flex w-full">
-                  <Input
-                    value={selectedFile ? selectedFile.name : "Choose File"}
-                    readOnly
-                    className="flex-1 bg-gray-50"
-                    placeholder="Choose File"
-                    data-testid="input-logo-display"
-                  />
+                <div className="text-center">
+                  {logoPreview ? (
+                    <div className="relative">
+                      <img src={logoPreview} alt="Logo preview" className="mx-auto h-32 w-32 object-cover rounded-lg" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-0 right-0"
+                        onClick={() => {
+                          setLogoFile(null);
+                          setLogoPreview("");
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="py-8">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Click to upload logo</p>
+                    </div>
+                  )}
                   <Button
                     type="button"
-                    onClick={() => document.getElementById('logo-upload')?.click()}
-                    className="ml-2 bg-green-600 hover:bg-green-700 text-white px-4"
-                    data-testid="button-browse-logo"
+                    variant="outline"
+                    onClick={() => logoInputRef.current?.click()}
+                    className="mt-2"
+                    data-testid="button-upload-logo"
                   >
-                    Browse
+                    Choose Logo
                   </Button>
                 </div>
               </div>
             </div>
 
+            {/* Banner Upload */}
             <div>
-              <Label className="text-sm font-medium text-gray-900 dark:text-white mb-3 block">
-                Attach Social Media
-              </Label>
-              <div className="space-y-3">
+              <Label className="text-sm font-medium text-gray-900 dark:text-white">Restaurant Banner</Label>
+              <div className="mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerSelect}
+                  className="hidden"
+                  data-testid="input-banner"
+                />
+                <div className="text-center">
+                  {bannerPreview ? (
+                    <div className="relative">
+                      <img src={bannerPreview} alt="Banner preview" className="mx-auto h-32 w-full object-cover rounded-lg" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-0 right-0"
+                        onClick={() => {
+                          setBannerFile(null);
+                          setBannerPreview("");
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="py-8">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Click to upload banner</p>
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => bannerInputRef.current?.click()}
+                    className="mt-2"
+                    data-testid="button-upload-banner"
+                  >
+                    Choose Banner
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Social Links (Optional)</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="instagram"
+                  name="InstagramLink"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Instagram</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Instagram"
+                          placeholder="Instagram URL"
                           className="w-full"
                           data-testid="input-instagram"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <FormField
                   control={form.control}
-                  name="whatsapp"
+                  name="WhatsappLink"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">WhatsApp</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Whatsapp"
+                          placeholder="WhatsApp URL"
                           className="w-full"
                           data-testid="input-whatsapp"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <FormField
                   control={form.control}
-                  name="facebook"
+                  name="FacebookLink"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Facebook</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Facebook"
+                          placeholder="Facebook URL"
                           className="w-full"
                           data-testid="input-facebook"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <FormField
                   control={form.control}
-                  name="googleMap"
+                  name="GoogleMapsLink"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Google Maps</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Google Map"
+                          placeholder="Google Maps URL"
                           className="w-full"
-                          data-testid="input-google-map"
+                          data-testid="input-google-maps"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
             </div>
 
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                data-testid="button-cancel"
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 disabled={createBranchMutation.isPending}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-md"
-                data-testid="button-next"
+                className="bg-green-600 hover:bg-green-700"
+                data-testid="button-submit"
               >
-                {createBranchMutation.isPending ? "Adding..." : "Next"}
+                {createBranchMutation.isPending ? "Adding..." : "Add Branch"}
               </Button>
             </div>
           </form>
