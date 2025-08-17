@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings, Edit, Trash2 } from "lucide-react";
+import { getFullImageUrl } from "@/lib/imageUtils";
 
 interface RestaurantCardProps {
   restaurant: {
@@ -18,7 +19,7 @@ export default function RestaurantCard({ restaurant, onDelete }: RestaurantCardP
     <Card className="bg-white border border-gray-100 overflow-hidden" data-testid={`restaurant-card-${restaurant.id}`}>
       <div className="relative">
         <img 
-          src={restaurant.imageUrl} 
+          src={getFullImageUrl(restaurant.imageUrl) || "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
           alt={`${restaurant.name} interior`} 
           className="w-full h-48 object-cover"
           data-testid={`restaurant-image-${restaurant.id}`}

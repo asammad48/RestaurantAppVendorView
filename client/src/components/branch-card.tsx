@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings, MapPin, Phone, Edit, Trash2, Store, Clock } from "lucide-react";
 import type { Branch } from "@/types/schema";
+import { getBranchImageUrl } from "@/lib/imageUtils";
 
 interface BranchCardProps {
   branch: Branch;
@@ -16,7 +17,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
     <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-branch-${branch.id}`}>
       <div className="relative">
         <img 
-          src={branch.restaurantLogo || "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
+          src={getBranchImageUrl(branch.restaurantLogo)} 
           alt={`${branch.name} logo`} 
           className="w-full h-48 object-cover bg-gray-100 transition-transform duration-300 group-hover:scale-105"
           data-testid={`branch-image-${branch.id}`}

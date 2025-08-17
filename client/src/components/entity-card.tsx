@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings, Edit, Trash2, MapPin, Phone, Mail, Building } from "lucide-react";
 import type { Entity } from "@/types/schema";
+import { getEntityImageUrl } from "@/lib/imageUtils";
 
 interface EntityCardProps {
   entity: Entity;
@@ -16,7 +17,7 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
     <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-entity-${entity.id}`}>
       <div className="relative">
         <img 
-          src={entity.profilePictureUrl || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
+          src={getEntityImageUrl(entity.profilePictureUrl)} 
           alt={`${entity.name} profile`} 
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
           data-testid={`entity-image-${entity.id}`}

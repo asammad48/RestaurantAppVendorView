@@ -14,6 +14,7 @@ import { Upload, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiRepository } from "@/lib/apiRepository";
 import type { Entity } from "@/types/schema";
+import { getFullImageUrl } from "@/lib/imageUtils";
 
 const formSchema = z.object({
   Name: z.string().min(1, "Entity name is required"),
@@ -64,19 +65,19 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
         Type: entityType,
       });
       
-      // Set image URLs with safe fallbacks - don't add if causing crashes
+      // Set image URLs with safe fallbacks and base URL prefix
       const profileUrl = entity.profilePictureUrl || entity.image || "";
       const certificateUrl = entity.certificateUrl || "";
       
-      // Only set images if they are valid URLs or base64 strings
-      if (profileUrl && (profileUrl.startsWith('http') || profileUrl.startsWith('data:'))) {
-        setProfilePicture(profileUrl);
+      // Use the image utility to get full URLs with base URL
+      if (profileUrl) {
+        setProfilePicture(getFullImageUrl(profileUrl));
       } else {
         setProfilePicture("");
       }
       
-      if (certificateUrl && (certificateUrl.startsWith('http') || certificateUrl.startsWith('data:'))) {
-        setCertificatePicture(certificateUrl);
+      if (certificateUrl) {
+        setCertificatePicture(getFullImageUrl(certificateUrl));
       } else {
         setCertificatePicture("");
       }
