@@ -101,8 +101,8 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
         apiFormData.append('CertificatePicture', certificateFile);
       }
 
-      const response = await apiRepository.call('updateEntity', 'PUT', apiFormData, {
-        'Content-Type': 'multipart/form-data',
+      const response = await apiRepository.call('updateEntity', 'PUT', apiFormData, {}, true, {
+        id: entity.id
       });
 
       if (response.error) {
