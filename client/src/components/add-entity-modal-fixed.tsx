@@ -59,24 +59,29 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const apiFormData = new FormData();
-      apiFormData.append('Name', data.Name);
-      apiFormData.append('Phone', data.Phone);
-      apiFormData.append('Address', data.Address);
-      apiFormData.append('Type', String(data.Type));
-      
-      if (profilePictureFile) {
-        apiFormData.append('ProfilePicture', profilePictureFile);
-      }
-      if (certificateFile) {
-        apiFormData.append('CertificateFile', certificateFile);
-      }
+      try {
+        const apiFormData = new FormData();
+        apiFormData.append('Name', data.Name);
+        apiFormData.append('Phone', data.Phone);
+        apiFormData.append('Address', data.Address);
+        apiFormData.append('Type', String(data.Type));
+        
+        if (profilePictureFile) {
+          apiFormData.append('ProfilePicture', profilePictureFile);
+        }
+        if (certificateFile) {
+          apiFormData.append('CertificateFile', certificateFile);
+        }
 
-      const response = await apiRepository.call('createEntity', 'POST', apiFormData);
-      if (response.error) {
-        throw new Error(response.error);
+        const response = await apiRepository.call('createEntity', 'POST', apiFormData, undefined, true);
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        return response.data;
+      } catch (error) {
+        console.error('Create entity error:', error);
+        throw error;
       }
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entities"] });
