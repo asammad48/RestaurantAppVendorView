@@ -418,9 +418,9 @@ export const apiRepository = new ApiRepository(defaultApiConfig);
 // Branch API Helper Functions
 export const branchApi = {
   // Get all branches by entity ID
-  getBranchesByEntity: async (entityId: number) => {
+  getBranchesByEntity: async (entityId: number): Promise<any[]> => {
     const response = await apiRepository.call('getBranchesByEntity', 'GET', undefined, {}, true, { entityId });
-    return response.data || [];
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   // Get branch by ID

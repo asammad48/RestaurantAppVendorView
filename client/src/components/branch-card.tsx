@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, MapPin, Phone, Edit, Trash2, Store, Clock } from "lucide-react";
+import { Settings, MapPin, Phone, Edit, Trash2, Store } from "lucide-react";
 import type { Branch } from "@/types/schema";
 import { getBranchImageUrl } from "@/lib/imageUtils";
 
@@ -59,11 +59,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-            <span>Contact Available</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <Clock className="w-4 h-4 text-orange-500 flex-shrink-0" />
-            <span>24/7 Available</span>
+            <span>{branch.contactNo || 'Phone: N/A'}</span>
           </div>
         </div>
         

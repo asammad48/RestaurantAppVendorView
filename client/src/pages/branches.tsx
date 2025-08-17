@@ -38,9 +38,13 @@ export default function Branches() {
     enabled: !!entityId,
   });
 
-  const { data: branches = [], isLoading } = useQuery<Branch[]>({
+  const { data: branches = [], isLoading } = useQuery({
     queryKey: ["branches", entityId],
-    queryFn: () => entityId ? branchApi.getBranchesByEntity(entityId) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!entityId) return [];
+      const result = await branchApi.getBranchesByEntity(entityId);
+      return Array.isArray(result) ? result : [];
+    },
     enabled: !!entityId,
   });
 
@@ -50,9 +54,9 @@ export default function Branches() {
     }
   }, [entity]);
 
-  const filteredBranches = Array.isArray(branches) ? branches.filter((branch) =>
-    branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (branch.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredBranches = Array.isArray(branches) ? branches.filter((branch: any) =>
+    (branch.Name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (branch.Address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (branch.restaurantType || '').toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
@@ -161,7 +165,7 @@ export default function Branches() {
             Total Branches: {Array.isArray(branches) ? branches.length : 0}
           </Badge>
           <Badge variant="outline" data-testid="badge-active-branches">
-            Active: {Array.isArray(branches) ? branches.filter(b => b.status === "active").length : 0}
+            Active: {Array.isArray(branches) ? branches.filter((b: any) => (b.status || "active") === "active").length : 0}
           </Badge>
         </div>
       </div>
@@ -189,7 +193,7 @@ export default function Branches() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredBranches.map((branch) => (
+          {filteredBranches.map((branch: any) => (
             <BranchCard
               key={branch.id}
               branch={branch}
