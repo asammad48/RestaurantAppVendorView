@@ -260,95 +260,106 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Profile Picture Upload */}
-              <div className="space-y-2">
-                <Label>Profile Picture</Label>
-                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-gray-400 transition-colors"
-                     onClick={() => profileFileRef.current?.click()}>
-                  {profilePicturePreview ? (
-                    <div className="relative">
-                      <img
-                        src={profilePicturePreview}
-                        alt="Profile preview"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFile('profile');
-                        }}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Click to upload profile picture
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    ref={profileFileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, 'profile');
-                    }}
-                    className="hidden"
-                  />
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Profile Picture Upload */}
+                <div className="space-y-2">
+                  <Label>Profile Picture (Optional)</Label>
+                  <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                    {profilePicturePreview ? (
+                      <div className="relative">
+                        <img
+                          src={profilePicturePreview}
+                          alt="Profile preview"
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile('profile')}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Upload profile picture
+                        </p>
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => profileFileRef.current?.click()}
+                          className="text-xs"
+                        >
+                          Choose File
+                        </Button>
+                      </div>
+                    )}
+                    <input
+                      ref={profileFileRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'profile');
+                      }}
+                      className="hidden"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Certificate Upload */}
-              <div className="space-y-2">
-                <Label>Certificate Picture</Label>
-                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-gray-400 transition-colors"
-                     onClick={() => certificateFileRef.current?.click()}>
-                  {certificatePicturePreview ? (
-                    <div className="relative">
-                      <img
-                        src={certificatePicturePreview}
-                        alt="Certificate preview"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFile('certificate');
-                        }}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Click to upload certificate
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    ref={certificateFileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, 'certificate');
-                    }}
-                    className="hidden"
-                  />
+                {/* Certificate Upload */}
+                <div className="space-y-2">
+                  <Label>Certificate Picture (Optional)</Label>
+                  <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                    {certificatePicturePreview ? (
+                      <div className="relative">
+                        <img
+                          src={certificatePicturePreview}
+                          alt="Certificate preview"
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile('certificate')}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Upload certificate picture
+                        </p>
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => certificateFileRef.current?.click()}
+                          className="text-xs"
+                        >
+                          Choose File
+                        </Button>
+                      </div>
+                    )}
+                    <input
+                      ref={certificateFileRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'certificate');
+                      }}
+                      className="hidden"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
             <div className="flex justify-end space-x-2">
               <Button
