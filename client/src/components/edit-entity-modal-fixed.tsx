@@ -264,7 +264,8 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
               {/* Profile Picture Upload */}
               <div className="space-y-2">
                 <Label>Profile Picture</Label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-gray-400 transition-colors"
+                     onClick={() => profileFileRef.current?.click()}>
                   {profilePicturePreview ? (
                     <div className="relative">
                       <img
@@ -274,8 +275,11 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
                       />
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile('profile')}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFile('profile');
+                        }}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -296,7 +300,7 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
                       const file = e.target.files?.[0];
                       if (file) handleFileUpload(file, 'profile');
                     }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="hidden"
                   />
                 </div>
               </div>
@@ -304,7 +308,8 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
               {/* Certificate Upload */}
               <div className="space-y-2">
                 <Label>Certificate Picture</Label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-gray-400 transition-colors"
+                     onClick={() => certificateFileRef.current?.click()}>
                   {certificatePicturePreview ? (
                     <div className="relative">
                       <img
@@ -314,8 +319,11 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
                       />
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile('certificate')}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFile('certificate');
+                        }}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -336,7 +344,7 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
                       const file = e.target.files?.[0];
                       if (file) handleFileUpload(file, 'certificate');
                     }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="hidden"
                   />
                 </div>
               </div>
