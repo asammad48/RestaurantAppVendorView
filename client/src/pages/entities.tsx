@@ -11,7 +11,8 @@ import EditEntityModal from "@/components/edit-entity-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import { apiRepository } from "@/lib/apiRepository";
-import type { Entity, transformEntityForUI } from "@/types/schema";
+import { transformEntityForUI } from "@/types/schema";
+import type { Entity } from "@/types/schema";
 
 export default function Entities() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,7 +22,7 @@ export default function Entities() {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
 
-  const { data: entities = [], isLoading } = useQuery<Entity[]>({
+  const { data: entities = [], isLoading, error } = useQuery<Entity[]>({
     queryKey: ["entities"],
     queryFn: async () => {
       const response = await apiRepository.call<Entity[]>('getEntities', 'GET');
@@ -29,7 +30,10 @@ export default function Entities() {
         throw new Error(response.error);
       }
       // Transform entities for UI compatibility
-      return (response.data || []).map(transformEntityForUI);
+      const transformedEntities = (response.data || []).map(transformEntityForUI);
+      console.log('Raw API response:', response.data);
+      console.log('Transformed entities:', transformedEntities);
+      return transformedEntities;
     },
   });
 
@@ -59,6 +63,19 @@ export default function Entities() {
       <div className="p-4 md:p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-lg">Loading entities...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-lg font-medium text-red-600 mb-2">Failed to load entities</div>
+            <div className="text-sm text-gray-600">{error.message}</div>
+          </div>
         </div>
       </div>
     );
