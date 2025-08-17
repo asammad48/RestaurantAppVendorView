@@ -120,6 +120,10 @@ export class ApiRepository {
     const isFormData = data instanceof FormData;
     if (!isFormData) {
       headers['Content-Type'] = 'application/json';
+    } else {
+      // Explicitly remove Content-Type for FormData to let browser set it with boundary
+      delete headers['Content-Type'];
+      console.log('FormData detected - Content-Type header removed for multipart/form-data');
     }
 
     // Add authorization header if required and token exists
@@ -343,6 +347,10 @@ export const API_ENDPOINTS = {
 // Default API configuration
 export const defaultApiConfig: ApiConfig = {
   baseUrl: API_BASE_URL,
+  headers: {
+    'Accept': '*/*',
+    // No Content-Type header here - let API repository handle it dynamically
+  },
   endpoints: {
     // Authentication endpoints
     login: API_ENDPOINTS.LOGIN,
@@ -378,10 +386,6 @@ export const defaultApiConfig: ApiConfig = {
     getAnalytics: API_ENDPOINTS.ANALYTICS,
     getFeedbacks: API_ENDPOINTS.FEEDBACKS,
     getTickets: API_ENDPOINTS.TICKETS,
-  },
-  headers: {
-    'Accept': '*/*',
-    'Content-Type': 'application/json',
   },
 };
 

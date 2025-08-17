@@ -80,6 +80,7 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
         return response.data;
       } catch (error) {
         console.error('Create entity error:', error);
+        console.log('FormData being sent:', Array.from(apiFormData.entries()));
         throw error;
       }
     },
