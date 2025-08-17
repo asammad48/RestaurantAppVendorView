@@ -45,20 +45,41 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
       Name: "",
       Phone: "",
       Address: "",
-      Type: 2,
+      Type: 2, // Default to restaurant, will be overridden by API values
     },
   });
 
   useEffect(() => {
     if (entity && open) {
+      // Determine the correct entity type from API response
+      let entityType = 2; // Default to restaurant
+      if (entity.type === 1 || entity.entityType === "hotel" || entity.entityType === "Hotel") {
+        entityType = 1; // Hotel
+      }
+      
       form.reset({
         Name: entity.name || "",
         Phone: entity.phone || "",
         Address: entity.address || "",
-        Type: entity.type || entity.entityType === "Hotel" ? 1 : 2,
+        Type: entityType,
       });
-      setProfilePicture(entity.profilePictureUrl || entity.profilePicture || "");
-      setCertificatePicture(entity.certificatePictureUrl || entity.certificatePicture || "");
+      
+      // Set image URLs with safe fallbacks - don't add if causing crashes
+      const profileUrl = entity.profilePictureUrl || entity.image || "";
+      const certificateUrl = entity.certificateUrl || "";
+      
+      // Only set images if they are valid URLs or base64 strings
+      if (profileUrl && (profileUrl.startsWith('http') || profileUrl.startsWith('data:'))) {
+        setProfilePicture(profileUrl);
+      } else {
+        setProfilePicture("");
+      }
+      
+      if (certificateUrl && (certificateUrl.startsWith('http') || certificateUrl.startsWith('data:'))) {
+        setCertificatePicture(certificateUrl);
+      } else {
+        setCertificatePicture("");
+      }
     }
   }, [entity, open, form]);
 
@@ -126,18 +147,43 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64String = e.target?.result as string;
-      if (type === 'profile') {
-        setProfilePicture(base64String);
-        setProfileFile(file);
-      } else {
-        setCertificatePicture(base64String);
-        setCertificateFile(file);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const base64String = e.target?.result as string;
+          if (type === 'profile') {
+            setProfilePicture(base64String);
+            setProfileFile(file);
+          } else {
+            setCertificatePicture(base64String);
+            setCertificateFile(file);
+          }
+        } catch (error) {
+          console.error('Error processing image:', error);
+          toast({
+            title: "Error",
+            description: "Failed to process image file",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to read image file",
+          variant: "destructive",
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to upload image file",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveFile = (type: 'profile' | 'certificate') => {
