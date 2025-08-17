@@ -1,51 +1,42 @@
-import React, { useRef, useState, useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as z from "zod";
-import { Upload, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { insertEntitySchema } from "../types/schema";
-import { apiRepository } from "../lib/apiRepository";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useState, useRef, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Upload, X } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { apiRepository } from "@/lib/apiRepository";
+import type { Entity } from "@/types/schema";
 
-const formSchema = insertEntitySchema;
+const formSchema = z.object({
+  Name: z.string().min(1, "Entity name is required"),
+  Phone: z.string().min(1, "Phone number is required"),
+  Address: z.string().min(1, "Address is required"),
+  Type: z.number().min(1).max(2),
+});
+
 type FormData = z.infer<typeof formSchema>;
 
 interface EditEntityModalProps {
-  entity: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  entity: Entity | null;
 }
 
-export default function EditEntityModal({ entity, open, onOpenChange }: EditEntityModalProps) {
+export default function EditEntityModal({ open, onOpenChange, entity }: EditEntityModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string>("");
-  const [certificatePicturePreview, setCertificatePicturePreview] = useState<string>("");
-  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string>("");
+  const [certificatePicture, setCertificatePicture] = useState<string>("");
+  const [profileFile, setProfileFile] = useState<File | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const profileFileRef = useRef<HTMLInputElement>(null);
-  const certificateFileRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  
   const queryClient = useQueryClient();
 
   const form = useForm<FormData>({
@@ -54,71 +45,81 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
       Name: "",
       Phone: "",
       Address: "",
-      Type: 2, // Default to restaurant
+      Type: 2,
     },
   });
 
-  // Update form values when entity changes
   useEffect(() => {
-    if (entity) {
+    if (entity && open) {
       form.reset({
-        Name: entity.name || entity.Name,
-        Phone: entity.phone || entity.Phone,
-        Address: entity.address || entity.Address,
-        Type: entity.entityType === "hotel" || entity.type === 1 ? 1 : 2, // 1 for hotel, 2 for restaurant
+        Name: entity.name || "",
+        Phone: entity.phone || "",
+        Address: entity.address || "",
+        Type: entity.type || entity.entityType === "Hotel" ? 1 : 2,
       });
-      setProfilePicturePreview(entity.profilePictureUrl || entity.profilePicture || "");
-      setCertificatePicturePreview(entity.certificateUrl || entity.certificatePicture || "");
+      setProfilePicture(entity.profilePictureUrl || entity.profilePicture || "");
+      setCertificatePicture(entity.certificatePictureUrl || entity.certificatePicture || "");
     }
-  }, [entity, form]);
+  }, [entity, open, form]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      if (!entity?.id) throw new Error("Entity ID not found");
+
       const apiFormData = new FormData();
+      apiFormData.append('Id', String(entity.id));
       apiFormData.append('Name', data.Name);
       apiFormData.append('Phone', data.Phone);
       apiFormData.append('Address', data.Address);
       apiFormData.append('Type', String(data.Type));
-      
-      if (profilePictureFile) {
-        apiFormData.append('ProfilePicture', profilePictureFile);
+
+      if (profileFile) {
+        apiFormData.append('ProfilePicture', profileFile);
       }
       if (certificateFile) {
-        apiFormData.append('CertificateFile', certificateFile);
+        apiFormData.append('CertificatePicture', certificateFile);
       }
 
-      const response = await apiRepository.call('updateEntity', 'PUT', apiFormData, undefined, true, { id: entity.id });
+      const response = await apiRepository.call('updateEntity', 'PUT', apiFormData, {
+        'Content-Type': 'multipart/form-data',
+      });
+
       if (response.error) {
         throw new Error(response.error);
       }
+
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
         title: "Success",
         description: "Entity updated successfully",
       });
-      form.reset();
-      setProfilePicturePreview("");
-      setCertificatePicturePreview("");
-      setProfilePictureFile(null);
-      setCertificateFile(null);
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
       onOpenChange(false);
+      resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update entity",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
+  const resetForm = () => {
+    form.reset();
+    setProfilePicture("");
+    setCertificatePicture("");
+    setProfileFile(null);
+    setCertificateFile(null);
+  };
+
   const handleFileUpload = (file: File, type: 'profile' | 'certificate') => {
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Error",
+        title: "Invalid file type",
         description: "Please select an image file only",
         variant: "destructive",
       });
@@ -129,10 +130,10 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
     reader.onload = (e) => {
       const base64String = e.target?.result as string;
       if (type === 'profile') {
-        setProfilePicturePreview(base64String);
-        setProfilePictureFile(file);
+        setProfilePicture(base64String);
+        setProfileFile(file);
       } else {
-        setCertificatePicturePreview(base64String);
+        setCertificatePicture(base64String);
         setCertificateFile(file);
       }
     };
@@ -141,17 +142,11 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
 
   const handleRemoveFile = (type: 'profile' | 'certificate') => {
     if (type === 'profile') {
-      setProfilePicturePreview("");
-      setProfilePictureFile(null);
-      if (profileFileRef.current) {
-        profileFileRef.current.value = "";
-      }
+      setProfilePicture("");
+      setProfileFile(null);
     } else {
-      setCertificatePicturePreview("");
+      setCertificatePicture("");
       setCertificateFile(null);
-      if (certificateFileRef.current) {
-        certificateFileRef.current.value = "";
-      }
     }
   };
 
@@ -163,6 +158,86 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
       setIsLoading(false);
     }
   };
+
+  const ProfileFileUpload = () => (
+    <div className="space-y-2">
+      <Label>Profile Picture (Optional)</Label>
+      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+        {profilePicture ? (
+          <div className="relative">
+            <img
+              src={profilePicture}
+              alt="Profile preview"
+              className="w-full h-32 object-cover rounded-lg"
+            />
+            <button
+              type="button"
+              onClick={() => handleRemoveFile('profile')}
+              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              Upload profile picture
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileUpload(file, 'profile');
+              }}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const CertificateFileUpload = () => (
+    <div className="space-y-2">
+      <Label>Certificate Picture (Optional)</Label>
+      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+        {certificatePicture ? (
+          <div className="relative">
+            <img
+              src={certificatePicture}
+              alt="Certificate preview"
+              className="w-full h-32 object-cover rounded-lg"
+            />
+            <button
+              type="button"
+              onClick={() => handleRemoveFile('certificate')}
+              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              Upload certificate picture
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileUpload(file, 'certificate');
+              }}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -261,85 +336,8 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Profile Picture Upload */}
-              <div className="space-y-2">
-                <Label>Profile Picture</Label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
-                  {profilePicturePreview ? (
-                    <div className="relative">
-                      <img
-                        src={profilePicturePreview}
-                        alt="Profile preview"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile('profile')}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Click to upload profile picture
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    ref={profileFileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, 'profile');
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              {/* Certificate Upload */}
-              <div className="space-y-2">
-                <Label>Certificate Picture</Label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
-                  {certificatePicturePreview ? (
-                    <div className="relative">
-                      <img
-                        src={certificatePicturePreview}
-                        alt="Certificate preview"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile('certificate')}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Click to upload certificate
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    ref={certificateFileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, 'certificate');
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </div>
-              </div>
+              <ProfileFileUpload />
+              <CertificateFileUpload />
             </div>
 
             <div className="flex justify-end space-x-2">
