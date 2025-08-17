@@ -16,17 +16,42 @@ export const insertUserSchema = z.object({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = InsertUser & { id: string; createdAt: Date; };
 
-// Entity types
+// Entity types based on API response
 export const insertEntitySchema = z.object({
-  name: z.string().min(1, "Entity name is required"),
-  type: z.enum(["restaurant", "hotel"]),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  status: z.string().default("active"),
+  Name: z.string().min(1, "Entity name is required"),
+  Phone: z.string().min(1, "Phone is required"),
+  Address: z.string().min(1, "Address is required"),
+  Type: z.number().min(1).max(2), // 1 for hotel, 2 for restaurant
+  ProfilePicture: z.any().optional(), // File
+  CertificateFile: z.any().optional(), // File
 });
 
 export type InsertEntity = z.infer<typeof insertEntitySchema>;
-export type Entity = InsertEntity & { id: string; createdAt: Date; };
+
+// Entity type based on API response structure
+export interface Entity {
+  id: number;
+  userId: number;
+  name: string;
+  phone: string;
+  address: string;
+  profilePictureUrl: string;
+  certificateUrl: string;
+  type: number; // 1 for hotel, 2 for restaurant
+  entityDetails: {
+    primaryColor: string;
+  };
+  // Helper properties for UI compatibility
+  entityType?: string;
+  image?: string;
+}
+
+// Helper function to transform API entity to UI entity
+export const transformEntityForUI = (apiEntity: Entity): Entity => ({
+  ...apiEntity,
+  entityType: apiEntity.type === 1 ? 'hotel' : 'restaurant',
+  image: apiEntity.profilePictureUrl,
+});
 
 // Branch types
 export const insertBranchSchema = z.object({

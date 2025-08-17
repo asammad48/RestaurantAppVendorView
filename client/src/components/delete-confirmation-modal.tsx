@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRepository } from "@/lib/apiRepository";
 import { useToast } from "@/hooks/use-toast";
-import type { Entity } from "@shared/schema";
+import type { Entity } from "@/types/schema";
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,15 @@ export default function DeleteConfirmationModal({ entity, open, onOpenChange }: 
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: () => apiRequest("DELETE", `/api/entities/${entity.id}`),
+    mutationFn: async () => {
+      const response = await apiRepository.call('deleteEntity', 'DELETE', undefined, undefined, true, { id: entity.id });
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response.data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/entities"] });
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
         title: "Success",
         description: "Entity deleted successfully",

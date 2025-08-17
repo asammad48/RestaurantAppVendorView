@@ -16,7 +16,7 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
     <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-entity-${entity.id}`}>
       <div className="relative">
         <img 
-          src={entity.profilePicture || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
+          src={entity.profilePictureUrl || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
           alt={`${entity.name} profile`} 
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
           data-testid={`entity-image-${entity.id}`}
@@ -24,13 +24,10 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute top-4 right-4">
           <Badge 
-            className={entity.status === 'active' 
-              ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg' 
-              : 'bg-gray-500 hover:bg-gray-600 text-white shadow-lg'
-            }
+            className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
             data-testid={`entity-status-${entity.id}`}
           >
-            {entity.status === 'active' ? 'Active' : 'Inactive'}
+            Active
           </Badge>
         </div>
         <div className="absolute top-4 left-4">
@@ -40,7 +37,7 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
             data-testid={`entity-type-${entity.id}`}
           >
             <Building className="w-3 h-3 mr-1" />
-            {entity.entityType.toUpperCase()}
+            {(entity.entityType || (entity.type === 1 ? 'Hotel' : 'Restaurant')).toUpperCase()}
           </Badge>
         </div>
         <div className="absolute bottom-4 left-4 right-4">
@@ -62,7 +59,7 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <Building className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span className="line-clamp-1">{entity.entityType.charAt(0).toUpperCase() + entity.entityType.slice(1)} Business</span>
+            <span className="line-clamp-1">{(entity.entityType || (entity.type === 1 ? 'Hotel' : 'Restaurant'))} Business</span>
           </div>
         </div>
         

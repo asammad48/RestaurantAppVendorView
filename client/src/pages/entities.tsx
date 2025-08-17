@@ -10,7 +10,8 @@ import AddEntityModal from "@/components/add-entity-modal";
 import EditEntityModal from "@/components/edit-entity-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
-import type { Entity } from "@shared/schema";
+import { apiRepository } from "@/lib/apiRepository";
+import type { Entity, transformEntityForUI } from "@/types/schema";
 
 export default function Entities() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,12 +22,20 @@ export default function Entities() {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
 
   const { data: entities = [], isLoading } = useQuery<Entity[]>({
-    queryKey: ["/api/entities"],
+    queryKey: ["entities"],
+    queryFn: async () => {
+      const response = await apiRepository.call<Entity[]>('getEntities', 'GET');
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      // Transform entities for UI compatibility
+      return (response.data || []).map(transformEntityForUI);
+    },
   });
 
   const filteredEntities = entities.filter((entity) =>
     entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entity.entityType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (entity.entityType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     entity.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

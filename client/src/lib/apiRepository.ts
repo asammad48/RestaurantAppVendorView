@@ -27,7 +27,7 @@ export class ApiRepository {
 
   // Load tokens from localStorage
   private loadTokensFromStorage() {
-    this.accessToken = localStorage.getItem('access_token');
+    this.accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
     this.refreshToken = localStorage.getItem('refresh_token');
   }
 
@@ -83,15 +83,16 @@ export class ApiRepository {
     }
   }
 
-  // Generic API call method
+  // Generic API call method with support for FormData
   async call<T>(
     endpointKey: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' = 'GET',
     data?: any,
     customHeaders?: { [key: string]: string },
-    requiresAuth: boolean = true
+    requiresAuth: boolean = true,
+    pathParams?: { [key: string]: string | number }
   ): Promise<ApiResponse<T>> {
-    const endpoint = this.config.endpoints[endpointKey];
+    let endpoint = this.config.endpoints[endpointKey];
     if (!endpoint) {
       return {
         error: `Endpoint '${endpointKey}' not found in configuration`,
@@ -99,15 +100,27 @@ export class ApiRepository {
       };
     }
 
+    // Replace path parameters if provided
+    if (pathParams) {
+      Object.entries(pathParams).forEach(([key, value]) => {
+        endpoint = endpoint.replace(`{${key}}`, String(value));
+      });
+    }
+
     const url = `${this.config.baseUrl}${endpoint}`;
     
     // Prepare headers
     const headers: { [key: string]: string } = {
-      'Content-Type': 'application/json',
       'accept': '*/*',
       ...this.config.headers,
       ...customHeaders,
     };
+
+    // Don't set Content-Type for FormData - browser will set it with boundary
+    const isFormData = data instanceof FormData;
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Add authorization header if required and token exists
     if (requiresAuth && this.accessToken) {
@@ -121,7 +134,11 @@ export class ApiRepository {
     };
 
     if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-      requestOptions.body = JSON.stringify(data);
+      if (isFormData) {
+        requestOptions.body = data;
+      } else {
+        requestOptions.body = JSON.stringify(data);
+      }
     }
 
     try {
@@ -151,11 +168,28 @@ export class ApiRepository {
 
       // Handle response based on status
       if (response.ok) {
-        const responseData = await response.json();
-        return {
-          data: responseData,
-          status: response.status,
-        };
+        // Handle 204 No Content responses
+        if (response.status === 204) {
+          return {
+            data: null as T,
+            status: response.status,
+          };
+        }
+        
+        // Try to parse JSON response
+        try {
+          const responseData = await response.json();
+          return {
+            data: responseData,
+            status: response.status,
+          };
+        } catch {
+          // If JSON parsing fails, return null data for successful responses
+          return {
+            data: null as T,
+            status: response.status,
+          };
+        }
       } else {
         let errorMessage = `Request failed with status ${response.status}`;
         
@@ -275,49 +309,75 @@ export class ApiRepository {
   }
 }
 
+// API Base URL and Endpoints
+export const API_BASE_URL = 'https://81w6jsg0-7261.inc1.devtunnels.ms';
+
+export const API_ENDPOINTS = {
+  // Authentication endpoints
+  LOGIN: '/api/auth/login',
+  SIGNUP: '/api/User/restaurant-owner',
+  REFRESH_TOKEN: '/api/auth/refresh',
+  
+  // Entity endpoints
+  ENTITIES: '/api/Entity',
+  ENTITY_BY_ID: '/api/Entity/{id}',
+  
+  // Branch endpoints
+  BRANCHES: '/api/branches',
+  BRANCH_BY_ID: '/api/branches/{id}',
+  
+  // Menu endpoints
+  MENU_ITEMS: '/api/menu-items',
+  MENU_ITEM_BY_ID: '/api/menu-items/{id}',
+  
+  // Order endpoints
+  ORDERS: '/api/orders',
+  ORDER_BY_ID: '/api/orders/{id}',
+  
+  // Other endpoints
+  ANALYTICS: '/api/analytics',
+  FEEDBACKS: '/api/feedbacks',
+  TICKETS: '/api/tickets',
+};
+
 // Default API configuration
 export const defaultApiConfig: ApiConfig = {
-  baseUrl: 'https://81w6jsg0-7261.inc1.devtunnels.ms',
+  baseUrl: API_BASE_URL,
   endpoints: {
     // Authentication endpoints
-    login: '/api/auth/login',
-    signup: '/api/User/restaurant-owner',
-    refreshToken: '/api/auth/refresh',
+    login: API_ENDPOINTS.LOGIN,
+    signup: API_ENDPOINTS.SIGNUP,
+    refreshToken: API_ENDPOINTS.REFRESH_TOKEN,
     
-    // User endpoints
-    getUsers: '/api/users',
-    createUser: '/api/users',
-    updateUser: '/api/users/{id}',
-    deleteUser: '/api/users/{id}',
-    
-    // Restaurant/Entity endpoints
-    getEntities: '/api/entities',
-    createEntity: '/api/entities',
-    updateEntity: '/api/entities/{id}',
-    deleteEntity: '/api/entities/{id}',
+    // Entity endpoints
+    getEntities: API_ENDPOINTS.ENTITIES,
+    createEntity: API_ENDPOINTS.ENTITIES,
+    getEntityById: API_ENDPOINTS.ENTITY_BY_ID,
+    updateEntity: API_ENDPOINTS.ENTITY_BY_ID,
+    deleteEntity: API_ENDPOINTS.ENTITY_BY_ID,
     
     // Branch endpoints
-    getBranches: '/api/branches',
-    createBranch: '/api/branches',
-    updateBranch: '/api/branches/{id}',
-    deleteBranch: '/api/branches/{id}',
+    getBranches: API_ENDPOINTS.BRANCHES,
+    createBranch: API_ENDPOINTS.BRANCHES,
+    updateBranch: API_ENDPOINTS.BRANCH_BY_ID,
+    deleteBranch: API_ENDPOINTS.BRANCH_BY_ID,
     
     // Menu endpoints
-    getMenuItems: '/api/menu-items',
-    createMenuItem: '/api/menu-items',
-    updateMenuItem: '/api/menu-items/{id}',
-    deleteMenuItem: '/api/menu-items/{id}',
+    getMenuItems: API_ENDPOINTS.MENU_ITEMS,
+    createMenuItem: API_ENDPOINTS.MENU_ITEMS,
+    updateMenuItem: API_ENDPOINTS.MENU_ITEM_BY_ID,
+    deleteMenuItem: API_ENDPOINTS.MENU_ITEM_BY_ID,
     
     // Order endpoints
-    getOrders: '/api/orders',
-    createOrder: '/api/orders',
-    updateOrder: '/api/orders/{id}',
-    deleteOrder: '/api/orders/{id}',
+    getOrders: API_ENDPOINTS.ORDERS,
+    createOrder: API_ENDPOINTS.ORDERS,
+    updateOrder: API_ENDPOINTS.ORDER_BY_ID,
+    deleteOrder: API_ENDPOINTS.ORDER_BY_ID,
     
-    // Other endpoints as needed
-    getAnalytics: '/api/analytics',
-    getFeedbacks: '/api/feedbacks',
-    getTickets: '/api/tickets',
+    // Other endpoints
+    getAnalytics: API_ENDPOINTS.ANALYTICS,
+    getFeedbacks: API_ENDPOINTS.FEEDBACKS,
+    getTickets: API_ENDPOINTS.TICKETS,
   },
   headers: {
     'Accept': '*/*',
