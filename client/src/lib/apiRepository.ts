@@ -477,10 +477,9 @@ export const branchApi = {
     }
 
     console.log('Sending PUT request to update branch...');
-    console.log('FormData entries:');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
+    console.log('FormData being sent for update branch:');
+    // Log formData contents for debugging
+    console.log('Number of form entries:', Array.from(formData.entries()).length);
     
     const response = await apiRepository.call('updateBranch', 'PUT', formData, {}, true, { id: branchId });
     console.log('Update branch response:', response);

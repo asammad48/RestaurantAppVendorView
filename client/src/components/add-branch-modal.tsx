@@ -59,7 +59,9 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
 
   // Update form values when branch data is loaded for editing
   React.useEffect(() => {
+    console.log('Effect triggered:', { isEdit, branchData, hasFormData: !!branchData });
     if (isEdit && branchData) {
+      console.log('Resetting form with branch data:', branchData);
       form.reset({
         Name: (branchData as any).name || "",
         Address: (branchData as any).address || "",
@@ -125,6 +127,11 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
   });
 
   const onSubmit = (data: InsertBranch) => {
+    console.log('=== FORM SUBMIT TRIGGERED ===');
+    console.log('Submit data:', data);
+    console.log('isEdit:', isEdit);
+    console.log('branchToEdit:', branchToEdit);
+    console.log('Mutation pending:', createBranchMutation.isPending);
     createBranchMutation.mutate(data);
   };
 
