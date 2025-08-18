@@ -56,22 +56,22 @@ export const transformEntityForUI = (apiEntity: Entity): Entity => ({
 // Branch types (matching API response)
 export type Branch = {
   id: number;
-  EntityId: number;
+  entityId: number;
   userId: number;
-  Name: string;
-  Address: string;
-  SubscriptionId: number;
+  name: string;
+  address: string;
+  subscriptionId: number;
+  contactNumber?: string;
   trialEndDate: string;
   gracePeriodEndDate: string;
   billingStartDate: string;
-  RestaurantLogo: string;
-  RestaurantBanner: string;
-  InstagramLink: string;
-  WhatsappLink: string;
-  FacebookLink: string;
-  GoogleMapsLink: string;
+  restaurantLogo: string;
+  restaurantBanner: string;
+  instagramLink: string;
+  whatsappLink: string;
+  facebookLink: string;
+  googleMapsLink: string;
   // UI helper properties
-  contactNo?: string;
   restaurantType?: string;
   status?: string;
 };
@@ -80,6 +80,7 @@ export type Branch = {
 export const insertBranchSchema = z.object({
   Name: z.string().min(1, "Branch name is required"),
   Address: z.string().min(1, "Address is required"),
+  ContactNumber: z.string().optional(),
   EntityId: z.number().min(1, "Entity ID is required"),
   SubscriptionId: z.number().default(1),
   InstagramLink: z.string().optional(),

@@ -17,8 +17,8 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
     <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-branch-${branch.id}`}>
       <div className="relative">
         <img 
-          src={getBranchImageUrl(branch.RestaurantLogo)} 
-          alt={`${branch.Name} logo`} 
+          src={getBranchImageUrl(branch.restaurantLogo)} 
+          alt={`${branch.name} logo`} 
           className="w-full h-48 object-cover bg-gray-100 transition-transform duration-300 group-hover:scale-105"
           data-testid={`branch-image-${branch.id}`}
         />
@@ -46,7 +46,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
         </div>
         <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg" data-testid={`branch-name-${branch.id}`}>
-            {branch.Name}
+            {branch.name}
           </h3>
         </div>
       </div>
@@ -55,11 +55,11 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
         <div className="space-y-3 mb-6">
           <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
             <MapPin className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" />
-            <span className="line-clamp-2">{branch.Address}</span>
+            <span className="line-clamp-2">{branch.address}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-            <span>{branch.contactNo || 'Phone: N/A'}</span>
+            <span>{branch.contactNumber || 'Phone: N/A'}</span>
           </div>
         </div>
         

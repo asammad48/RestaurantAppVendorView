@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Upload } from "lucide-react";
@@ -8,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertBranchSchema, type InsertBranch } from "@/types/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { insertBranchSchema, type InsertBranch, type Branch } from "@/types/schema";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { branchApi } from "@/lib/apiRepository";
 
@@ -17,9 +18,11 @@ interface AddBranchModalProps {
   open: boolean;
   onClose: () => void;
   entityId: number;
+  branchToEdit?: Branch | null;
+  isEdit?: boolean;
 }
 
-export default function AddBranchModal({ open, onClose, entityId }: AddBranchModalProps) {
+export default function AddBranchModal({ open, onClose, entityId, branchToEdit, isEdit = false }: AddBranchModalProps) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -29,11 +32,22 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch branch data for editing
+  const { data: branchData } = useQuery({
+    queryKey: ["branch", branchToEdit?.id],
+    queryFn: async () => {
+      if (!branchToEdit) return null;
+      return await branchApi.getBranchById(branchToEdit.id);
+    },
+    enabled: isEdit && !!branchToEdit?.id,
+  });
+
   const form = useForm<InsertBranch>({
     resolver: zodResolver(insertBranchSchema),
     defaultValues: {
       Name: "",
       Address: "",
+      ContactNumber: "",
       EntityId: entityId,
       SubscriptionId: 1,
       InstagramLink: "",
@@ -43,16 +57,48 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
     },
   });
 
+  // Update form values when branch data is loaded for editing
+  React.useEffect(() => {
+    if (isEdit && branchData) {
+      form.reset({
+        Name: (branchData as any).name || "",
+        Address: (branchData as any).address || "",
+        ContactNumber: (branchData as any).contactNumber || "",
+        EntityId: entityId,
+        SubscriptionId: (branchData as any).subscriptionId || 1,
+        InstagramLink: (branchData as any).instagramLink || "",
+        WhatsappLink: (branchData as any).whatsappLink || "",
+        FacebookLink: (branchData as any).facebookLink || "",
+        GoogleMapsLink: (branchData as any).googleMapsLink || "",
+      });
+      
+      // Set image previews if they exist
+      if ((branchData as any).restaurantLogo) {
+        setLogoPreview(`https://l5246g5z-7261.inc1.devtunnels.ms/${(branchData as any).restaurantLogo}`);
+      }
+      if ((branchData as any).restaurantBanner) {
+        setBannerPreview(`https://l5246g5z-7261.inc1.devtunnels.ms/${(branchData as any).restaurantBanner}`);
+      }
+    }
+  }, [isEdit, branchData, form, entityId]);
+
   const createBranchMutation = useMutation({
     mutationFn: async (data: InsertBranch) => {
-      return await branchApi.createBranch(data, logoFile || undefined, bannerFile || undefined);
+      if (isEdit && branchToEdit) {
+        return await branchApi.updateBranch(branchToEdit.id, data, logoFile || undefined, bannerFile || undefined);
+      } else {
+        return await branchApi.createBranch(data, logoFile || undefined, bannerFile || undefined);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches", entityId] });
       queryClient.invalidateQueries({ queryKey: ["entities"] });
+      if (isEdit && branchToEdit) {
+        queryClient.invalidateQueries({ queryKey: ["branch", branchToEdit.id] });
+      }
       toast({
         title: "Success",
-        description: "Branch added successfully",
+        description: isEdit ? "Branch updated successfully" : "Branch added successfully",
       });
       form.reset();
       setLogoFile(null);
@@ -64,7 +110,7 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
     onError: (error: any) => {
       toast({
         title: "Error", 
-        description: error.message || "Failed to add branch",
+        description: error.message || (isEdit ? "Failed to update branch" : "Failed to add branch"),
         variant: "destructive",
       });
     },
@@ -98,7 +144,9 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-semibold">Add Branch</DialogTitle>
+          <DialogTitle className="text-center text-xl font-semibold">
+            {isEdit ? "Edit Branch" : "Add Branch"}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -134,6 +182,25 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
                       placeholder="Enter branch address"
                       className="w-full"
                       data-testid="input-address"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ContactNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Contact Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter contact number"
+                      className="w-full"
+                      data-testid="input-contact-number"
                     />
                   </FormControl>
                   <FormMessage />
@@ -335,7 +402,7 @@ export default function AddBranchModal({ open, onClose, entityId }: AddBranchMod
                 className="bg-green-600 hover:bg-green-700"
                 data-testid="button-submit"
               >
-                {createBranchMutation.isPending ? "Adding..." : "Add Branch"}
+                {createBranchMutation.isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Branch" : "Add Branch")}
               </Button>
             </div>
           </form>

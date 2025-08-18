@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Plus, Search, ArrowLeft, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ export default function Branches() {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [currentEntity, setCurrentEntity] = useState<Entity | null>(null);
   const [isTrialUser, setIsTrialUser] = useState(true); // Assume trial for demo
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Extract entity ID from URL query params
   const rawEntityId = new URLSearchParams(window.location.search).get('entityId');
@@ -55,8 +58,8 @@ export default function Branches() {
   }, [entity]);
 
   const filteredBranches = Array.isArray(branches) ? branches.filter((branch: any) =>
-    (branch.Name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (branch.Address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (branch.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (branch.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (branch.restaurantType || '').toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
@@ -221,6 +224,8 @@ export default function Branches() {
             setSelectedBranch(null);
           }}
           entityId={currentEntity?.id || 0}
+          branchToEdit={selectedBranch}
+          isEdit={true}
         />
       )}
 
@@ -235,7 +240,7 @@ export default function Branches() {
             <DialogHeader>
               <DialogTitle>Delete Branch</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{selectedBranch.Name}"? This action cannot be undone.
+                Are you sure you want to delete "{selectedBranch.name}"? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-3 mt-6">
@@ -250,9 +255,26 @@ export default function Branches() {
               </Button>
               <Button 
                 variant="destructive"
-                onClick={() => {
-                  // Handle delete logic here
-                  console.log("Deleting branch:", selectedBranch.id);
+                onClick={async () => {
+                  try {
+                    await branchApi.deleteBranch(selectedBranch.id);
+                    // Refresh branches list
+                    if (entityId) {
+                      const refreshedBranches = await branchApi.getBranchesByEntity(entityId);
+                      // Force re-fetch by invalidating query
+                      queryClient.invalidateQueries({ queryKey: ["branches", entityId] });
+                    }
+                    toast({
+                      title: "Success",
+                      description: "Branch deleted successfully",
+                    });
+                  } catch (error: any) {
+                    toast({
+                      title: "Error",
+                      description: error.message || "Failed to delete branch",
+                      variant: "destructive",
+                    });
+                  }
                   setShowDeleteModal(false);
                   setSelectedBranch(null);
                 }}
