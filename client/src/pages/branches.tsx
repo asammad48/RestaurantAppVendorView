@@ -222,10 +222,11 @@ export default function Branches() {
         <AddBranchModal
           open={showEditModal}
           onClose={() => {
+            console.log('=== EDIT MODAL CLOSING ===');
             setShowEditModal(false);
             setSelectedBranch(null);
           }}
-          entityId={currentEntity?.id || 0}
+          entityId={currentEntity?.id || entityId || 0}
           branchToEdit={selectedBranch}
           isEdit={true}
         />

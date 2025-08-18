@@ -458,9 +458,10 @@ export const branchApi = {
     
     const formData = new FormData();
     
-    // Add text fields
+    // Add text fields - Make sure EntityId is included
     Object.keys(branchData).forEach(key => {
       if (branchData[key] !== undefined && branchData[key] !== null) {
+        console.log(`Adding field ${key}:`, branchData[key]);
         formData.append(key, branchData[key].toString());
       }
     });

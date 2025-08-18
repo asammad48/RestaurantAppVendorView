@@ -23,6 +23,11 @@ interface AddBranchModalProps {
 }
 
 export default function AddBranchModal({ open, onClose, entityId, branchToEdit, isEdit = false }: AddBranchModalProps) {
+  console.log('=== AddBranchModal Props ===');
+  console.log('entityId:', entityId);
+  console.log('isEdit:', isEdit);
+  console.log('branchToEdit:', branchToEdit);
+  
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -129,10 +134,20 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
   const onSubmit = (data: InsertBranch) => {
     console.log('=== FORM SUBMIT TRIGGERED ===');
     console.log('Submit data:', data);
+    console.log('EntityId in form data:', data.EntityId);
+    console.log('entityId prop:', entityId);
     console.log('isEdit:', isEdit);
     console.log('branchToEdit:', branchToEdit);
     console.log('Mutation pending:', createBranchMutation.isPending);
-    createBranchMutation.mutate(data);
+    
+    // Ensure EntityId is set
+    const formDataWithEntityId = {
+      ...data,
+      EntityId: entityId // Force entityId to be set
+    };
+    
+    console.log('Final form data being sent:', formDataWithEntityId);
+    createBranchMutation.mutate(formDataWithEntityId);
   };
 
   const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
