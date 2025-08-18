@@ -165,7 +165,12 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-1">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            console.log('=== FORM VALIDATION ERRORS ===');
+            console.log('Validation errors:', errors);
+            console.log('Form values:', form.getValues());
+            console.log('Form state:', form.formState);
+          })} className="space-y-6 px-1">
             <FormField
               control={form.control}
               name="Name"
@@ -416,6 +421,12 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
                 disabled={createBranchMutation.isPending}
                 className="bg-green-600 hover:bg-green-700"
                 data-testid="button-submit"
+                onClick={() => {
+                  console.log('=== SUBMIT BUTTON CLICKED ===');
+                  console.log('Form valid:', form.formState.isValid);
+                  console.log('Form errors:', form.formState.errors);
+                  console.log('Current values:', form.getValues());
+                }}
               >
                 {createBranchMutation.isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Branch" : "Add Branch")}
               </Button>

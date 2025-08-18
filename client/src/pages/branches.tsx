@@ -89,6 +89,8 @@ export default function Branches() {
   };
 
   const handleEdit = (branch: Branch) => {
+    console.log('=== EDIT BRANCH CLICKED ===');
+    console.log('Branch to edit:', branch);
     setSelectedBranch(branch);
     setShowEditModal(true);
   };
