@@ -84,9 +84,17 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
 
   const createBranchMutation = useMutation({
     mutationFn: async (data: InsertBranch) => {
+      console.log('Form submission data:', data);
+      console.log('Is edit mode:', isEdit);
+      console.log('Branch to edit:', branchToEdit);
+      console.log('Logo file:', logoFile);
+      console.log('Banner file:', bannerFile);
+      
       if (isEdit && branchToEdit) {
+        console.log('Calling updateBranch API...');
         return await branchApi.updateBranch(branchToEdit.id, data, logoFile || undefined, bannerFile || undefined);
       } else {
+        console.log('Calling createBranch API...');
         return await branchApi.createBranch(data, logoFile || undefined, bannerFile || undefined);
       }
     },

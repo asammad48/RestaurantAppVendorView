@@ -454,6 +454,8 @@ export const branchApi = {
 
   // Update branch with FormData
   updateBranch: async (branchId: number, branchData: any, logoFile?: File, bannerFile?: File) => {
+    console.log('updateBranch called with:', { branchId, branchData, logoFile, bannerFile });
+    
     const formData = new FormData();
     
     // Add text fields
@@ -463,15 +465,30 @@ export const branchApi = {
       }
     });
 
-    // Add files if provided
+    // Add files if provided - for updates, these should be optional but backend requires them
+    // If no new files provided, we should not include empty file fields
     if (logoFile) {
       formData.append('RestaurantLogo', logoFile);
+      console.log('Added logo file to form data');
     }
     if (bannerFile) {
       formData.append('RestaurantBanner', bannerFile);
+      console.log('Added banner file to form data');
     }
 
+    console.log('Sending PUT request to update branch...');
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+    
     const response = await apiRepository.call('updateBranch', 'PUT', formData, {}, true, { id: branchId });
+    console.log('Update branch response:', response);
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
     return response.data;
   },
 
