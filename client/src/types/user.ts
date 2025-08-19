@@ -18,3 +18,14 @@ export interface UserListItem {
   profilePicture?: string;
   branchName: string;
 }
+
+export interface UserDetailsResponse {
+  id: number;
+  name: string;
+  email: string;
+  mobileNumber: string;
+  profilePicture?: string;
+  branchId: number;
+  entityId: number;
+  roleId: number;
+}

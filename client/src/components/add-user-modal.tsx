@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { UserListItem, UserDetailsResponse } from "@/types/user";
 import { X, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ type UserFormData = z.infer<typeof userFormSchema>;
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingUser?: any;
+  editingUser?: UserListItem | null;
 }
 
 // Interfaces for API responses
@@ -102,6 +103,28 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // Fetch user details when editing
+  const { data: userDetails, isLoading: userDetailsLoading, error: userDetailsError } = useQuery<UserDetailsResponse>({
+    queryKey: ["user-details", editingUser?.id],
+    queryFn: async () => {
+      if (!editingUser?.id) throw new Error('No user ID provided');
+      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
+        headers: {
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user details');
+      }
+      return response.json();
+    },
+    enabled: isOpen && isEditing && !!editingUser?.id,
+    retry: 2,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  });
+
   // Extract entities and branches from the response
   const entities = entitiesAndBranches?.entities || [];
   const allBranches = entitiesAndBranches?.branches || [];
@@ -117,19 +140,19 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     resolver: zodResolver(userFormSchema),
   });
 
-  // Reset form when modal opens/closes or when editingUser changes
+  // Reset form when modal opens/closes or when user details are loaded
   React.useEffect(() => {
     if (isOpen) {
-      const defaultValues = isEditing && editingUser
+      const defaultValues = isEditing && userDetails
         ? {
-            name: editingUser.name || "",
-            email: editingUser.email || "",
+            name: userDetails.name || "",
+            email: userDetails.email || "",
             password: "", // Always require password input for editing
-            phoneNumber: editingUser.mobileNumber || editingUser.phoneNumber || "",
-            role: editingUser.roleId?.toString() || editingUser.role || "",
-            entityId: editingUser.entityId?.toString() || "",
-            assignedBranch: editingUser.branchId?.toString() || editingUser.assignedBranch || "",
-            image: editingUser.profilePicture || editingUser.image || "",
+            phoneNumber: userDetails.mobileNumber || "",
+            role: userDetails.roleId?.toString() || "",
+            entityId: userDetails.entityId?.toString() || "",
+            assignedBranch: userDetails.branchId?.toString() || "",
+            image: userDetails.profilePicture || "",
           }
         : {
             name: "",
@@ -143,9 +166,16 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           };
       
       reset(defaultValues);
-      setImageFile(editingUser?.image || "");
+      if (isEditing && userDetails?.profilePicture) {
+        setImageFile(userDetails.profilePicture);
+      } else {
+        setImageFile("");
+      }
+    } else {
+      reset();
+      setImageFile("");
     }
-  }, [isOpen, editingUser, isEditing, reset]);
+  }, [isOpen, isEditing, userDetails, reset]);
 
   const roleValue = watch("role");
   const entityValue = watch("entityId");
@@ -175,7 +205,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
         formData.append('ProfilePicture', blob, 'profile.png');
       }
 
-      if (isEditing) {
+      if (isEditing && editingUser?.id) {
         // For editing - use PATCH or PUT method
         const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
           method: 'PUT',
@@ -271,17 +301,25 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           <h2 className="text-xl font-semibold text-center" data-testid="modal-title">
             {isEditing ? "Edit User" : "Add User"}
           </h2>
-          {(rolesError || entitiesError) && (
+          {(rolesError || entitiesError || userDetailsError) && (
             <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-600">
                 {rolesError && "Failed to load roles. "}
                 {entitiesError && "Failed to load entities and branches. "}
+                {userDetailsError && "Failed to load user details. "}
                 Please try again.
               </p>
             </div>
           )}
+          {(rolesLoading || entitiesLoading || (isEditing && userDetailsLoading)) && (
+            <div className="mt-2 p-3 text-center text-sm text-gray-600">
+              Loading {isEditing ? "user details and " : ""}form data...
+            </div>
+          )}
         </div>
 
+        {/* Only show form when required data is loaded */}
+        {(!rolesLoading && !entitiesLoading && (!isEditing || !userDetailsLoading)) && (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -457,7 +495,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md cursor-pointer text-sm text-gray-500 hover:border-gray-400"
                 data-testid="label-choose-file"
               >
-                {imageFile || editingUser?.image ? "Image selected" : "Choose File"}
+                {imageFile ? "Image selected" : "Choose File"}
               </Label>
               <Button
                 type="button"
@@ -482,6 +520,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             </Button>
           </div>
         </form>
+        )}
         </Card>
       </div>
     </div>
