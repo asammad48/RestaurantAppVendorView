@@ -14,10 +14,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 
 
-const userFormSchema = z.object({
+// Create schema conditionally based on editing mode
+const createUserFormSchema = (isEditing: boolean) => z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: isEditing 
+    ? z.string().optional() 
+    : z.string().min(6, "Password must be at least 6 characters"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   role: z.string().min(1, "Role is required"),
   entityId: z.string().min(1, "Entity is required"),
@@ -25,7 +28,7 @@ const userFormSchema = z.object({
   image: z.string().optional(),
 });
 
-type UserFormData = z.infer<typeof userFormSchema>;
+type UserFormData = z.infer<ReturnType<typeof createUserFormSchema>>;
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -138,7 +141,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     reset,
     formState: { errors, isSubmitting },
   } = useForm<UserFormData>({
-    resolver: zodResolver(userFormSchema),
+    resolver: zodResolver(createUserFormSchema(isEditing)),
   });
 
   // Reset form when modal opens/closes or when user details are loaded
@@ -149,7 +152,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
         ? {
             name: userDetails.name || "",
             email: userDetails.email || "",
-            password: "", // Always require password input for editing
+            password: "", // Password not required for editing
             phoneNumber: userDetails.mobileNumber || "",
             role: userDetails.roleId?.toString() || "",
             entityId: userDetails.entityId?.toString() || "",
@@ -195,41 +198,50 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const createUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
       const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      
-      // Create FormData for the API call
-      const formData = new FormData();
-      formData.append('Email', data.email);
-      formData.append('Name', data.name);
-      formData.append('Password', data.password);
-      formData.append('MobileNumber', data.phoneNumber);
-      formData.append('RoleId', data.role);
-      formData.append('BranchId', data.assignedBranch);
-      
-      // Handle profile picture
-      if (data.image && data.image.startsWith('data:')) {
-        // Convert base64 to blob
-        const response = await fetch(data.image);
-        const blob = await response.blob();
-        formData.append('ProfilePicture', blob, 'profile.png');
-      }
 
       if (isEditing && editingUser?.id) {
-        // For editing - use PATCH or PUT method
-        const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
+        // For editing - use PUT method with JSON payload
+        const updatePayload = {
+          id: editingUser.id,
+          name: data.name,
+          mobileNumber: data.phoneNumber,
+          roleId: parseInt(data.role),
+          branchId: parseInt(data.assignedBranch),
+        };
+
+        const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user', {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
             'accept': '*/*',
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(updatePayload),
         });
         
         if (!response.ok) {
           throw new Error('Failed to update user');
         }
-        return response.json();
+        // Update API returns 200 OK only, so return the payload for success handling
+        return { ...updatePayload, name: data.name };
       } else {
-        // For creating new user
+        // For creating - use POST method with FormData
+        const formData = new FormData();
+        formData.append('Email', data.email);
+        formData.append('Name', data.name);
+        formData.append('Password', data.password || '');
+        formData.append('MobileNumber', data.phoneNumber);
+        formData.append('RoleId', data.role);
+        formData.append('BranchId', data.assignedBranch);
+        
+        // Handle profile picture
+        if (data.image && data.image.startsWith('data:')) {
+          // Convert base64 to blob
+          const response = await fetch(data.image);
+          const blob = await response.blob();
+          formData.append('ProfilePicture', blob, 'profile.png');
+        }
+
         const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user', {
           method: 'POST',
           headers: {
@@ -363,36 +375,38 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="password" className="text-sm font-medium">
-                Password
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...register("password")}
-                  className="pr-10"
-                  data-testid="input-password"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                  data-testid="button-toggle-password"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
+          <div className={`grid ${isEditing ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+            {!isEditing && (
+              <div>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    className="pr-10"
+                    data-testid="input-password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                    data-testid="button-toggle-password"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
-              )}
-            </div>
+            )}
 
             <div>
               <Label htmlFor="phoneNumber" className="text-sm font-medium">
