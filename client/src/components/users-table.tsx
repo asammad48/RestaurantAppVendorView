@@ -212,52 +212,89 @@ export default function UsersTable({
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
               Page {currentPage} of {totalPages}
             </div>
-            {totalPages > 1 && (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  className="hidden h-8 w-8 p-0 lg:flex"
-                  onClick={() => onPageChange(1)}
-                  disabled={currentPage === 1}
-                  data-testid="button-first-page"
-                >
-                  <span className="sr-only">Go to first page</span>
-                  <ChevronLeft className="h-4 w-4" />
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-8 w-8 p-0"
-                  onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  data-testid="button-prev-page"
-                >
-                  <span className="sr-only">Go to previous page</span>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-8 w-8 p-0"
-                  onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  data-testid="button-next-page"
-                >
-                  <span className="sr-only">Go to next page</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hidden h-8 w-8 p-0 lg:flex"
-                  onClick={() => onPageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                  data-testid="button-last-page"
-                >
-                  <span className="sr-only">Go to last page</span>
-                  <ChevronRight className="h-4 w-4" />
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+            <div className="flex items-center space-x-2">
+              {totalPages > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="hidden h-8 w-8 p-0 lg:flex"
+                    onClick={() => onPageChange(1)}
+                    disabled={currentPage === 1}
+                    data-testid="button-first-page"
+                  >
+                    <span className="sr-only">Go to first page</span>
+                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    data-testid="button-prev-page"
+                  >
+                    <span className="sr-only">Go to previous page</span>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+              
+              {/* Page number buttons */}
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pageNumbers = [];
+                  const showPages = Math.min(5, totalPages); // Show max 5 page numbers
+                  let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                  let endPage = Math.min(totalPages, startPage + showPages - 1);
+                  
+                  // Adjust start if we're near the end
+                  if (endPage - startPage < showPages - 1) {
+                    startPage = Math.max(1, endPage - showPages + 1);
+                  }
+                  
+                  for (let i = startPage; i <= endPage; i++) {
+                    pageNumbers.push(
+                      <Button
+                        key={i}
+                        variant={currentPage === i ? "default" : "outline"}
+                        className={`h-8 w-8 p-0 ${currentPage === i ? "bg-blue-600 text-white" : ""}`}
+                        onClick={() => onPageChange(i)}
+                        data-testid={`button-page-${i}`}
+                      >
+                        {i}
+                      </Button>
+                    );
+                  }
+                  return pageNumbers;
+                })()}
               </div>
-            )}
+              
+              {totalPages > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-next-page"
+                  >
+                    <span className="sr-only">Go to next page</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="hidden h-8 w-8 p-0 lg:flex"
+                    onClick={() => onPageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-last-page"
+                  >
+                    <span className="sr-only">Go to last page</span>
+                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
