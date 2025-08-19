@@ -1,10 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MoreHorizontal, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { SearchTooltip } from "@/components/SearchTooltip";
-import { FilterTooltip } from "@/components/FilterTooltip";
+import { Input } from "@/components/ui/input";
+import { MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,19 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  assignedTable: string | null;
-  assignedBranch: string | null;
-  status: string;
-}
+import { UserListItem } from "@/types/user";
+import { DEFAULT_PAGINATION_CONFIG } from "@/types/pagination";
+import { useState } from "react";
 
 interface UsersTableProps {
-  users: User[];
+  users: UserListItem[];
   currentPage: number;
   totalPages: number;
   itemsPerPage: number;
@@ -38,18 +28,9 @@ interface UsersTableProps {
   onItemsPerPageChange: (itemsPerPage: number) => void;
   onNameSearch?: (value: string) => void;
   onNameSearchClear?: () => void;
-  onRoleFilter?: (roles: string[]) => void;
-  onRoleFilterClear?: () => void;
-  onBranchFilter?: (branch: string) => void;
-  onBranchFilterClear?: () => void;
-  onStatusFilter?: (statuses: string[]) => void;
-  onStatusFilterClear?: () => void;
   nameSearchValue?: string;
-  roleFilterValues?: string[];
-  branchFilterValue?: string;
-  statusFilterValues?: string[];
-  onEditUser?: (user: User) => void;
-  onDeleteUser?: (user: User) => void;
+  onEditUser?: (user: UserListItem) => void;
+  onDeleteUser?: (user: UserListItem) => void;
 }
 
 export default function UsersTable({
@@ -61,30 +42,24 @@ export default function UsersTable({
   onItemsPerPageChange,
   onNameSearch = () => {},
   onNameSearchClear = () => {},
-  onRoleFilter = () => {},
-  onRoleFilterClear = () => {},
-  onBranchFilter = () => {},
-  onBranchFilterClear = () => {},
-  onStatusFilter = () => {},
-  onStatusFilterClear = () => {},
   nameSearchValue = '',
-  roleFilterValues = [],
-  branchFilterValue = '',
-  statusFilterValues = [],
   onEditUser = () => {},
   onDeleteUser = () => {},
 }: UsersTableProps) {
-  
-  const roleOptions = [
-    { value: 'manager', label: 'Manager' },
-    { value: 'waiter', label: 'Waiter' },
-    { value: 'chef', label: 'Chef' },
-  ];
+  const [localNameSearch, setLocalNameSearch] = useState(nameSearchValue);
+  const [showNameSearch, setShowNameSearch] = useState(false);
 
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-  ];
+  const handleNameSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onNameSearch(localNameSearch);
+  };
+
+  const handleNameSearchClear = () => {
+    setLocalNameSearch('');
+    onNameSearchClear();
+    setShowNameSearch(false);
+  };
+
   return (
     <Card className="bg-white border border-gray-100 overflow-hidden" data-testid="users-table-card">
       <div className="overflow-x-auto">
@@ -94,57 +69,67 @@ export default function UsersTable({
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-name">
                 <div className="flex items-center space-x-2">
                   <span>Name</span>
-                  <SearchTooltip
-                    placeholder="Search by name..."
-                    onSearch={onNameSearch}
-                    onClear={onNameSearchClear}
-                    currentValue={nameSearchValue}
-                  />
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowNameSearch(!showNameSearch)}
+                      className="h-6 w-6 p-0"
+                      data-testid="button-name-search-toggle"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                    {showNameSearch && (
+                      <div className="absolute top-8 left-0 z-10 bg-white border border-gray-200 rounded-md shadow-lg p-3 min-w-[200px]">
+                        <form onSubmit={handleNameSearchSubmit} className="space-y-2">
+                          <Input
+                            placeholder="Search by name..."
+                            value={localNameSearch}
+                            onChange={(e) => setLocalNameSearch(e.target.value)}
+                            className="text-sm"
+                            data-testid="input-name-search"
+                          />
+                          <div className="flex space-x-1">
+                            <Button type="submit" size="sm" className="text-xs px-2 py-1" data-testid="button-name-search-apply">
+                              Apply
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleNameSearchClear}
+                              className="text-xs px-2 py-1"
+                              data-testid="button-name-search-clear"
+                            >
+                              Clear
+                            </Button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                  {nameSearchValue && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleNameSearchClear}
+                      className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
+                      data-testid="button-name-search-clear-indicator"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-role">
-                <div className="flex items-center space-x-2">
-                  <span>Role</span>
-                  <FilterTooltip
-                    filterType="checkbox"
-                    title="Role"
-                    options={roleOptions}
-                    onApply={onRoleFilter}
-                    onClear={onRoleFilterClear}
-                    currentValue={roleFilterValues}
-                  />
-                </div>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-email">
+                Email
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-table">
-                Assign Table
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-phone">
+                Phone Number
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-branch">
-                <div className="flex items-center space-x-2">
-                  <span>Assign Branch</span>
-                  <FilterTooltip
-                    filterType="input"
-                    title="Branch"
-                    placeholder="Filter by branch..."
-                    onApply={onBranchFilter}
-                    onClear={onBranchFilterClear}
-                    currentValue={branchFilterValue}
-                  />
-                </div>
+                Branch
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-status">
-                <div className="flex items-center space-x-2">
-                  <span>Status</span>
-                  <FilterTooltip
-                    filterType="checkbox"
-                    title="Status"
-                    options={statusOptions}
-                    onApply={onStatusFilter}
-                    onClear={onStatusFilterClear}
-                    currentValue={statusFilterValues}
-                  />
-                </div>
-              </th>
-
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" data-testid="header-actions">
                 Actions
               </th>
@@ -154,25 +139,26 @@ export default function UsersTable({
             {users.map((user) => (
               <tr key={user.id} className="table-row" data-testid={`user-row-${user.id}`}>
                 <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-name-${user.id}`}>
-                  <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                  <div className="flex items-center">
+                    {user.profilePicture && (
+                      <img 
+                        className="h-10 w-10 rounded-full mr-3" 
+                        src={user.profilePicture} 
+                        alt={user.name}
+                      />
+                    )}
+                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                  </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-role-${user.id}`}>
-                  <div className="text-sm text-gray-900 capitalize">{user.role}</div>
+                <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-email-${user.id}`}>
+                  <div className="text-sm text-gray-900">{user.email}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-table-${user.id}`}>
-                  <div className="text-sm text-gray-900">{user.assignedTable || "-"}</div>
+                <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-phone-${user.id}`}>
+                  <div className="text-sm text-gray-900">{user.mobileNumber}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-branch-${user.id}`}>
-                  <div className="text-sm text-gray-900">{user.assignedBranch || "-"}</div>
+                  <div className="text-sm text-gray-900">{user.branchName || "-"}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-status-${user.id}`}>
-                  <Badge 
-                    className={user.status === 'active' ? 'status-active' : 'status-inactive'}
-                  >
-                    {user.status === 'active' ? 'Active' : 'Inactive'}
-                  </Badge>
-                </td>
-
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -210,76 +196,78 @@ export default function UsersTable({
         </table>
       </div>
 
-      {/* Table Pagination */}
-      <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6" data-testid="table-pagination">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Show result:</span>
-            <select 
-              className="border border-gray-300 rounded px-3 py-1 text-sm"
-              value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              data-testid="select-table-items-per-page"
-            >
-              <option value={6}>6</option>
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-            </select>
-          </div>
-          
-          <div className="pagination">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              data-testid="button-table-prev"
-            >
-              ←
-            </Button>
-            
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = i + 1;
-              return (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
-                  className={currentPage === page ? "bg-green-500 hover:bg-green-600" : ""}
-                  onClick={() => onPageChange(page)}
-                  data-testid={`button-table-page-${page}`}
-                >
-                  {page}
-                </Button>
-              );
-            })}
-            
-            {totalPages > 5 && (
-              <>
-                <span className="px-3 py-1 text-gray-500">...</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onPageChange(totalPages)}
-                  data-testid={`button-table-page-${totalPages}`}
-                >
-                  {totalPages}
-                </Button>
-              </>
-            )}
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              data-testid="button-table-next"
-            >
-              →
-            </Button>
+      {/* Pagination Controls */}
+      <CardContent>
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center space-x-6 lg:space-x-8">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm font-medium">Rows per page</p>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => onItemsPerPageChange(Number(value))}
+              >
+                <SelectTrigger className="h-8 w-[70px]" data-testid="select-items-per-page">
+                  <SelectValue placeholder={itemsPerPage.toString()} />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  {DEFAULT_PAGINATION_CONFIG.pageSizeOptions.map((pageSize) => (
+                    <SelectItem key={pageSize} value={pageSize.toString()}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                className="hidden h-8 w-8 p-0 lg:flex"
+                onClick={() => onPageChange(1)}
+                disabled={currentPage === 1}
+                data-testid="button-first-page"
+              >
+                <span className="sr-only">Go to first page</span>
+                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="h-8 w-8 p-0"
+                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                data-testid="button-prev-page"
+              >
+                <span className="sr-only">Go to previous page</span>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="h-8 w-8 p-0"
+                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                data-testid="button-next-page"
+              >
+                <span className="sr-only">Go to next page</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="hidden h-8 w-8 p-0 lg:flex"
+                onClick={() => onPageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                data-testid="button-last-page"
+              >
+                <span className="sr-only">Go to last page</span>
+                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }

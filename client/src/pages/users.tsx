@@ -1,68 +1,71 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Filter, Calendar, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UsersTable from "@/components/users-table";
 import AddUserModal from "@/components/add-user-modal";
 import DeleteUserModal from "@/components/delete-user-modal";
-
-const roleFilters = [
-  { value: "all", label: "All Users" },
-  { value: "waiter", label: "Waiter" },
-  { value: "manager", label: "Manager" },
-  { value: "chef", label: "Chefs" },
-];
+import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
+import { UserListItem } from "@/types/user";
 
 export default function Users() {
-  const [activeRole, setActiveRole] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
-  
-  // Filter states
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
   const [nameSearchTerm, setNameSearchTerm] = useState("");
-  const [roleFilters, setRoleFilters] = useState<string[]>([]);
-  const [branchFilter, setBranchFilter] = useState("");
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
   
   // Delete modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [userToDelete, setUserToDelete] = useState<UserListItem | null>(null);
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: activeRole === "all" ? ["/api/users"] : ["/api/users", { role: activeRole }],
+  const { data: usersResponse, isLoading } = useQuery<PaginationResponse<UserListItem>>({
+    queryKey: ["users", currentPage, pageSize, nameSearchTerm],
+    queryFn: async () => {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      const paginationRequest: PaginationRequest = {
+        pageNumber: currentPage,
+        pageSize: pageSize,
+        sortBy: 'name',
+        isAscending: true,
+        searchTerm: nameSearchTerm || undefined,
+      };
+
+      const queryString = buildPaginationQuery(paginationRequest);
+      const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/users?${queryString}`, {
+        headers: {
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      return response.json();
+    },
   });
 
-  const filteredUsers = Array.isArray(users) 
-    ? users.filter((user: any) => {
-        // Name search filter
-        const matchesNameSearch = nameSearchTerm === "" || 
-          user.username?.toLowerCase().includes(nameSearchTerm.toLowerCase()) ||
-          user.email?.toLowerCase().includes(nameSearchTerm.toLowerCase());
-        
-        // Role filter
-        const matchesRoleFilter = roleFilters.length === 0 || 
-          roleFilters.includes(user.role?.toLowerCase());
-        
-        // Branch filter
-        const matchesBranchFilter = branchFilter === "" || 
-          user.assignedBranch?.toLowerCase().includes(branchFilter.toLowerCase());
-        
-        // Status filter
-        const matchesStatusFilter = statusFilters.length === 0 || 
-          statusFilters.includes(user.status?.toLowerCase());
-        
-        return matchesNameSearch && matchesRoleFilter && matchesBranchFilter && matchesStatusFilter;
-      })
-    : [];
+  const users = usersResponse?.items || [];
+  const totalPages = usersResponse?.totalPages || 0;
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  const handleEditUser = (user: UserListItem) => {
+    setEditingUser(user);
+    setIsAddUserModalOpen(true);
+  };
+
+  const handleDeleteUser = (user: UserListItem) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    // Implementation for delete user API call will be added later
+    console.log('Deleting user:', userToDelete);
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
 
   if (isLoading) {
     return (
@@ -73,129 +76,38 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-6" data-testid="users-page">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-800" data-testid="page-title">Users</h2>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900" data-testid="page-title">User Management</h1>
+          <p className="text-gray-600 mt-1">Manage your restaurant users</p>
+        </div>
         <Button 
-          className="bg-green-500 hover:bg-green-600" 
-          onClick={() => {
-            setEditingUser(null);
-            setIsAddUserModalOpen(true);
-          }}
+          onClick={() => setIsAddUserModalOpen(true)}
+          className="bg-emerald-500 hover:bg-emerald-600 text-white"
           data-testid="button-add-user"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="w-4 h-4 mr-2" />
           Add User
         </Button>
       </div>
 
-
-
-      {/* Active Filters Display */}
-      {(nameSearchTerm || roleFilters.length > 0 || branchFilter || statusFilters.length > 0) && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
-          <span>Active filters:</span>
-          {nameSearchTerm && (
-            <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
-              Name: "{nameSearchTerm}"
-              <button
-                onClick={() => setNameSearchTerm("")}
-                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                title="Remove name filter"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          )}
-          {roleFilters.map((role) => (
-            <span key={role} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
-              Role: {role}
-              <button
-                onClick={() => setRoleFilters(roleFilters.filter(r => r !== role))}
-                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                title={`Remove ${role} role filter`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-          {branchFilter && (
-            <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
-              Branch: "{branchFilter}"
-              <button
-                onClick={() => setBranchFilter("")}
-                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                title="Remove branch filter"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          )}
-          {statusFilters.map((status) => (
-            <span key={status} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md">
-              Status: {status}
-              <button
-                onClick={() => setStatusFilters(statusFilters.filter(s => s !== status))}
-                className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                title={`Remove ${status} status filter`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-          {/* Clear All Filters Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setNameSearchTerm("");
-              setRoleFilters([]);
-              setBranchFilter("");
-              setStatusFilters([]);
-            }}
-            className="ml-2 text-gray-600 border-gray-300 hover:bg-gray-50"
-          >
-            <X className="w-3 h-3 mr-1" />
-            Clear All
-          </Button>
-        </div>
-      )}
-
       {/* Users Table */}
-      <UsersTable 
-        users={paginatedUsers}
+      <UsersTable
+        users={users}
         currentPage={currentPage}
         totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={pageSize}
         onPageChange={setCurrentPage}
-        onItemsPerPageChange={(newItemsPerPage) => {
-          setItemsPerPage(newItemsPerPage);
-          setCurrentPage(1);
-        }}
+        onItemsPerPageChange={setPageSize}
         onNameSearch={setNameSearchTerm}
         onNameSearchClear={() => setNameSearchTerm("")}
-        onRoleFilter={setRoleFilters}
-        onRoleFilterClear={() => setRoleFilters([])}
-        onBranchFilter={setBranchFilter}
-        onBranchFilterClear={() => setBranchFilter("")}
-        onStatusFilter={setStatusFilters}
-        onStatusFilterClear={() => setStatusFilters([])}
         nameSearchValue={nameSearchTerm}
-        roleFilterValues={roleFilters}
-        branchFilterValue={branchFilter}
-        statusFilterValues={statusFilters}
-        onEditUser={(user) => {
-          setEditingUser(user);
-          setIsAddUserModalOpen(true);
-        }}
-        onDeleteUser={(user) => {
-          setUserToDelete(user);
-          setIsDeleteModalOpen(true);
-        }}
+        onEditUser={handleEditUser}
+        onDeleteUser={handleDeleteUser}
       />
 
-      {/* Add User Modal */}
+      {/* Modals */}
       <AddUserModal
         isOpen={isAddUserModalOpen}
         onClose={() => {
@@ -205,20 +117,11 @@ export default function Users() {
         editingUser={editingUser}
       />
 
-      {/* Delete User Modal */}
       <DeleteUserModal
         isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setUserToDelete(null);
-        }}
+        onClose={() => setIsDeleteModalOpen(false)}
         user={userToDelete}
-        onConfirm={() => {
-          // Handle delete logic here
-          console.log("Deleting user:", userToDelete);
-          setIsDeleteModalOpen(false);
-          setUserToDelete(null);
-        }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

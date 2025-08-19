@@ -6,17 +6,14 @@ This is a full-stack restaurant and hotel management application. Its main purpo
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Technical preferences:
-- Use dummy/mock data instead of database connections
-- Remove API endpoints and render data directly from React components
-- UI styling: Order buttons should have gray background matching tables
-- Services: "Free Services" should be labeled as "Services"
-- Remove edit/delete buttons from all service cards (including paid services)
-- Table modals: Fix duplicate close buttons, edit modal should only allow editing seating capacity and assignee
-- Menu section: Menu and category buttons should have gray background, only down border, highlighted items have green border
-- Add Table button should be green
-- Deals table: Remove checkboxes, add edit/delete context menu functionality
-- Apply Discount modal: Should have only one close button
-- Menu and category context menus: Add edit/delete buttons with proper functionality
+- Integrate real API endpoints for user management with proper authentication
+- Implement generic pagination system with configurable page sizes
+- User table: Only keep name search filter, remove all other search filters
+- Use FormData format for user creation with profile pictures
+- Password field should have show/hide toggle functionality
+- API integration: Users list API with name filtering and pagination support
+- Generic pagination configuration stored in centralized location
+- Real-time API integration with proper error handling and loading states
 
 ## System Architecture
 
@@ -31,11 +28,12 @@ Technical preferences:
 - **Charts**: Recharts for data visualization.
 
 ### Data Management (Frontend-Only with External APIs)
-- **Architecture**: Pure client-side React application.
+- **Architecture**: Pure client-side React application with real API integration.
 - **External API Integration**: Generic API repository pattern for all external API calls.
-- **Data Storage**: localStorage for session management and local caching.
-- **Development Data**: Mock data for development and testing.
+- **Data Storage**: localStorage for session management and authentication tokens.
+- **Real API Integration**: Users API, Roles API, Entities/Branches API with proper authentication.
 - **API Repository**: Centralized error handling, token management, and configurable endpoints, handling 400/401/403/404/422/500 status codes.
+- **Pagination System**: Generic pagination utilities with configurable page sizes (5, 10, 20, 50, 100).
 - **Server Removal**: All Node.js/Express server code, database dependencies (Drizzle ORM, PostgreSQL) have been removed.
 
 ### Authentication & Authorization
@@ -49,11 +47,12 @@ Technical preferences:
 - **File Upload**: Image-only file upload for profile/certificate pictures (Base64 encoding, FormData for API).
 - **Mobile Responsiveness**: Full responsive design across all components.
 - **Comprehensive Management Systems**: Includes Orders, Menu (with CRUD, add-ons, customizations), Deals, Services, and Tickets.
-- **User Management**: Comprehensive Add/Edit User modal with profile pictures, role, and branch assignment.
+- **User Management**: Comprehensive Add/Edit User modal with profile pictures, role, and branch assignment, real API integration.
 - **Dashboard Analytics**: Sales summary, item performance, occupancy, peak hours, customer feedback with date range toggles and 7 specialized categories.
 - **Appearance Customization**: Gradient color picker for real-time UI previews.
-- **Enhanced Search**: Clickable search icons in table headers for real-time filtering across sections.
+- **Enhanced Search**: Name-only search filter in user table with real-time API integration.
 - **Card Design**: Attractive entity and branch cards with gradient overlays, hover effects, and animated buttons.
+- **Generic Pagination**: Reusable pagination system with configurable page sizes and proper API integration.
 
 ## External Dependencies
 
