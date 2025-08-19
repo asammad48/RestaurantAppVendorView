@@ -139,16 +139,7 @@ export default function UsersTable({
             {users.map((user) => (
               <tr key={user.id} className="table-row" data-testid={`user-row-${user.id}`}>
                 <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-name-${user.id}`}>
-                  <div className="flex items-center">
-                    {user.profilePicture && (
-                      <img 
-                        className="h-10 w-10 rounded-full mr-3" 
-                        src={user.profilePicture} 
-                        alt={user.name}
-                      />
-                    )}
-                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                  </div>
+                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap" data-testid={`user-email-${user.id}`}>
                   <div className="text-sm text-gray-900">{user.email}</div>
@@ -221,50 +212,52 @@ export default function UsersTable({
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
               Page {currentPage} of {totalPages}
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => onPageChange(1)}
-                disabled={currentPage === 1}
-                data-testid="button-first-page"
-              >
-                <span className="sr-only">Go to first page</span>
-                <ChevronLeft className="h-4 w-4" />
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                data-testid="button-prev-page"
-              >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                data-testid="button-next-page"
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => onPageChange(totalPages)}
-                disabled={currentPage === totalPages}
-                data-testid="button-last-page"
-              >
-                <span className="sr-only">Go to last page</span>
-                <ChevronRight className="h-4 w-4" />
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => onPageChange(1)}
+                  disabled={currentPage === 1}
+                  data-testid="button-first-page"
+                >
+                  <span className="sr-only">Go to first page</span>
+                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  data-testid="button-prev-page"
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => onPageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-last-page"
+                >
+                  <span className="sr-only">Go to last page</span>
+                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
