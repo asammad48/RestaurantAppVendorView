@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import UsersTable from "@/components/users-table";
 import AddUserModal from "@/components/add-user-modal";
 import DeleteUserModal from "@/components/delete-user-modal";
@@ -9,6 +10,8 @@ import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, build
 import { UserListItem } from "@/types/user";
 
 export default function Users() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -18,6 +21,7 @@ export default function Users() {
   // Delete modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserListItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: usersResponse, isLoading } = useQuery<PaginationResponse<UserListItem>>({
     queryKey: ["users", currentPage, pageSize, nameSearchTerm],
@@ -60,11 +64,45 @@ export default function Users() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    // Implementation for delete user API call will be added later
-    console.log('Deleting user:', userToDelete);
-    setIsDeleteModalOpen(false);
-    setUserToDelete(null);
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user/${userToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete user: ${response.status}`);
+      }
+
+      // Show success toast
+      toast({
+        title: "Success",
+        description: `User "${userToDelete.name}" has been deleted successfully.`,
+      });
+
+      // Refresh the users list
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -119,9 +157,15 @@ export default function Users() {
 
       <DeleteUserModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={() => {
+          if (!isDeleting) {
+            setIsDeleteModalOpen(false);
+            setUserToDelete(null);
+          }
+        }}
         user={userToDelete}
         onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
       />
     </div>
   );

@@ -9,21 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  assignedTable: string | null;
-  assignedBranch: string | null;
-  status: string;
-}
+import { UserListItem } from "@/types/user";
 
 interface DeleteUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
+  user: UserListItem | null;
   onConfirm: () => void;
   isLoading?: boolean;
 }
@@ -59,11 +50,12 @@ export default function DeleteUserModal({
         <div className="mt-4">
           <p className="text-sm text-gray-700">
             Are you sure you want to delete the user{" "}
-            <span className="font-semibold text-gray-900">{user.username}</span>?
+            <span className="font-semibold text-gray-900">{user.name}</span>?
           </p>
           <div className="mt-2 text-xs text-gray-500">
             <p>Email: {user.email}</p>
-            <p>Role: {user.role}</p>
+            <p>Phone: {user.mobileNumber}</p>
+            <p>Branch: {user.branchName}</p>
           </div>
         </div>
 
