@@ -2,30 +2,26 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { insertUserSchema } from "@/types/schema";
-import { apiRequest } from "@/lib/queryClient";
 
-const userFormSchema = insertUserSchema.extend({
+
+const userFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   role: z.string().min(1, "Role is required"),
   entityId: z.string().min(1, "Entity is required"),
   assignedBranch: z.string().min(1, "Assigned branch is required"),
-  address: z.string().optional(),
   image: z.string().optional(),
-  // These are required for user creation but will be generated
-  username: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
 });
 
 type UserFormData = z.infer<typeof userFormSchema>;
@@ -60,6 +56,7 @@ interface EntitiesAndBranchesResponse {
 
 export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserModalProps) {
   const [imageFile, setImageFile] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEditing = !!editingUser;
@@ -125,28 +122,24 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     if (isOpen) {
       const defaultValues = isEditing && editingUser
         ? {
-            name: editingUser.username || "", // Using username as display name
-            phoneNumber: editingUser.phoneNumber || "",
-            role: editingUser.role || "",
-            entityId: editingUser.entityId || "",
-            assignedBranch: editingUser.assignedBranch || "",
-            address: editingUser.address || "",
-            image: editingUser.image || "",
-            username: editingUser.username || "",
+            name: editingUser.name || "",
             email: editingUser.email || "",
-            password: "existing-password",
+            password: "", // Always require password input for editing
+            phoneNumber: editingUser.mobileNumber || editingUser.phoneNumber || "",
+            role: editingUser.roleId?.toString() || editingUser.role || "",
+            entityId: editingUser.entityId?.toString() || "",
+            assignedBranch: editingUser.branchId?.toString() || editingUser.assignedBranch || "",
+            image: editingUser.profilePicture || editingUser.image || "",
           }
         : {
             name: "",
+            email: "",
+            password: "",
             phoneNumber: "",
             role: "",
             entityId: "",
             assignedBranch: "",
-            address: "",
             image: "",
-            username: "",
-            email: "",
-            password: "",
           };
       
       reset(defaultValues);
@@ -163,30 +156,67 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
 
   const createUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
-      // Auto-generate username and email from name if not provided
-      if (!data.username) {
-        data.username = data.name.toLowerCase().replace(/\s+/g, '.');
-      }
-      if (!data.email) {
-        data.email = `${data.username}@restaurant.com`;
-      }
-      if (!isEditing && !data.password) {
-        data.password = "defaultPassword123";
+      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      
+      // Create FormData for the API call
+      const formData = new FormData();
+      formData.append('Email', data.email);
+      formData.append('Name', data.name);
+      formData.append('Password', data.password);
+      formData.append('MobileNumber', data.phoneNumber);
+      formData.append('RoleId', data.role);
+      formData.append('BranchId', data.assignedBranch);
+      
+      // Handle profile picture
+      if (data.image && data.image.startsWith('data:')) {
+        // Convert base64 to blob
+        const response = await fetch(data.image);
+        const blob = await response.blob();
+        formData.append('ProfilePicture', blob, 'profile.png');
       }
 
-      const endpoint = isEditing ? `/api/users/${editingUser.id}` : "/api/users";
-      const method = isEditing ? "PATCH" : "POST";
-      
-      return apiRequest(method, endpoint, data);
+      if (isEditing) {
+        // For editing - use PATCH or PUT method
+        const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'accept': '*/*',
+          },
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update user');
+        }
+        return response.json();
+      } else {
+        // For creating new user
+        const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'accept': '*/*',
+          },
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create user');
+        }
+        return response.json();
+      }
     },
-    onSuccess: () => {
+    onSuccess: (responseData) => {
       toast({
-        title: "Success",
-        description: `User has been ${isEditing ? 'updated' : 'created'} successfully.`,
+        title: "Success", 
+        description: `User "${responseData.name}" has been ${isEditing ? 'updated' : 'created'} successfully.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       reset();
       setImageFile("");
+      setShowPassword(false);
       onClose();
     },
     onError: (error) => {
@@ -289,18 +319,32 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="username" className="text-sm font-medium">
-                Username
+              <Label htmlFor="password" className="text-sm font-medium">
+                Password
               </Label>
-              <Input
-                id="username"
-                {...register("username")}
-                className="mt-1"
-                data-testid="input-username"
-                disabled={isEditing}
-              />
-              {errors.username && (
-                <p className="text-sm text-red-600 mt-1">{errors.username.message}</p>
+              <div className="relative mt-1">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  className="pr-10"
+                  data-testid="input-password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                  data-testid="button-toggle-password"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
               )}
             </div>
 
@@ -393,20 +437,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             )}
           </div>
 
-          <div>
-            <Label htmlFor="address" className="text-sm font-medium">
-              Address
-            </Label>
-            <Textarea
-              id="address"
-              {...register("address")}
-              className="mt-1 min-h-[80px]"
-              data-testid="textarea-address"
-            />
-            {errors.address && (
-              <p className="text-sm text-red-600 mt-1">{errors.address.message}</p>
-            )}
-          </div>
+
 
           <div>
             <Label htmlFor="image" className="text-sm font-medium">
