@@ -36,13 +36,27 @@ interface AddUserModalProps {
   editingUser?: any;
 }
 
-const USER_ROLES = [
-  { value: "manager", label: "Manager" },
-  { value: "waiter", label: "Waiter" },
-  { value: "chef", label: "Chef" },
-];
+// Interfaces for API responses
+interface Role {
+  id: number;
+  name: string;
+}
 
-// Remove static BRANCHES array as we'll fetch from API
+interface Entity {
+  id: number;
+  name: string;
+}
+
+interface Branch {
+  id: number;
+  name: string;
+  entityId: number;
+}
+
+interface EntitiesAndBranchesResponse {
+  entities: Entity[];
+  branches: Branch[];
+}
 
 export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserModalProps) {
   const [imageFile, setImageFile] = useState<string>("");
@@ -50,16 +64,50 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const queryClient = useQueryClient();
   const isEditing = !!editingUser;
 
-  // Fetch entities and branches
-  const { data: entities } = useQuery({
-    queryKey: ["/api/entities"],
+  // Fetch roles
+  const { data: roles, isLoading: rolesLoading, error: rolesError } = useQuery<Role[]>({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/Generic/roles', {
+        headers: {
+          'accept': '*/*',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch roles');
+      }
+      return response.json();
+    },
     enabled: isOpen,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const { data: branches } = useQuery({
-    queryKey: ["/api/branches"],
+  // Fetch entities and branches in one call
+  const { data: entitiesAndBranches, isLoading: entitiesLoading, error: entitiesError } = useQuery<EntitiesAndBranchesResponse>({
+    queryKey: ["entities-and-branches"],
+    queryFn: async () => {
+      // Get token from localStorage for this API call
+      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/Generic/entities-and-branches', {
+        headers: {
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch entities and branches');
+      }
+      return response.json();
+    },
     enabled: isOpen,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
+
+  // Extract entities and branches from the response
+  const entities = entitiesAndBranches?.entities || [];
+  const allBranches = entitiesAndBranches?.branches || [];
 
   const {
     register,
@@ -110,10 +158,8 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const entityValue = watch("entityId");
   const branchValue = watch("assignedBranch");
 
-  // For now, show all branches since the data structure is transitioning from restaurant-based to entity-based
-  // The branches table still uses restaurantId, but we're selecting based on entityId
-  // Until this is unified, we'll show all available branches
-  const filteredBranches = Array.isArray(branches) ? branches : [];
+  // Filter branches based on selected entity
+  const filteredBranches = entityValue ? allBranches.filter(branch => branch.entityId === parseInt(entityValue)) : [];
 
   const createUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
@@ -195,6 +241,15 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           <h2 className="text-xl font-semibold text-center" data-testid="modal-title">
             {isEditing ? "Edit User" : "Add User"}
           </h2>
+          {(rolesError || entitiesError) && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">
+                {rolesError && "Failed to load roles. "}
+                {entitiesError && "Failed to load entities and branches. "}
+                Please try again.
+              </p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -272,12 +327,12 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
               </Label>
               <Select value={roleValue} onValueChange={(value) => setValue("role", value)}>
                 <SelectTrigger className="mt-1" data-testid="select-role">
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder={rolesLoading ? "Loading roles..." : "Select role"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {USER_ROLES.map((role) => (
-                    <SelectItem key={role.value} value={role.value} data-testid={`option-role-${role.value}`}>
-                      {role.label}
+                  {roles?.map((role) => (
+                    <SelectItem key={role.id} value={role.id.toString()} data-testid={`option-role-${role.id}`}>
+                      {role.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -297,11 +352,11 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
                 setValue("assignedBranch", "");
               }}>
                 <SelectTrigger className="mt-1" data-testid="select-entity">
-                  <SelectValue placeholder="Select entity" />
+                  <SelectValue placeholder={entitiesLoading ? "Loading entities..." : "Select entity"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.isArray(entities) && entities.map((entity: any) => (
-                    <SelectItem key={entity.id} value={entity.id} data-testid={`option-entity-${entity.id}`}>
+                  {entities.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id.toString()} data-testid={`option-entity-${entity.id}`}>
                       {entity.name}
                     </SelectItem>
                   ))}
@@ -320,13 +375,14 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
             <Select 
               value={branchValue} 
               onValueChange={(value) => setValue("assignedBranch", value)}
+              disabled={!entityValue || entitiesLoading}
             >
               <SelectTrigger className="mt-1" data-testid="select-branch">
-                <SelectValue placeholder="Select branch" />
+                <SelectValue placeholder={!entityValue ? "Select entity first" : "Select branch"} />
               </SelectTrigger>
               <SelectContent>
-                {filteredBranches.map((branch: any) => (
-                  <SelectItem key={branch.id} value={branch.id} data-testid={`option-branch-${branch.id}`}>
+                {filteredBranches.map((branch) => (
+                  <SelectItem key={branch.id} value={branch.id.toString()} data-testid={`option-branch-${branch.id}`}>
                     {branch.name}
                   </SelectItem>
                 ))}
