@@ -190,26 +190,27 @@ export default function UsersTable({
       {/* Pagination Controls */}
       <CardContent>
         <div className="flex items-center justify-between px-2">
-          <div className="flex items-center space-x-6 lg:space-x-8">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium">Rows per page</p>
-              <Select
-                value={itemsPerPage.toString()}
-                onValueChange={(value) => onItemsPerPageChange(Number(value))}
-              >
-                <SelectTrigger className="h-8 w-[70px]" data-testid="select-items-per-page">
-                  <SelectValue placeholder={itemsPerPage.toString()} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {DEFAULT_PAGINATION_CONFIG.pageSizeOptions.map((pageSize) => (
-                    <SelectItem key={pageSize} value={pageSize.toString()}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Rows per page</p>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => onItemsPerPageChange(Number(value))}
+            >
+              <SelectTrigger className="h-8 w-[70px]" data-testid="select-items-per-page">
+                <SelectValue placeholder={itemsPerPage.toString()} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {DEFAULT_PAGINATION_CONFIG.pageSizeOptions.map((pageSize) => (
+                  <SelectItem key={pageSize} value={pageSize.toString()}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="text-sm font-medium">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex items-center space-x-2">
@@ -257,7 +258,7 @@ export default function UsersTable({
                       <Button
                         key={i}
                         variant={currentPage === i ? "default" : "outline"}
-                        className={`h-8 w-8 p-0 ${currentPage === i ? "bg-blue-600 text-white" : ""}`}
+                        className={`h-8 w-8 p-0 ${currentPage === i ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                         onClick={() => onPageChange(i)}
                         data-testid={`button-page-${i}`}
                       >
