@@ -58,6 +58,7 @@ interface EntitiesAndBranchesResponse {
 export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserModalProps) {
   const [imageFile, setImageFile] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEditing = !!editingUser;
@@ -143,6 +144,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   // Reset form when modal opens/closes or when user details are loaded
   React.useEffect(() => {
     if (isOpen) {
+      setIsFormLoading(true);
       const defaultValues = isEditing && userDetails
         ? {
             name: userDetails.name || "",
@@ -171,9 +173,15 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
       } else {
         setImageFile("");
       }
+      
+      // Delay to allow form population to complete before user interactions
+      setTimeout(() => {
+        setIsFormLoading(false);
+      }, 100);
     } else {
       reset();
       setImageFile("");
+      setIsFormLoading(false);
     }
   }, [isOpen, isEditing, userDetails, reset]);
 
@@ -430,8 +438,10 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
               </Label>
               <Select value={entityValue} onValueChange={(value) => {
                 setValue("entityId", value);
-                // Clear branch selection when entity changes
-                setValue("assignedBranch", "");
+                // Only clear branch selection if not during initial form loading
+                if (!isFormLoading) {
+                  setValue("assignedBranch", "");
+                }
               }}>
                 <SelectTrigger className="mt-1" data-testid="select-entity">
                   <SelectValue placeholder={entitiesLoading ? "Loading entities..." : "Select entity"} />
