@@ -1233,14 +1233,18 @@ export default function Orders() {
           itemName={deleteItem.name}
           onConfirm={async () => {
             if (deleteItem.type === 'table') {
-              // TODO: Implement delete table API call
+              // Delete table using real API endpoint
               try {
-                // await locationApi.deleteLocation(deleteItem.id);
-                console.log(`Deleting table: ${deleteItem.name}`);
-                // Refresh the tables list after deletion
+                const response = await locationApi.deleteLocation(deleteItem.id);
+                // API returns 204 status on successful deletion
+                if (response.error) {
+                  throw new Error(response.error);
+                }
+                // Refresh the tables list after successful deletion
                 refetchTables();
-              } catch (error) {
+              } catch (error: any) {
                 console.error('Failed to delete table:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
             } else {
               // Here you would typically call an API to delete the item
