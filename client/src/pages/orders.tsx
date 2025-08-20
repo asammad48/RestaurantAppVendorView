@@ -22,7 +22,7 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi } from "@/lib/apiRepository";
+import { locationApi, branchApi } from "@/lib/apiRepository";
 // Temporary interface definitions until proper schema is set up
 interface MenuItem {
   id: string;
@@ -84,6 +84,12 @@ interface LocationApiResponse {
   name: string;
   qrCode: string;
   capacity: number;
+}
+
+// Extended interface with branch name
+interface TableWithBranchData extends TableData {
+  qrCode: string;
+  branchName: string;
 }
 
 const mockOrders: Order[] = [
@@ -215,7 +221,7 @@ export default function Orders() {
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditTableModal, setShowEditTableModal] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
+  const [selectedTable, setSelectedTable] = useState<TableWithBranchData | null>(null);
 
   // Check URL params for pricing modal trigger
   useEffect(() => {
@@ -225,6 +231,20 @@ export default function Orders() {
       setShowPricingModal(true);
     }
   }, []);
+  // Get branch details for branch 3
+  const { data: branchData } = useQuery({
+    queryKey: ["branch", 3],
+    queryFn: async () => {
+      const response = await branchApi.getBranchById(3);
+      if ((response as any).error) {
+        throw new Error((response as any).error);
+      }
+      return (response as any).data;
+    },
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+    retry: 2,
+  });
+
   // Real API query for tables from branch 3
   const { data: tablesData, isLoading: isLoadingTables, refetch: refetchTables } = useQuery<LocationApiResponse[]>({
     queryKey: ["tables", "branch", 3],
@@ -241,14 +261,16 @@ export default function Orders() {
     retry: 2,
   });
 
-  // Transform API data to match UI format
-  const tables: TableData[] = (tablesData || []).map((location) => ({
+  // Transform API data to match UI format with real branch name
+  const tables: TableWithBranchData[] = (tablesData || []).map((location) => ({
     id: location.id.toString(),
     tableNumber: `Table ${location.name}`,
-    branch: "Gulshan Branch", // Default branch name
-    waiter: "Unassigned", // API doesn't return waiter info
+    branch: branchData?.name || "Branch", // Use real branch name
+    branchName: branchData?.name || "Branch", // For QR modal
+    waiter: "Unassigned", // Keep for interface compatibility but won't display
     seats: location.capacity,
-    status: location.capacity > 0 ? "Active" : "Inactive" as "Active" | "Inactive"
+    status: location.capacity > 0 ? "Active" : "Inactive" as "Active" | "Inactive",
+    qrCode: location.qrCode // Store QR code from API
   }));
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
@@ -852,15 +874,9 @@ export default function Orders() {
 
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Waiter:</span>
-                      <span className="font-medium text-red-500" data-testid={`table-waiter-${table.id}`}>
-                        {table.waiter}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Seats:</span>
-                      <span className="font-medium text-red-500" data-testid={`table-seats-${table.id}`}>
-                        {table.seats}
+                      <span className="text-gray-600">Capacity:</span>
+                      <span className="font-medium text-red-500" data-testid={`table-capacity-${table.id}`}>
+                        {table.seats} {table.seats === 1 ? 'person' : 'people'}
                       </span>
                     </div>
                   </div>
@@ -1106,7 +1122,8 @@ export default function Orders() {
           open={showQRModal}
           onOpenChange={setShowQRModal}
           tableNumber={selectedTable.tableNumber}
-          branchName={selectedTable.branch}
+          branchName={selectedTable.branchName}
+          qrCodeBase64={selectedTable.qrCode}
         />
       )}
 

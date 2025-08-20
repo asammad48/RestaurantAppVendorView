@@ -8,92 +8,71 @@ interface QRCodeModalProps {
   onOpenChange: (open: boolean) => void;
   tableNumber: string;
   branchName: string;
+  qrCodeBase64?: string;
 }
 
-// Simple QR code SVG component (in a real app, you'd use a QR code library)
-const QRCodeSVG = ({ value, size = 200 }: { value: string; size?: number }) => {
-  // This is a simplified QR code representation
-  // In a real application, you would use a library like 'qrcode' or 'react-qr-code'
+// QR Code display component that handles base64 images
+const QRCodeDisplay = ({ base64Image, tableNumber, size = 200 }: { base64Image?: string; tableNumber: string; size?: number }) => {
+  if (base64Image && base64Image.trim() !== '') {
+    // Use the actual base64 QR code from API
+    return (
+      <div 
+        className="bg-white border-2 border-gray-300 flex items-center justify-center p-2"
+        style={{ width: size, height: size }}
+      >
+        <img 
+          src={`data:image/png;base64,${base64Image}`}
+          alt={`QR Code for ${tableNumber}`}
+          style={{ maxWidth: size - 20, maxHeight: size - 20 }}
+          className="object-contain"
+        />
+      </div>
+    );
+  }
+  
+  // Fallback: Simple QR code placeholder if no base64 image
   return (
     <div 
       className="bg-white border-2 border-gray-300 flex items-center justify-center"
       style={{ width: size, height: size }}
     >
-      <svg
-        width={size - 20}
-        height={size - 20}
-        viewBox="0 0 100 100"
-        className="text-black"
-      >
-        {/* Simplified QR pattern */}
-        <rect x="0" y="0" width="20" height="20" fill="currentColor" />
-        <rect x="80" y="0" width="20" height="20" fill="currentColor" />
-        <rect x="0" y="80" width="20" height="20" fill="currentColor" />
-        <rect x="10" y="10" width="80" height="5" fill="currentColor" />
-        <rect x="10" y="20" width="5" height="60" fill="currentColor" />
-        <rect x="85" y="20" width="5" height="60" fill="currentColor" />
-        <rect x="20" y="85" width="60" height="5" fill="currentColor" />
-        
-        {/* Add some pattern dots */}
-        {Array.from({ length: 10 }, (_, i) => (
-          <rect
-            key={i}
-            x={25 + (i % 5) * 10}
-            y={25 + Math.floor(i / 5) * 10}
-            width="5"
-            height="5"
-            fill="currentColor"
-          />
-        ))}
-        
-        {/* Center pattern */}
-        <rect x="40" y="40" width="20" height="20" fill="currentColor" />
-        <rect x="45" y="45" width="10" height="10" fill="white" />
-      </svg>
+      <div className="text-center text-gray-500">
+        <div className="text-sm font-medium mb-2">QR Code</div>
+        <div className="text-xs">Not Available</div>
+      </div>
     </div>
   );
 };
 
-export default function QRCodeModal({ open, onOpenChange, tableNumber, branchName }: QRCodeModalProps) {
+export default function QRCodeModal({ open, onOpenChange, tableNumber, branchName, qrCodeBase64 }: QRCodeModalProps) {
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {
-    if (qrCodeRef.current) {
-      // Create a canvas to convert the QR code to an image
+    if (qrCodeBase64 && qrCodeBase64.trim() !== '') {
+      // Download the actual base64 QR code image
+      const link = document.createElement('a');
+      link.download = `${tableNumber.replace(/\s+/g, '_')}_QR_Code.png`;
+      link.href = `data:image/png;base64,${qrCodeBase64}`;
+      link.click();
+    } else {
+      // Fallback: create a simple QR placeholder image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const size = 300;
       
       canvas.width = size;
-      canvas.height = size + 60; // Extra space for text
+      canvas.height = size + 60;
       
       if (ctx) {
-        // White background
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw QR code (simplified representation)
-        ctx.fillStyle = 'black';
-        ctx.fillRect(20, 20, 60, 60);
-        ctx.fillRect(220, 20, 60, 60);
-        ctx.fillRect(20, 220, 60, 60);
-        
-        // Add some QR pattern elements
-        for (let i = 0; i < 10; i++) {
-          for (let j = 0; j < 10; j++) {
-            if ((i + j) % 3 === 0) {
-              ctx.fillRect(90 + i * 12, 90 + j * 12, 8, 8);
-            }
-          }
-        }
-        
-        // Add text
         ctx.fillStyle = 'black';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
+        ctx.fillText('QR Code Not Available', size / 2, size / 2);
         ctx.fillText(`${tableNumber} - ${branchName}`, size / 2, size + 30);
         
-        // Create download link
         const link = document.createElement('a');
         link.download = `${tableNumber.replace(/\s+/g, '_')}_QR_Code.png`;
         link.href = canvas.toDataURL('image/png');
@@ -105,6 +84,10 @@ export default function QRCodeModal({ open, onOpenChange, tableNumber, branchNam
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const qrImageSrc = qrCodeBase64 && qrCodeBase64.trim() !== '' 
+        ? `data:image/png;base64,${qrCodeBase64}` 
+        : '';
+        
       printWindow.document.write(`
         <html>
           <head>
@@ -139,6 +122,10 @@ export default function QRCodeModal({ open, onOpenChange, tableNumber, branchNam
                 padding: 20px;
                 background: white;
               }
+              .qr-image {
+                max-width: 200px;
+                max-height: 200px;
+              }
               @media print {
                 body { margin: 0; padding: 20px; }
               }
@@ -149,7 +136,7 @@ export default function QRCodeModal({ open, onOpenChange, tableNumber, branchNam
               <div class="qr-title">${tableNumber}</div>
               <div class="qr-subtitle">${branchName}</div>
               <div class="qr-code">
-                ${qrCodeRef.current?.innerHTML || ''}
+                ${qrImageSrc ? `<img src="${qrImageSrc}" alt="QR Code" class="qr-image" />` : 'QR Code Not Available'}
               </div>
             </div>
           </body>
@@ -188,7 +175,7 @@ export default function QRCodeModal({ open, onOpenChange, tableNumber, branchNam
             className="flex justify-center p-4 bg-gray-50 rounded-lg"
             data-testid="qr-code-display"
           >
-            <QRCodeSVG value={qrValue} size={200} />
+            <QRCodeDisplay base64Image={qrCodeBase64} tableNumber={tableNumber} size={200} />
           </div>
 
           {/* Action Buttons */}
