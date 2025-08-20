@@ -322,33 +322,38 @@ export default function Orders() {
     queryFn: () => fetch("/api/menu-items").then(res => res.json()),
   });
 
-  // Query for categories with real API and pagination support
+  // Query for categories with real API and pagination support using generic API repository
   const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
-    queryKey: [`menu-categories-branch-3`, categoryCurrentPage, categorySearchTerm],
+    queryKey: [`menu-categories-branch-3`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
     queryFn: async () => {
-      // Build URL with query parameters as shown in the API example
-      const branchId = 3;
-      const url = `${apiRepository.getConfig().baseUrl}/api/MenuCategory/branch/${branchId}`;
-      const queryParams = new URLSearchParams({
-        PageNumber: categoryCurrentPage.toString(),
-        PageSize: categoryItemsPerPage.toString(),
-        SortBy: 'name',
-        IsAscending: 'true',
-        ...(categorySearchTerm && { SearchTerm: categorySearchTerm })
-      });
-      
-      const response = await fetch(`${url}?${queryParams}`, {
-        headers: {
-          'Accept': '*/*',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      const response = await apiRepository.call<{
+        items: MenuCategory[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        hasNext: boolean;
+      }>(
+        'getMenuCategoriesByBranch',
+        'GET',
+        undefined,
+        {
+          PageNumber: categoryCurrentPage.toString(),
+          PageSize: categoryItemsPerPage.toString(),
+          SortBy: 'name',
+          IsAscending: 'true',
+          ...(categorySearchTerm && { SearchTerm: categorySearchTerm })
         },
-      });
+        true,
+        { branchId: 3 }
+      );
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.status}`);
+      if (response.error) {
+        throw new Error(response.error);
       }
       
-      return response.json();
+      return response.data;
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
