@@ -22,6 +22,7 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
+import { locationApi } from "@/lib/apiRepository";
 // Temporary interface definitions until proper schema is set up
 interface MenuItem {
   id: string;
@@ -30,6 +31,7 @@ interface MenuItem {
   price: number;
   description?: string;
   imageUrl?: string;
+  image?: string;
 }
 
 interface Category {
@@ -72,6 +74,16 @@ interface TableData {
   waiter: string;
   seats: number;
   status: "Active" | "Inactive";
+}
+
+// API response interface for locations/tables
+interface LocationApiResponse {
+  id: number;
+  branchId: number;
+  locationType: number;
+  name: string;
+  qrCode: string;
+  capacity: number;
 }
 
 const mockOrders: Order[] = [
@@ -213,7 +225,31 @@ export default function Orders() {
       setShowPricingModal(true);
     }
   }, []);
-  const [tables, setTables] = useState<TableData[]>(mockTables);
+  // Real API query for tables from branch 3
+  const { data: tablesData, isLoading: isLoadingTables, refetch: refetchTables } = useQuery<LocationApiResponse[]>({
+    queryKey: ["tables", "branch", 3],
+    queryFn: async () => {
+      const response = await locationApi.getLocationsByBranch(3);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data as LocationApiResponse[];
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 2,
+  });
+
+  // Transform API data to match UI format
+  const tables: TableData[] = (tablesData || []).map((location) => ({
+    id: location.id.toString(),
+    tableNumber: `Table ${location.name}`,
+    branch: "Gulshan Branch", // Default branch name
+    waiter: "Unassigned", // API doesn't return waiter info
+    seats: location.capacity,
+    status: location.capacity > 0 ? "Active" : "Inactive" as "Active" | "Inactive"
+  }));
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [dealsSearchTerm, setDealsSearchTerm] = useState("");
@@ -263,34 +299,26 @@ export default function Orders() {
 
   // Query for menu items
   const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery<MenuItem[]>({
-    queryKey: ["/api/menu-items"],
+    queryKey: ["menu-items"],
     queryFn: () => fetch("/api/menu-items").then(res => res.json()),
   });
 
   // Query for categories
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["categories"],
     queryFn: () => fetch("/api/categories").then(res => res.json()),
   });
 
-  const handleAddTable = (tableData: any) => {
-    const newTable: TableData = {
-      id: (tables.length + 1).toString(),
-      tableNumber: tableData.tableNumber,
-      branch: "Gulshan Branch", // Default branch
-      waiter: tableData.assignedTo,
-      seats: parseInt(tableData.seatingCapacity),
-      status: tableData.available ? "Active" : "Inactive"
-    };
-    setTables([...tables, newTable]);
+  // Refresh tables after adding a new one
+  const handleRefreshTables = () => {
+    refetchTables();
   };
 
   const handleEditTable = (tableId: string, updates: { seats: number; waiter: string }) => {
-    setTables(prev => prev.map(table => 
-      table.id === tableId 
-        ? { ...table, seats: updates.seats, waiter: updates.waiter }
-        : table
-    ));
+    // TODO: Implement table update API call
+    console.log('Edit table:', tableId, updates);
+    // For now, just refresh the data
+    refetchTables();
   };
 
   const handleDeleteTable = (table: TableData) => {
@@ -784,8 +812,12 @@ export default function Orders() {
         </TabsContent>
 
         <TabsContent value="tables" className="space-y-6">
-          {/* Add Table Button */}
-          <div className="flex justify-end">
+          {/* Tables Header */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Tables 
+              {isLoadingTables && <span className="text-sm text-gray-500 ml-2">(Loading...)</span>}
+            </h2>
             <Button 
               className="bg-green-500 hover:bg-green-600 text-white" 
               onClick={() => setShowAddTableModal(true)}
@@ -1189,12 +1221,21 @@ export default function Orders() {
           }
           description={`Are you sure you want to delete this ${deleteItem.type}?`}
           itemName={deleteItem.name}
-          onConfirm={() => {
+          onConfirm={async () => {
             if (deleteItem.type === 'table') {
-              setTables(prev => prev.filter(table => table.id !== deleteItem.id));
+              // TODO: Implement delete table API call
+              try {
+                // await locationApi.deleteLocation(deleteItem.id);
+                console.log(`Deleting table: ${deleteItem.name}`);
+                // Refresh the tables list after deletion
+                refetchTables();
+              } catch (error) {
+                console.error('Failed to delete table:', error);
+              }
+            } else {
+              // Here you would typically call an API to delete the item
+              console.log(`Deleting ${deleteItem.type}: ${deleteItem.name}`);
             }
-            // Here you would typically call an API to delete the item
-            console.log(`Deleting ${deleteItem.type}: ${deleteItem.name}`);
             setShowDeleteModal(false);
             setDeleteItem(null);
           }}

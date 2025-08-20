@@ -365,6 +365,7 @@ export const API_ENDPOINTS = {
   // Location/Table endpoints
   LOCATIONS: '/api/Location',
   LOCATION_BY_ID: '/api/Location/{id}',
+  LOCATIONS_BY_BRANCH: '/api/Location/branch/{branchId}',
   
   // Menu endpoints
   MENU_ITEMS: '/api/menu-items',
@@ -423,6 +424,7 @@ export const defaultApiConfig: ApiConfig = {
     getLocations: API_ENDPOINTS.LOCATIONS,
     createLocation: API_ENDPOINTS.LOCATIONS,
     getLocationById: API_ENDPOINTS.LOCATION_BY_ID,
+    getLocationsByBranch: API_ENDPOINTS.LOCATIONS_BY_BRANCH,
     updateLocation: API_ENDPOINTS.LOCATION_BY_ID,
     deleteLocation: API_ENDPOINTS.LOCATION_BY_ID,
     
@@ -592,6 +594,11 @@ export const locationApi = {
   // Get location by ID
   getLocationById: async (locationId: string) => {
     return await apiRepository.call('getLocationById', 'GET', undefined, {}, true, { id: locationId });
+  },
+
+  // Get locations by branch ID
+  getLocationsByBranch: async (branchId: number) => {
+    return await apiRepository.call('getLocationsByBranch', 'GET', undefined, {}, true, { branchId: branchId.toString() });
   },
 
   // Update location
