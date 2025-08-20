@@ -81,10 +81,10 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
       
       // Set image previews if they exist
       if ((branchData as any).restaurantLogo) {
-        setLogoPreview(`https://l5246g5z-7261.inc1.devtunnels.ms/${(branchData as any).restaurantLogo}`);
+        setLogoPreview(`https://f040v9mc-7261.inc1.devtunnels.ms/${(branchData as any).restaurantLogo}`);
       }
       if ((branchData as any).restaurantBanner) {
-        setBannerPreview(`https://l5246g5z-7261.inc1.devtunnels.ms/${(branchData as any).restaurantBanner}`);
+        setBannerPreview(`https://f040v9mc-7261.inc1.devtunnels.ms/${(branchData as any).restaurantBanner}`);
       }
     }
   }, [isEdit, branchData, form, entityId]);

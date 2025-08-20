@@ -70,7 +70,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const { data: roles, isLoading: rolesLoading, error: rolesError } = useQuery<Role[]>({
     queryKey: ["roles"],
     queryFn: async () => {
-      const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/Generic/roles', {
+      const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/Generic/roles', {
         headers: {
           'accept': '*/*',
         },
@@ -91,7 +91,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     queryFn: async () => {
       // Get token from localStorage for this API call
       const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/Generic/entities-and-branches', {
+      const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/Generic/entities-and-branches', {
         headers: {
           'accept': '*/*',
           'Authorization': `Bearer ${token}`,
@@ -113,7 +113,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     queryFn: async () => {
       if (!editingUser?.id) throw new Error('No user ID provided');
       const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
+      const response = await fetch(`https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
         headers: {
           'accept': '*/*',
           'Authorization': `Bearer ${token}`,
@@ -209,7 +209,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           branchId: parseInt(data.assignedBranch),
         };
 
-        const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user', {
+        const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user', {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -242,7 +242,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           formData.append('ProfilePicture', blob, 'profile.png');
         }
 
-        const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/User/user', {
+        const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

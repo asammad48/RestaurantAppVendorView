@@ -39,7 +39,7 @@ export async function deleteLocalData(key: string, id: string): Promise<void> {
 // Real API functions for authentication
 export async function mockLogin(email: string, password: string) {
   try {
-    const response = await fetch('https://l5246g5z-7261.inc1.devtunnels.ms/api/User/login', {
+    const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/User/login', {
       method: 'POST',
       headers: {
         'accept': '*/*',

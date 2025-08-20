@@ -32,7 +32,7 @@ export default function Users() {
       };
 
       const queryString = buildPaginationQuery(paginationRequest);
-      const response = await fetch(`https://l5246g5z-7261.inc1.devtunnels.ms/api/User/users?${queryString}`, {
+      const response = await fetch(`https://f040v9mc-7261.inc1.devtunnels.ms/api/User/users?${queryString}`, {
         headers: {
           'accept': '*/*',
           'Authorization': `Bearer ${token}`,
