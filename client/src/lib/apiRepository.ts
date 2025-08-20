@@ -375,6 +375,11 @@ export const API_ENDPOINTS = {
   ORDERS: '/api/orders',
   ORDER_BY_ID: '/api/orders/{id}',
   
+  // MenuCategory endpoints
+  MENU_CATEGORIES: '/api/MenuCategory',
+  MENU_CATEGORY_BY_ID: '/api/MenuCategory/{id}',
+  MENU_CATEGORIES_BY_BRANCH: '/api/MenuCategory/branch/{branchId}',
+
   // Other endpoints
   ANALYTICS: '/api/analytics',
   FEEDBACKS: '/api/feedbacks',
@@ -440,6 +445,14 @@ export const defaultApiConfig: ApiConfig = {
     updateOrder: API_ENDPOINTS.ORDER_BY_ID,
     deleteOrder: API_ENDPOINTS.ORDER_BY_ID,
     
+    // MenuCategory endpoints
+    getMenuCategories: API_ENDPOINTS.MENU_CATEGORIES,
+    createMenuCategory: API_ENDPOINTS.MENU_CATEGORIES,
+    getMenuCategoryById: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
+    updateMenuCategory: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
+    deleteMenuCategory: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
+    getMenuCategoriesByBranch: API_ENDPOINTS.MENU_CATEGORIES_BY_BRANCH,
+
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,
     getFeedbacks: API_ENDPOINTS.FEEDBACKS,

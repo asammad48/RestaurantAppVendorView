@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import type { InsertCategory } from "@/types/schema";
+import { apiRepository } from "@/lib/apiRepository";
+import type { MenuCategory, InsertMenuCategory } from "@/types/schema";
 
 const addCategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
-  restaurantId: z.string().optional(),
+  branchId: z.number().min(1, "Branch ID is required"),
 });
 
 type AddCategoryFormData = z.infer<typeof addCategorySchema>;
@@ -20,11 +21,11 @@ type AddCategoryFormData = z.infer<typeof addCategorySchema>;
 interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  restaurantId?: string;
-  editCategory?: any; // Category type for edit mode
+  branchId: number;
+  editCategory?: MenuCategory;
 }
 
-export default function AddCategoryModal({ isOpen, onClose, restaurantId, editCategory }: AddCategoryModalProps) {
+export default function AddCategoryModal({ isOpen, onClose, branchId, editCategory }: AddCategoryModalProps) {
   const isEditMode = !!editCategory;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -33,24 +34,26 @@ export default function AddCategoryModal({ isOpen, onClose, restaurantId, editCa
     resolver: zodResolver(addCategorySchema),
     defaultValues: {
       name: editCategory?.name || "",
-      restaurantId: restaurantId || "",
+      branchId: branchId,
     },
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: async (data: InsertCategory) => {
-      const response = await fetch("/api/categories", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create category");
+    mutationFn: async (data: InsertMenuCategory) => {
+      const response = await apiRepository.call<MenuCategory>(
+        'createMenuCategory',
+        'POST',
+        data
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
-      return response.json();
+      
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
       toast({ title: "Category added successfully" });
       onClose();
       form.reset();
@@ -64,13 +67,48 @@ export default function AddCategoryModal({ isOpen, onClose, restaurantId, editCa
     },
   });
 
+  const updateCategoryMutation = useMutation({
+    mutationFn: async (data: { name: string }) => {
+      const response = await apiRepository.call<MenuCategory>(
+        'updateMenuCategory',
+        'PUT',
+        data,
+        undefined,
+        true,
+        { id: editCategory!.id }
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
+      toast({ title: "Category updated successfully" });
+      onClose();
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating category",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: AddCategoryFormData) => {
-    const categoryData: InsertCategory = {
-      name: data.name,
-      restaurantId: data.restaurantId || null,
-      status: "active",
-    };
-    createCategoryMutation.mutate(categoryData);
+    if (isEditMode) {
+      updateCategoryMutation.mutate({ name: data.name });
+    } else {
+      const categoryData: InsertMenuCategory = {
+        name: data.name,
+        branchId: data.branchId,
+      };
+      createCategoryMutation.mutate(categoryData);
+    }
   };
 
   return (
@@ -100,10 +138,10 @@ export default function AddCategoryModal({ isOpen, onClose, restaurantId, editCa
             <Button
               type="submit"
               className="bg-green-600 hover:bg-green-700 text-white px-12 py-2 rounded-lg"
-              disabled={createCategoryMutation.isPending}
+              disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
               data-testid="button-add-category"
             >
-              {createCategoryMutation.isPending 
+              {(createCategoryMutation.isPending || updateCategoryMutation.isPending)
                 ? (isEditMode ? "Updating..." : "Adding...") 
                 : (isEditMode ? "Update Category" : "Add Category")
               }

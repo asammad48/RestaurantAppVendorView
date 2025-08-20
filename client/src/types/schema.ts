@@ -53,6 +53,21 @@ export const transformEntityForUI = (apiEntity: Entity): Entity => ({
   image: apiEntity.profilePictureUrl,
 });
 
+// MenuCategory types (matching API response)
+export interface MenuCategory {
+  id: number;
+  branchId: number;
+  name: string;
+  isActive: boolean;
+}
+
+export const insertMenuCategorySchema = z.object({
+  branchId: z.number().min(1, "Branch ID is required"),
+  name: z.string().min(1, "Category name is required"),
+});
+
+export type InsertMenuCategory = z.infer<typeof insertMenuCategorySchema>;
+
 // Branch types (matching API response)
 export type Branch = {
   id: number;

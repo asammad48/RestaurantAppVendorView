@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi, branchApi } from "@/lib/apiRepository";
+import { locationApi, branchApi, apiRepository } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
 // Temporary interface definitions until proper schema is set up
 interface MenuItem {
@@ -35,11 +35,8 @@ interface MenuItem {
   image?: string;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  description?: string;
-}
+// Use MenuCategory from schema instead of local interface
+import type { MenuCategory } from "@/types/schema";
 
 interface Deal {
   id: string;
@@ -199,6 +196,7 @@ const mockTables: TableData[] = [
 
 export default function Orders() {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [orderFilter, setOrderFilter] = useState("All Orders");
   const [itemsPerPage, setItemsPerPage] = useState(6);
@@ -276,7 +274,7 @@ export default function Orders() {
   const [dealsSearchTerm, setDealsSearchTerm] = useState("");
   const [activeMenuTab, setActiveMenuTab] = useState("Menu");
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -324,11 +322,39 @@ export default function Orders() {
     queryFn: () => fetch("/api/menu-items").then(res => res.json()),
   });
 
-  // Query for categories
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery<Category[]>({
-    queryKey: ["categories"],
-    queryFn: () => fetch("/api/categories").then(res => res.json()),
+  // Query for categories with real API and pagination support
+  const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
+    queryKey: [`menu-categories-branch-3`, categoryCurrentPage, categorySearchTerm],
+    queryFn: async () => {
+      // Build URL with query parameters as shown in the API example
+      const branchId = 3;
+      const url = `${apiRepository.getConfig().baseUrl}/api/MenuCategory/branch/${branchId}`;
+      const queryParams = new URLSearchParams({
+        PageNumber: categoryCurrentPage.toString(),
+        PageSize: categoryItemsPerPage.toString(),
+        SortBy: 'name',
+        IsAscending: 'true',
+        ...(categorySearchTerm && { SearchTerm: categorySearchTerm })
+      });
+      
+      const response = await fetch(`${url}?${queryParams}`, {
+        headers: {
+          'Accept': '*/*',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
+
+  const categories = categoriesResponse?.items || [];
+  const categoryTotalPages = categoriesResponse?.totalPages || 1;
 
   // Refresh tables after adding a new one
   const handleRefreshTables = () => {
@@ -363,15 +389,9 @@ export default function Orders() {
   const menuStartIndex = (menuCurrentPage - 1) * menuItemsPerPage;
   const paginatedMenuItems = filteredMenuItems.slice(menuStartIndex, menuStartIndex + menuItemsPerPage);
 
-  // Filter categories based on search
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
-  );
-
-  // Category pagination
-  const categoryTotalPages = Math.ceil(filteredCategories.length / categoryItemsPerPage);
-  const categoryStartIndex = (categoryCurrentPage - 1) * categoryItemsPerPage;
-  const paginatedCategories = filteredCategories.slice(categoryStartIndex, categoryStartIndex + categoryItemsPerPage);
+  // Categories are already filtered and paginated by the API
+  const filteredCategories = categories;
+  const paginatedCategories = categories;
 
   // Mock deals data
   const mockDeals = [
@@ -720,7 +740,7 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    paginatedCategories.map((category) => (
+                    paginatedCategories.map((category: MenuCategory) => (
                       <TableRow key={category.id} data-testid={`category-row-${category.id}`}>
                         <TableCell className="font-medium" data-testid={`category-name-${category.id}`}>
                           {category.name}
@@ -748,7 +768,7 @@ export default function Orders() {
                               <DropdownMenuItem 
                                 className="text-red-600"
                                 onClick={() => {
-                                  setDeleteItem({type: 'category', id: category.id, name: category.name});
+                                  setDeleteItem({type: 'category', id: category.id.toString(), name: category.name});
                                   setShowDeleteModal(true);
                                 }}
                               >
@@ -1146,7 +1166,7 @@ export default function Orders() {
       <AddCategoryModal
         isOpen={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
-        restaurantId="1"
+        branchId={3}
       />
 
       {/* Apply Discount Modal */}
@@ -1210,7 +1230,7 @@ export default function Orders() {
             setShowEditCategoryModal(false);
             setSelectedCategory(null);
           }}
-          restaurantId="1"
+          branchId={3}
           editCategory={selectedCategory}
         />
       )}
@@ -1244,6 +1264,28 @@ export default function Orders() {
                 refetchTables();
               } catch (error: any) {
                 console.error('Failed to delete table:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
+              }
+            } else if (deleteItem.type === 'category') {
+              // Delete category using real API endpoint
+              try {
+                const response = await apiRepository.call(
+                  'deleteMenuCategory',
+                  'DELETE',
+                  undefined,
+                  undefined,
+                  true,
+                  { id: deleteItem.id }
+                );
+                
+                if (response.error) {
+                  throw new Error(response.error);
+                }
+                
+                // Refresh the categories list after successful deletion
+                queryClient.invalidateQueries({ queryKey: ['menu-categories-branch-3'] });
+              } catch (error: any) {
+                console.error('Failed to delete category:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
             } else {
