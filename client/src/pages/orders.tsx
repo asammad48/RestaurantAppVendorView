@@ -23,6 +23,7 @@ import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi } from "@/lib/apiRepository";
+import type { Branch } from "@/types/schema";
 // Temporary interface definitions until proper schema is set up
 interface MenuItem {
   id: string;
@@ -232,14 +233,15 @@ export default function Orders() {
     }
   }, []);
   // Get branch details for branch 3
-  const { data: branchData } = useQuery({
+  const { data: branchData } = useQuery<Branch>({
     queryKey: ["branch", 3],
     queryFn: async () => {
       const response = await branchApi.getBranchById(3);
-      if ((response as any).error) {
-        throw new Error((response as any).error);
+      if (response?.error) {
+        throw new Error(response.error);
       }
-      return (response as any).data;
+      // The getBranchById already returns response.data, so we just need the response
+      return response as Branch;
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     retry: 2,
@@ -261,12 +263,12 @@ export default function Orders() {
     retry: 2,
   });
 
-  // Transform API data to match UI format with real branch name
+  // Transform API data to match UI format with real branch name from API
   const tables: TableWithBranchData[] = (tablesData || []).map((location) => ({
     id: location.id.toString(),
     tableNumber: `Table ${location.name}`,
-    branch: branchData?.name || "Branch", // Use real branch name
-    branchName: branchData?.name || "Branch", // For QR modal
+    branch: branchData?.name || "Loading branch...", // Use actual branch name from API (Rich pakistan)
+    branchName: branchData?.name || "Loading branch...", // For QR modal - use actual API branch name (Rich pakistan)
     waiter: "Unassigned", // Keep for interface compatibility but won't display
     seats: location.capacity,
     status: location.capacity > 0 ? "Active" : "Inactive" as "Active" | "Inactive",
