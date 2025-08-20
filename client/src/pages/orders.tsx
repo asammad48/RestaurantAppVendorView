@@ -237,10 +237,7 @@ export default function Orders() {
     queryKey: ["branch", 3],
     queryFn: async () => {
       const response = await branchApi.getBranchById(3);
-      if (response?.error) {
-        throw new Error(response.error);
-      }
-      // The getBranchById already returns response.data, so we just need the response
+      // getBranchById returns the data directly
       return response as Branch;
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
@@ -338,12 +335,7 @@ export default function Orders() {
     refetchTables();
   };
 
-  const handleEditTable = (tableId: string, updates: { seats: number; waiter: string }) => {
-    // TODO: Implement table update API call
-    console.log('Edit table:', tableId, updates);
-    // For now, just refresh the data
-    refetchTables();
-  };
+  // Removed handleEditTable function - now handled directly in the modal
 
   const handleDeleteTable = (table: TableData) => {
     setDeleteItem({ type: 'table', id: table.id, name: `Table ${table.tableNumber}` });
@@ -1141,7 +1133,6 @@ export default function Orders() {
         open={showEditTableModal}
         onOpenChange={setShowEditTableModal}
         table={selectedTable}
-        onEditTable={handleEditTable}
       />
 
       {/* Add Menu Modal */}

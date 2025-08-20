@@ -3,19 +3,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { locationApi } from "@/lib/apiRepository";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 const editTableSchema = z.object({
-  seatingCapacity: z.string().min(1, "Seating capacity is required"),
-  assignedTo: z.string().min(1, "Please assign a waiter"),
+  capacity: z.string().min(1, "Capacity is required").refine((val) => {
+    const num = parseInt(val);
+    return num > 0 && num <= 50;
+  }, "Capacity must be between 1 and 50"),
 });
 
 type EditTableFormData = z.infer<typeof editTableSchema>;
+
+// API response interface for location details
+interface LocationDetails {
+  id: number;
+  branchId: number;
+  locationType: number;
+  name: string;
+  capacity: number;
+}
 
 interface TableData {
   id: string;
@@ -30,43 +42,75 @@ interface EditTableModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   table: TableData | null;
-  onEditTable: (tableId: string, updates: { seats: number; waiter: string }) => void;
 }
 
-const mockWaiters = [
-  { id: "1", name: "Raza" },
-  { id: "2", name: "Ahmed" },
-  { id: "3", name: "Sarah" },
-  { id: "4", name: "Hassan" },
-  { id: "5", name: "Fatima" }
-];
-
-export default function EditTableModal({ open, onOpenChange, table, onEditTable }: EditTableModalProps) {
+export default function EditTableModal({ open, onOpenChange, table }: EditTableModalProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const form = useForm<EditTableFormData>({
     resolver: zodResolver(editTableSchema),
     defaultValues: {
-      seatingCapacity: "",
-      assignedTo: "",
+      capacity: "",
     }
   });
 
+  // Get location details from API
+  const { data: locationData, isLoading } = useQuery<LocationDetails>({
+    queryKey: ["location", table?.id],
+    queryFn: async () => {
+      if (!table?.id) throw new Error("No table ID");
+      const response = await locationApi.getLocationById(table.id);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response.data as LocationDetails;
+    },
+    enabled: !!table?.id && open, // Only fetch when modal is open and table ID exists
+  });
+
+  // Update form when location data is loaded
   useEffect(() => {
-    if (table) {
+    if (locationData) {
       form.reset({
-        seatingCapacity: table.seats.toString(),
-        assignedTo: table.waiter,
+        capacity: locationData.capacity.toString(),
       });
     }
-  }, [table, form]);
+  }, [locationData, form]);
+
+  // Update location mutation
+  const updateLocationMutation = useMutation({
+    mutationFn: async (data: EditTableFormData) => {
+      if (!table?.id) throw new Error("No table ID");
+      const response = await locationApi.updateLocation(table.id, {
+        capacity: parseInt(data.capacity)
+      });
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Table capacity updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tables", "branch", 3] });
+      queryClient.invalidateQueries({ queryKey: ["location", table?.id] });
+      form.reset();
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update table capacity.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const onSubmit = (data: EditTableFormData) => {
-    if (table) {
-      onEditTable(table.id, {
-        seats: parseInt(data.seatingCapacity),
-        waiter: data.assignedTo,
-      });
-    }
-    onOpenChange(false);
+    updateLocationMutation.mutate(data);
   };
 
   if (!table) return null;
@@ -80,92 +124,71 @@ export default function EditTableModal({ open, onOpenChange, table, onEditTable 
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-            {/* Table Number (Read-only) */}
-            <div>
-              <Label className="text-sm font-medium text-gray-900">
-                Table Number
-              </Label>
-              <Input
-                value={table.tableNumber}
-                disabled
-                className="w-full bg-gray-50"
-              />
-            </div>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="text-gray-500">Loading table details...</div>
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+              {/* Table Number (Read-only) */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Table Name</Label>
+                <Input
+                  value={locationData?.name ? `Table ${locationData.name}` : table?.tableNumber || ""}
+                  readOnly
+                  className="bg-gray-50 text-gray-500 cursor-not-allowed"
+                  data-testid="table-number-input"
+                />
+              </div>
 
-            {/* Seating Capacity */}
-            <FormField
-              control={form.control}
-              name="seatingCapacity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-900">
-                    Seating Capacity
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 4"
-                      min="1"
-                      max="20"
-                      {...field}
-                      className="w-full"
-                      data-testid="input-seating-capacity"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Assigned To */}
-            <FormField
-              control={form.control}
-              name="assignedTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-900">
-                    Assignee
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+              {/* Capacity */}
+              <FormField
+                control={form.control}
+                name="capacity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">Capacity</FormLabel>
                     <FormControl>
-                      <SelectTrigger data-testid="select-assignee">
-                        <SelectValue placeholder="Select a waiter" />
-                      </SelectTrigger>
+                      <Input
+                        {...field}
+                        type="number"
+                        min="1"
+                        max="50"
+                        placeholder="Enter table capacity"
+                        className="border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        data-testid="capacity-input"
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {mockWaiters.map((waiter) => (
-                        <SelectItem key={waiter.id} value={waiter.name}>
-                          {waiter.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                data-testid="button-cancel"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                className="bg-green-600 hover:bg-green-700 text-white px-6"
-                data-testid="button-save"
-              >
-                Save Changes
-              </Button>
-            </div>
-          </form>
-        </Form>
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+                  data-testid="cancel-button"
+                  disabled={updateLocationMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white"
+                  data-testid="save-button"
+                  disabled={updateLocationMutation.isPending}
+                >
+                  {updateLocationMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );
