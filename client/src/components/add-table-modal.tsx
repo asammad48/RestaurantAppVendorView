@@ -3,19 +3,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { locationApi } from "@/lib/apiRepository";
+import { useToast } from "@/hooks/use-toast";
 
 const addTableSchema = z.object({
-  tableNumber: z.string().min(1, "Table number is required"),
-  seatingCapacity: z.string().min(1, "Seating capacity is required"),
-  assignedTo: z.string().min(1, "Please assign a waiter"),
-  available: z.boolean().default(true)
+  name: z.string().min(1, "Table name is required"),
+  capacity: z.string().min(1, "Seating capacity is required"),
 });
 
 type AddTableFormData = z.infer<typeof addTableSchema>;
@@ -23,32 +21,63 @@ type AddTableFormData = z.infer<typeof addTableSchema>;
 interface AddTableModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddTable: (table: AddTableFormData) => void;
+  branchId?: number;
 }
 
-const mockWaiters = [
-  { id: "1", name: "Raza" },
-  { id: "2", name: "Ahmed" },
-  { id: "3", name: "Sarah" },
-  { id: "4", name: "Hassan" },
-  { id: "5", name: "Fatima" }
-];
 
-export default function AddTableModal({ open, onOpenChange, onAddTable }: AddTableModalProps) {
+export default function AddTableModal({ open, onOpenChange, branchId }: AddTableModalProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const form = useForm<AddTableFormData>({
     resolver: zodResolver(addTableSchema),
     defaultValues: {
-      tableNumber: "",
-      seatingCapacity: "",
-      assignedTo: "",
-      available: true
+      name: "",
+      capacity: "",
     }
   });
 
+  const createTableMutation = useMutation({
+    mutationFn: async (data: AddTableFormData) => {
+      if (!branchId) {
+        throw new Error('Branch ID is required');
+      }
+      
+      const locationData = {
+        branchId: branchId,
+        name: data.name,
+        capacity: parseInt(data.capacity)
+      };
+      
+      const response = await locationApi.createLocation(locationData);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+    onSuccess: (responseData: any) => {
+      toast({
+        title: "Success", 
+        description: `Table "${responseData.name}" has been created successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      form.reset();
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create table. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: AddTableFormData) => {
-    onAddTable(data);
-    form.reset();
-    onOpenChange(false);
+    createTableMutation.mutate(data);
   };
 
   return (
@@ -62,21 +91,21 @@ export default function AddTableModal({ open, onOpenChange, onAddTable }: AddTab
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-            {/* Table Number */}
+            {/* Table Name */}
             <FormField
               control={form.control}
-              name="tableNumber"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-900">
-                    Table Number
+                    Table Name
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g. Table #1"
+                      placeholder="e.g. Table 1 or Table A1"
                       {...field}
                       className="w-full"
-                      data-testid="input-table-number"
+                      data-testid="input-table-name"
                     />
                   </FormControl>
                   <FormMessage />
@@ -87,7 +116,7 @@ export default function AddTableModal({ open, onOpenChange, onAddTable }: AddTab
             {/* Seating Capacity */}
             <FormField
               control={form.control}
-              name="seatingCapacity"
+              name="capacity"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-900">
@@ -109,64 +138,17 @@ export default function AddTableModal({ open, onOpenChange, onAddTable }: AddTab
               )}
             />
 
-            {/* Assigned To */}
-            <FormField
-              control={form.control}
-              name="assignedTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-900">
-                    Assign to
-                  </FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full" data-testid="select-assigned-to">
-                        <SelectValue placeholder="Select a waiter" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockWaiters.map((waiter) => (
-                          <SelectItem key={waiter.id} value={waiter.name}>
-                            {waiter.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {/* Available Toggle */}
-            <FormField
-              control={form.control}
-              name="available"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between py-2">
-                  <FormLabel className="text-sm font-medium text-gray-900 mb-0">
-                    Available
-                  </FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-green-500"
-                      data-testid="toggle-available"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
 
             {/* Submit Button */}
             <div className="flex justify-center pt-4">
               <Button
                 type="submit"
                 className="bg-green-500 hover:bg-green-600 text-white px-12 py-2 rounded-lg"
-                disabled={form.formState.isSubmitting}
+                disabled={createTableMutation.isPending}
                 data-testid="button-submit"
               >
-                Next
+Create Table
               </Button>
             </div>
           </form>

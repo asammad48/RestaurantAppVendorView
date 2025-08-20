@@ -362,6 +362,10 @@ export const API_ENDPOINTS = {
   BRANCH_BY_ID: '/api/Branch/{id}',
   BRANCHES_BY_ENTITY: '/api/Branch/entity/{entityId}',
   
+  // Location/Table endpoints
+  LOCATIONS: '/api/Location',
+  LOCATION_BY_ID: '/api/Location/{id}',
+  
   // Menu endpoints
   MENU_ITEMS: '/api/menu-items',
   MENU_ITEM_BY_ID: '/api/menu-items/{id}',
@@ -414,6 +418,13 @@ export const defaultApiConfig: ApiConfig = {
     createBranch: API_ENDPOINTS.BRANCHES,
     updateBranch: API_ENDPOINTS.BRANCH_BY_ID,
     deleteBranch: API_ENDPOINTS.BRANCH_BY_ID,
+    
+    // Location/Table endpoints
+    getLocations: API_ENDPOINTS.LOCATIONS,
+    createLocation: API_ENDPOINTS.LOCATIONS,
+    getLocationById: API_ENDPOINTS.LOCATION_BY_ID,
+    updateLocation: API_ENDPOINTS.LOCATION_BY_ID,
+    deleteLocation: API_ENDPOINTS.LOCATION_BY_ID,
     
     // Menu endpoints
     getMenuItems: API_ENDPOINTS.MENU_ITEMS,
@@ -568,6 +579,29 @@ export const genericApi = {
   // Get entities and branches
   getEntitiesAndBranches: async () => {
     return await apiRepository.call('getEntitiesAndBranches', 'GET');
+  },
+};
+
+// Location/Table API Helper Functions
+export const locationApi = {
+  // Create a new table/location
+  createLocation: async (locationData: { branchId: number; name: string; capacity: number }) => {
+    return await apiRepository.call('createLocation', 'POST', locationData);
+  },
+
+  // Get location by ID
+  getLocationById: async (locationId: string) => {
+    return await apiRepository.call('getLocationById', 'GET', undefined, {}, true, { id: locationId });
+  },
+
+  // Update location
+  updateLocation: async (locationId: string, locationData: { branchId?: number; name?: string; capacity?: number }) => {
+    return await apiRepository.call('updateLocation', 'PUT', locationData, {}, true, { id: locationId });
+  },
+
+  // Delete location
+  deleteLocation: async (locationId: string) => {
+    return await apiRepository.call('deleteLocation', 'DELETE', undefined, {}, true, { id: locationId });
   },
 };
 

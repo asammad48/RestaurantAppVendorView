@@ -22,7 +22,37 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import type { MenuItem, Category, Deal, Service } from "@shared/schema";
+// Temporary interface definitions until proper schema is set up
+interface MenuItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description?: string;
+  imageUrl?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+interface Deal {
+  id: string;
+  name: string;
+  items: string;
+  status: string;
+  price: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  price: string;
+}
 
 interface Order {
   id: string;
@@ -1052,7 +1082,7 @@ export default function Orders() {
       <AddTableModal
         open={showAddTableModal}
         onOpenChange={setShowAddTableModal}
-        onAddTable={handleAddTable}
+        branchId={3}
       />
 
       {/* Edit Table Modal */}
