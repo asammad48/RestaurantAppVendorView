@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { insertBranchSchema, type InsertBranch, type Branch } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { branchApi } from "@/lib/apiRepository";
+import { branchApi, getImageUrl } from "@/lib/apiRepository";
 
 interface AddBranchModalProps {
   open: boolean;
@@ -81,10 +81,10 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
       
       // Set image previews if they exist
       if ((branchData as any).restaurantLogo) {
-        setLogoPreview(`https://f040v9mc-7261.inc1.devtunnels.ms/${(branchData as any).restaurantLogo}`);
+        setLogoPreview(getImageUrl((branchData as any).restaurantLogo));
       }
       if ((branchData as any).restaurantBanner) {
-        setBannerPreview(`https://f040v9mc-7261.inc1.devtunnels.ms/${(branchData as any).restaurantBanner}`);
+        setBannerPreview(getImageUrl((branchData as any).restaurantBanner));
       }
     }
   }, [isEdit, branchData, form, entityId]);

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { genericApi, userApi } from "@/lib/apiRepository";
 
 
 // Create schema conditionally based on editing mode
@@ -70,15 +71,11 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const { data: roles, isLoading: rolesLoading, error: rolesError } = useQuery<Role[]>({
     queryKey: ["roles"],
     queryFn: async () => {
-      const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/Generic/roles', {
-        headers: {
-          'accept': '*/*',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch roles');
+      const response = await genericApi.getRoles();
+      if (response.error) {
+        throw new Error(response.error);
       }
-      return response.json();
+      return response.data as Role[];
     },
     enabled: isOpen,
     retry: 2,
@@ -91,16 +88,11 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     queryFn: async () => {
       // Get token from localStorage for this API call
       const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/Generic/entities-and-branches', {
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch entities and branches');
+      const response = await genericApi.getEntitiesAndBranches();
+      if (response.error) {
+        throw new Error(response.error);
       }
-      return response.json();
+      return response.data as EntitiesAndBranchesResponse;
     },
     enabled: isOpen,
     retry: 2,
@@ -113,16 +105,11 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     queryFn: async () => {
       if (!editingUser?.id) throw new Error('No user ID provided');
       const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await fetch(`https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user/${editingUser.id}`, {
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch user details');
+      const response = await userApi.getUserById(editingUser.id.toString());
+      if (response.error) {
+        throw new Error(response.error);
       }
-      return response.json();
+      return response.data as UserDetailsResponse;
     },
     enabled: isOpen && isEditing && !!editingUser?.id,
     retry: 2,
@@ -209,20 +196,12 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           branchId: parseInt(data.assignedBranch),
         };
 
-        const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user', {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': '*/*',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updatePayload),
-        });
+        const response = await userApi.updateUser(updatePayload);
         
-        if (!response.ok) {
-          throw new Error('Failed to update user');
+        if (response.error) {
+          throw new Error(response.error);
         }
-        // Update API returns 200 OK only, so return the payload for success handling
+        // Return the updated data
         return { ...updatePayload, name: data.name };
       } else {
         // For creating - use POST method with FormData
@@ -242,22 +221,15 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
           formData.append('ProfilePicture', blob, 'profile.png');
         }
 
-        const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': '*/*',
-          },
-          body: formData,
-        });
+        const response = await userApi.createUser(formData);
         
-        if (!response.ok) {
-          throw new Error('Failed to create user');
+        if (response.error) {
+          throw new Error(response.error);
         }
-        return response.json();
+        return response.data;
       }
     },
-    onSuccess: (responseData) => {
+    onSuccess: (responseData: any) => {
       toast({
         title: "Success", 
         description: `User "${responseData.name}" has been ${isEditing ? 'updated' : 'created'} successfully.`,

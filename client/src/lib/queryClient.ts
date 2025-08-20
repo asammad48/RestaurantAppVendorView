@@ -37,25 +37,17 @@ export async function deleteLocalData(key: string, id: string): Promise<void> {
 }
 
 // Real API functions for authentication
+import { authApi } from './apiRepository';
+
 export async function mockLogin(email: string, password: string) {
   try {
-    const response = await fetch('https://f040v9mc-7261.inc1.devtunnels.ms/api/User/login', {
-      method: 'POST',
-      headers: {
-        'accept': '*/*',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password
-      })
-    });
+    const response = await authApi.login({ email, password });
 
-    if (!response.ok) {
-      throw new Error('Invalid credentials');
+    if (response.error) {
+      throw new Error(response.error);
     }
 
-    const data = await response.json();
+    const data = response.data as any;
     
     // Store all user data in localStorage
     const userData = {

@@ -8,6 +8,7 @@ import AddUserModal from "@/components/add-user-modal";
 import DeleteUserModal from "@/components/delete-user-modal";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 import { UserListItem } from "@/types/user";
+import { userApi } from "@/lib/apiRepository";
 
 export default function Users() {
   const queryClient = useQueryClient();
@@ -26,7 +27,6 @@ export default function Users() {
   const { data: usersResponse, isLoading } = useQuery<PaginationResponse<UserListItem>>({
     queryKey: ["users", currentPage, pageSize, nameSearchTerm],
     queryFn: async () => {
-      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
       const paginationRequest: PaginationRequest = {
         pageNumber: currentPage,
         pageSize: pageSize,
@@ -36,18 +36,13 @@ export default function Users() {
       };
 
       const queryString = buildPaginationQuery(paginationRequest);
-      const response = await fetch(`https://f040v9mc-7261.inc1.devtunnels.ms/api/User/users?${queryString}`, {
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
+      const response = await userApi.getUsers(queryString);
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      return response.json();
+      return response.data as PaginationResponse<UserListItem>;
     },
   });
 
@@ -69,17 +64,10 @@ export default function Users() {
 
     setIsDeleting(true);
     try {
-      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await fetch(`https://f040v9mc-7261.inc1.devtunnels.ms/api/User/user/${userToDelete.id}`, {
-        method: 'DELETE',
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await userApi.deleteUser(userToDelete.id.toString());
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete user: ${response.status}`);
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       // Show success toast

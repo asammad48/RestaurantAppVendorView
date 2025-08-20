@@ -7,6 +7,7 @@ import AddUserModal from "@/components/add-user-modal";
 import DeleteUserModal from "@/components/delete-user-modal";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 import { UserListItem } from "@/types/user";
+import { userApi } from "@/lib/apiRepository";
 
 export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,18 +33,13 @@ export default function Users() {
       };
 
       const queryString = buildPaginationQuery(paginationRequest);
-      const response = await fetch(`https://f040v9mc-7261.inc1.devtunnels.ms/api/User/users?${queryString}`, {
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
+      const response = await userApi.getUsers(queryString);
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      return response.json();
+      return response.data as PaginationResponse<UserListItem>;
     },
   });
 

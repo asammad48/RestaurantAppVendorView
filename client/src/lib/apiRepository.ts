@@ -338,9 +338,20 @@ export const API_BASE_URL = 'https://f040v9mc-7261.inc1.devtunnels.ms';
 
 export const API_ENDPOINTS = {
   // Authentication endpoints
-  LOGIN: '/api/auth/login',
+  LOGIN: '/api/User/login',
   SIGNUP: '/api/User/restaurant-owner',
   REFRESH_TOKEN: '/api/auth/refresh',
+  
+  // User endpoints
+  USERS: '/api/User/users',
+  USER_BY_ID: '/api/User/user/{id}',
+  CREATE_USER: '/api/User/user',
+  UPDATE_USER: '/api/User/user',
+  DELETE_USER: '/api/User/user/{id}',
+  
+  // Generic endpoints
+  ROLES: '/api/Generic/roles',
+  ENTITIES_AND_BRANCHES: '/api/Generic/entities-and-branches',
   
   // Entity endpoints
   ENTITIES: '/api/Entity',
@@ -377,6 +388,17 @@ export const defaultApiConfig: ApiConfig = {
     login: API_ENDPOINTS.LOGIN,
     signup: API_ENDPOINTS.SIGNUP,
     refreshToken: API_ENDPOINTS.REFRESH_TOKEN,
+    
+    // User endpoints
+    getUsers: API_ENDPOINTS.USERS,
+    getUserById: API_ENDPOINTS.USER_BY_ID,
+    createUser: API_ENDPOINTS.CREATE_USER,
+    updateUser: API_ENDPOINTS.UPDATE_USER,
+    deleteUser: API_ENDPOINTS.DELETE_USER,
+    
+    // Generic endpoints
+    getRoles: API_ENDPOINTS.ROLES,
+    getEntitiesAndBranches: API_ENDPOINTS.ENTITIES_AND_BRANCHES,
     
     // Entity endpoints
     getEntities: API_ENDPOINTS.ENTITIES,
@@ -497,4 +519,73 @@ export const branchApi = {
     const response = await apiRepository.call('deleteBranch', 'DELETE', undefined, {}, true, { id: branchId });
     return response.data;
   },
+};
+
+// User API Helper Functions
+export const userApi = {
+  // Get users with pagination
+  getUsers: async (queryString: string) => {
+    // For query parameters, we need to modify the endpoint temporarily
+    const originalEndpoint = apiRepository.getConfig().endpoints['getUsers'];
+    apiRepository.updateEndpoint('getUsers', `${originalEndpoint}?${queryString}`);
+    
+    const response = await apiRepository.call('getUsers', 'GET', undefined, {}, true);
+    
+    // Restore original endpoint
+    apiRepository.updateEndpoint('getUsers', originalEndpoint);
+    
+    return response;
+  },
+
+  // Get user by ID
+  getUserById: async (userId: string) => {
+    return await apiRepository.call('getUserById', 'GET', undefined, {}, true, { id: userId });
+  },
+
+  // Create user with FormData
+  createUser: async (formData: FormData) => {
+    return await apiRepository.call('createUser', 'POST', formData);
+  },
+
+  // Update user with JSON
+  updateUser: async (userData: any) => {
+    return await apiRepository.call('updateUser', 'PUT', userData);
+  },
+
+  // Delete user
+  deleteUser: async (userId: string) => {
+    return await apiRepository.call('deleteUser', 'DELETE', undefined, {}, true, { id: userId });
+  },
+};
+
+// Generic API Helper Functions  
+export const genericApi = {
+  // Get roles
+  getRoles: async () => {
+    return await apiRepository.call('getRoles', 'GET', undefined, {}, false);
+  },
+
+  // Get entities and branches
+  getEntitiesAndBranches: async () => {
+    return await apiRepository.call('getEntitiesAndBranches', 'GET');
+  },
+};
+
+// Auth API Helper Functions
+export const authApi = {
+  // Login
+  login: async (credentials: { email: string; password: string }) => {
+    return await apiRepository.call('login', 'POST', credentials, undefined, false);
+  },
+
+  // Signup  
+  signup: async (userData: any) => {
+    return await apiRepository.call('signup', 'POST', userData, undefined, false);
+  },
+};
+
+// Helper to get full URL for images
+export const getImageUrl = (relativePath: string): string => {
+  if (!relativePath) return '';
+  return `${API_BASE_URL}/${relativePath}`;
 };
