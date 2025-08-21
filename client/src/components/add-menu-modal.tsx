@@ -53,6 +53,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
   const [addOns, setAddOns] = useState<AddOn[]>([{ name: "", price: 0 }]);
   const [customizations, setCustomizations] = useState<Customization[]>([{ name: "", options: [""] }]);
   const [variants, setVariants] = useState<Variant[]>([{ option: "", price: 0 }]);
+  
+  // Section visibility states
+  const [showAddOns, setShowAddOns] = useState<boolean>(true);
+  const [showCustomizations, setShowCustomizations] = useState<boolean>(true);
 
   const form = useForm<AddMenuFormData>({
     resolver: zodResolver(addMenuSchema),
@@ -85,6 +89,8 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
       setCustomizations([{ name: "", options: [""] }]);
       setVariants([{ option: "", price: 0 }]);
       setImage("");
+      setShowAddOns(true);
+      setShowCustomizations(true);
     },
     onError: (error: any) => {
       toast({
@@ -175,6 +181,26 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
     }
   };
 
+  // Section removal functions
+  const removeEntireAddOnSection = () => {
+    setShowAddOns(false);
+    setAddOns([{ name: "", price: 0 }]); // Reset to default
+  };
+
+  const removeEntireCustomizationSection = () => {
+    setShowCustomizations(false);
+    setCustomizations([{ name: "", options: [""] }]); // Reset to default
+  };
+
+  // Functions to restore sections
+  const addAddOnSection = () => {
+    setShowAddOns(true);
+  };
+
+  const addCustomizationSection = () => {
+    setShowCustomizations(true);
+  };
+
   const onSubmit = (data: AddMenuFormData) => {
     // Calculate base price from the first variant, or default to 0 if no variants
     const basePrice = variants.length > 0 && variants[0].price > 0 ? variants[0].price : 0;
@@ -183,15 +209,19 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
       ...data,
       price: Math.round(basePrice * 100), // Convert to cents, use base price from variants
       image: image || undefined,
-      addOns: addOns
-        .filter(addon => addon.name.trim())
-        .map(addon => JSON.stringify({ name: addon.name, price: addon.price })),
-      customizations: customizations
-        .filter(cust => cust.name.trim() && cust.options.some(opt => opt.trim()))
-        .map(cust => JSON.stringify({ 
-          name: cust.name, 
-          options: cust.options.filter(opt => opt.trim()) 
-        })),
+      addOns: showAddOns 
+        ? addOns
+          .filter(addon => addon.name.trim())
+          .map(addon => JSON.stringify({ name: addon.name, price: addon.price }))
+        : [],
+      customizations: showCustomizations
+        ? customizations
+          .filter(cust => cust.name.trim() && cust.options.some(opt => opt.trim()))
+          .map(cust => JSON.stringify({ 
+            name: cust.name, 
+            options: cust.options.filter(opt => opt.trim()) 
+          }))
+        : [],
       variants: variants
         .filter(variant => variant.option.trim())
         .map(variant => JSON.stringify({ option: variant.option, price: variant.price })),
@@ -285,10 +315,38 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
           </div>
 
           {/* Add-ons Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Modifiers (Add-ons)</h3>
+          {!showAddOns ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                <span className="text-gray-500">Modifiers section removed</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addAddOnSection}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  data-testid="button-restore-addon-section"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Modifiers Section
+                </Button>
+              </div>
             </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Modifiers (Add-ons)</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={removeEntireAddOnSection}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  data-testid="button-remove-addon-section"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove Section
+                </Button>
+              </div>
             {addOns.map((addOn, index) => (
               <div key={index} className="grid grid-cols-2 gap-4 items-end">
                 <div>
@@ -336,11 +394,42 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
               <Plus className="h-4 w-4 mr-2" />
               Add Another
             </Button>
-          </div>
+            </div>
+          )}
 
           {/* Customization Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Customization</h3>
+          {!showCustomizations ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                <span className="text-gray-500">Customization section removed</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addCustomizationSection}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  data-testid="button-restore-customization-section"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Customization Section
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Customization</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={removeEntireCustomizationSection}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  data-testid="button-remove-customization-section"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove Section
+                </Button>
+              </div>
             {customizations.map((customization, custIndex) => (
               <div key={custIndex} className="space-y-3 p-4 border rounded-lg relative">
                 {customizations.length > 1 && (
@@ -412,7 +501,8 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
               <Plus className="h-4 w-4 mr-2" />
               Add Another Customization
             </Button>
-          </div>
+            </div>
+          )}
 
           {/* Variants Section */}
           <div className="space-y-4">

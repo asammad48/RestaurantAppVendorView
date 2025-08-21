@@ -115,6 +115,9 @@ export const insertMenuItemSchema = z.object({
   image: z.string().optional(),
   status: z.string().default("active"),
   restaurantId: z.string().optional(),
+  addOns: z.array(z.string()).optional(),
+  customizations: z.array(z.string()).optional(),
+  variants: z.array(z.string()).optional(),
 });
 
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
