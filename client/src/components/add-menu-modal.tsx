@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import type { InsertMenuItem } from "@/types/schema";
+import { ApiRepository } from "@/lib/apiRepository";
+import type { InsertMenuItem, MenuCategory } from "@/types/schema";
+
+// Create apiRepository instance
+const apiRepository = new ApiRepository({
+  baseUrl: "https://5dtrtpzg-7261.inc1.devtunnels.ms",
+  endpoints: {
+    menuCategoryList: "/api/MenuCategory",
+    menuItemCreate: "/api/MenuItem",
+  },
+});
 
 const addMenuSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  category: z.string().min(1, "Category is required"),
+  categoryId: z.number().min(1, "Category is required"),
   description: z.string().optional(),
   preparationTime: z.number().min(1, "Preparation time must be at least 1 minute"),
   restaurantId: z.string().optional(),
@@ -59,11 +68,23 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
   const [showAddOns, setShowAddOns] = useState<boolean>(true);
   const [showCustomizations, setShowCustomizations] = useState<boolean>(true);
 
+  // Fetch categories for dropdown
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["/api/MenuCategory"],
+    queryFn: async () => {
+      const response = await apiRepository.call<{ items: MenuCategory[] }>(
+        'menuCategoryList',
+        'GET'
+      );
+      return response.data?.items || [];
+    },
+  });
+
   const form = useForm<AddMenuFormData>({
     resolver: zodResolver(addMenuSchema),
     defaultValues: {
       name: editMenuItem?.name || "",
-      category: editMenuItem?.category || "",
+      categoryId: editMenuItem?.categoryId || 0,
       description: editMenuItem?.description || "",
       preparationTime: editMenuItem?.preparationTime || 15,
       restaurantId: restaurantId || "",
@@ -71,19 +92,19 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
   });
 
   const createMenuItemMutation = useMutation({
-    mutationFn: async (data: InsertMenuItem) => {
-      const response = await fetch("/api/menu-items", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create menu item");
+    mutationFn: async (data: any) => {
+      const response = await apiRepository.call(
+        'menuItemCreate',
+        'POST',
+        data
+      );
+      if (response.error) {
+        throw new Error(response.error);
       }
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/menu-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/MenuItem"] });
       toast({ title: "Menu item added successfully" });
       onClose();
       form.reset();
@@ -106,8 +127,29 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onloadend = () => {
+        // Store as base64 for API submission
         setImage(reader.result as string);
       };
       reader.readAsDataURL(file);
@@ -204,30 +246,37 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
   };
 
   const onSubmit = (data: AddMenuFormData) => {
-    // Calculate base price from the first variant, or default to 0 if no variants
-    const basePrice = variants.length > 0 && variants[0].price > 0 ? variants[0].price : 0;
-    
-    const menuItemData: InsertMenuItem = {
-      ...data,
-      price: Math.round(basePrice * 100), // Convert to cents, use base price from variants
-      image: image || undefined,
-      addOns: showAddOns 
+    // Prepare API payload according to the real API structure
+    const menuItemData = {
+      menuCategoryId: data.categoryId,
+      name: data.name,
+      description: data.description || "",
+      preparationTime: data.preparationTime,
+      menuItemPicture: image || "", // Base64 image data
+      variants: variants
+        .filter(variant => variant.option.trim())
+        .map(variant => ({
+          name: variant.option,
+          price: variant.price
+        })),
+      modifiers: showAddOns 
         ? addOns
           .filter(addon => addon.name.trim())
-          .map(addon => JSON.stringify({ name: addon.name, price: addon.price }))
+          .map(addon => ({
+            name: addon.name,
+            price: addon.price
+          }))
         : [],
       customizations: showCustomizations
         ? customizations
           .filter(cust => cust.name.trim() && cust.options.some(opt => opt.trim()))
-          .map(cust => JSON.stringify({ 
-            name: cust.name, 
-            options: cust.options.filter(opt => opt.trim()) 
+          .map(cust => ({
+            name: cust.name,
+            options: cust.options
+              .filter(opt => opt.trim())
+              .map(opt => ({ name: opt }))
           }))
-        : [],
-      variants: variants
-        .filter(variant => variant.option.trim())
-        .map(variant => JSON.stringify({ option: variant.option, price: variant.price })),
-      status: "active",
+        : []
     };
 
     createMenuItemMutation.mutate(menuItemData);
@@ -257,22 +306,24 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
 
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select onValueChange={(value) => form.setValue("category", value)} data-testid="select-category">
+              <Select 
+                onValueChange={(value) => form.setValue("categoryId", parseInt(value))} 
+                data-testid="select-category"
+                disabled={categoriesLoading}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select category"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Fast Food">Fast Food</SelectItem>
-                  <SelectItem value="Cuisine">Cuisine</SelectItem>
-                  <SelectItem value="Italian">Italian</SelectItem>
-                  <SelectItem value="Salads">Salads</SelectItem>
-                  <SelectItem value="Seafood">Seafood</SelectItem>
-                  <SelectItem value="Beverages">Beverages</SelectItem>
-                  <SelectItem value="Desserts">Desserts</SelectItem>
+                  {categories?.map((category: MenuCategory) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {form.formState.errors.category && (
-                <p className="text-sm text-red-500">{form.formState.errors.category.message}</p>
+              {form.formState.errors.categoryId && (
+                <p className="text-sm text-red-500">{form.formState.errors.categoryId.message}</p>
               )}
             </div>
 
