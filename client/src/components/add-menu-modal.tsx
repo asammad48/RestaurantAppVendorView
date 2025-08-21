@@ -350,7 +350,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
                 id="preparationTime"
                 type="number"
                 min="1"
-                {...form.register("preparationTime", { valueAsNumber: true })}
+                {...form.register("preparationTime", { 
+                  valueAsNumber: true,
+                  setValueAs: (value) => value === "" ? undefined : Number(value)
+                })}
                 placeholder="15"
                 data-testid="input-preparation-time"
               />
@@ -438,8 +441,11 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
                     <Input
                       type="number"
                       placeholder="Price"
-                      value={addOn.price}
-                      onChange={(e) => updateAddOn(index, "price", parseFloat(e.target.value) || 0)}
+                      value={addOn.price === 0 ? "" : addOn.price}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        updateAddOn(index, "price", value === "" ? 0 : parseFloat(value) || 0);
+                      }}
                       data-testid={`input-addon-price-${index}`}
                     />
                     {addOns.length > 1 && (
@@ -598,8 +604,11 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
                     <Input
                       type="number"
                       placeholder="Price"
-                      value={variant.price}
-                      onChange={(e) => updateVariant(index, "price", parseFloat(e.target.value) || 0)}
+                      value={variant.price === 0 ? "" : variant.price}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        updateVariant(index, "price", value === "" ? 0 : parseFloat(value) || 0);
+                      }}
                       data-testid={`input-variant-price-${index}`}
                     />
                     {variants.length > 1 && (
