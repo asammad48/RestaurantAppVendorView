@@ -115,6 +115,7 @@ export const insertMenuItemSchema = z.object({
   image: z.string().optional(),
   status: z.string().default("active"),
   restaurantId: z.string().optional(),
+  preparationTime: z.number().min(1, "Preparation time must be at least 1 minute"),
   addOns: z.array(z.string()).optional(),
   customizations: z.array(z.string()).optional(),
   variants: z.array(z.string()).optional(),

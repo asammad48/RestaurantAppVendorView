@@ -18,6 +18,7 @@ const addMenuSchema = z.object({
   name: z.string().min(1, "Name is required"),
   category: z.string().min(1, "Category is required"),
   description: z.string().optional(),
+  preparationTime: z.number().min(1, "Preparation time must be at least 1 minute"),
   restaurantId: z.string().optional(),
 });
 
@@ -64,6 +65,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
       name: editMenuItem?.name || "",
       category: editMenuItem?.category || "",
       description: editMenuItem?.description || "",
+      preparationTime: editMenuItem?.preparationTime || 15,
       restaurantId: restaurantId || "",
     },
   });
@@ -283,6 +285,21 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
                 rows={3}
                 data-testid="textarea-description"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="preparationTime">Preparation Time (minutes)</Label>
+              <Input
+                id="preparationTime"
+                type="number"
+                min="1"
+                {...form.register("preparationTime", { valueAsNumber: true })}
+                placeholder="15"
+                data-testid="input-preparation-time"
+              />
+              {form.formState.errors.preparationTime && (
+                <p className="text-sm text-red-500">{form.formState.errors.preparationTime.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
