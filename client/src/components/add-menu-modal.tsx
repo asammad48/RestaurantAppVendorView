@@ -18,7 +18,6 @@ const addMenuSchema = z.object({
   name: z.string().min(1, "Name is required"),
   category: z.string().min(1, "Category is required"),
   description: z.string().optional(),
-  price: z.number().min(0, "Price must be positive"),
   restaurantId: z.string().optional(),
 });
 
@@ -61,7 +60,6 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
       name: editMenuItem?.name || "",
       category: editMenuItem?.category || "",
       description: editMenuItem?.description || "",
-      price: editMenuItem?.price ? editMenuItem.price / 100 : 0, // Convert from cents
       restaurantId: restaurantId || "",
     },
   });
@@ -150,11 +148,41 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
     setVariants(newVariants);
   };
 
+  // Remove functions for each section
+  const removeAddOn = (index: number) => {
+    if (addOns.length > 1) {
+      setAddOns(addOns.filter((_, i) => i !== index));
+    }
+  };
+
+  const removeCustomization = (index: number) => {
+    if (customizations.length > 1) {
+      setCustomizations(customizations.filter((_, i) => i !== index));
+    }
+  };
+
+  const removeCustomizationOption = (custIndex: number, optIndex: number) => {
+    const newCustomizations = [...customizations];
+    if (newCustomizations[custIndex].options.length > 1) {
+      newCustomizations[custIndex].options = newCustomizations[custIndex].options.filter((_, i) => i !== optIndex);
+      setCustomizations(newCustomizations);
+    }
+  };
+
+  const removeVariant = (index: number) => {
+    if (variants.length > 1) {
+      setVariants(variants.filter((_, i) => i !== index));
+    }
+  };
+
   const onSubmit = (data: AddMenuFormData) => {
+    // Calculate base price from the first variant, or default to 0 if no variants
+    const basePrice = variants.length > 0 && variants[0].price > 0 ? variants[0].price : 0;
+    
     const menuItemData: InsertMenuItem = {
       ...data,
-      price: Math.round(data.price * 100), // Convert to cents
-      image: image || null,
+      price: Math.round(basePrice * 100), // Convert to cents, use base price from variants
+      image: image || undefined,
       addOns: addOns
         .filter(addon => addon.name.trim())
         .map(addon => JSON.stringify({ name: addon.name, price: addon.price })),
@@ -228,21 +256,6 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Price (Rs)</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                {...form.register("price", { valueAsNumber: true })}
-                placeholder="0.00"
-                data-testid="input-price"
-              />
-              {form.formState.errors.price && (
-                <p className="text-sm text-red-500">{form.formState.errors.price.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="image">Image Upload</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -274,10 +287,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
           {/* Add-ons Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Add-ons</h3>
+              <h3 className="text-lg font-medium">Modifiers (Add-ons)</h3>
             </div>
             {addOns.map((addOn, index) => (
-              <div key={index} className="grid grid-cols-2 gap-4">
+              <div key={index} className="grid grid-cols-2 gap-4 items-end">
                 <div>
                   <Label>Name</Label>
                   <Input
@@ -289,13 +302,27 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
                 </div>
                 <div>
                   <Label>Price</Label>
-                  <Input
-                    type="number"
-                    placeholder="Price"
-                    value={addOn.price}
-                    onChange={(e) => updateAddOn(index, "price", parseFloat(e.target.value) || 0)}
-                    data-testid={`input-addon-price-${index}`}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={addOn.price}
+                      onChange={(e) => updateAddOn(index, "price", parseFloat(e.target.value) || 0)}
+                      data-testid={`input-addon-price-${index}`}
+                    />
+                    {addOns.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeAddOn(index)}
+                        className="text-red-600 border-red-600 hover:bg-red-50 flex-shrink-0"
+                        data-testid={`button-remove-addon-${index}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -315,7 +342,19 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Customization</h3>
             {customizations.map((customization, custIndex) => (
-              <div key={custIndex} className="space-y-3 p-4 border rounded-lg">
+              <div key={custIndex} className="space-y-3 p-4 border rounded-lg relative">
+                {customizations.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeCustomization(custIndex)}
+                    className="absolute top-2 right-2 text-red-600 border-red-600 hover:bg-red-50 h-8 w-8"
+                    data-testid={`button-remove-customization-${custIndex}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
                 <div>
                   <Label>Customization Name</Label>
                   <Input
@@ -328,13 +367,26 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
                 <div className="space-y-2">
                   <Label>Options</Label>
                   {customization.options.map((option, optIndex) => (
-                    <Input
-                      key={optIndex}
-                      placeholder="Option"
-                      value={option}
-                      onChange={(e) => updateCustomizationOption(custIndex, optIndex, e.target.value)}
-                      data-testid={`input-customization-option-${custIndex}-${optIndex}`}
-                    />
+                    <div key={optIndex} className="flex gap-2">
+                      <Input
+                        placeholder="Option"
+                        value={option}
+                        onChange={(e) => updateCustomizationOption(custIndex, optIndex, e.target.value)}
+                        data-testid={`input-customization-option-${custIndex}-${optIndex}`}
+                      />
+                      {customization.options.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeCustomizationOption(custIndex, optIndex)}
+                          className="text-red-600 border-red-600 hover:bg-red-50 flex-shrink-0"
+                          data-testid={`button-remove-customization-option-${custIndex}-${optIndex}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   ))}
                   <Button
                     type="button"
@@ -366,7 +418,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Variants</h3>
             {variants.map((variant, index) => (
-              <div key={index} className="grid grid-cols-2 gap-4">
+              <div key={index} className="grid grid-cols-2 gap-4 items-end">
                 <div>
                   <Label>Options</Label>
                   <Input
@@ -378,13 +430,27 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
                 </div>
                 <div>
                   <Label>Price</Label>
-                  <Input
-                    type="number"
-                    placeholder="Price"
-                    value={variant.price}
-                    onChange={(e) => updateVariant(index, "price", parseFloat(e.target.value) || 0)}
-                    data-testid={`input-variant-price-${index}`}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={variant.price}
+                      onChange={(e) => updateVariant(index, "price", parseFloat(e.target.value) || 0)}
+                      data-testid={`input-variant-price-${index}`}
+                    />
+                    {variants.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeVariant(index)}
+                        className="text-red-600 border-red-600 hover:bg-red-50 flex-shrink-0"
+                        data-testid={`button-remove-variant-${index}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
