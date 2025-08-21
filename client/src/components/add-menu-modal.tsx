@@ -18,7 +18,7 @@ import type { InsertMenuItem, MenuCategory } from "@/types/schema";
 const apiRepository = new ApiRepository({
   baseUrl: "https://5dtrtpzg-7261.inc1.devtunnels.ms",
   endpoints: {
-    menuCategoryList: "/api/MenuCategory",
+    menuCategoryByBranch: "/api/MenuCategory/GetBranchById/{branchId}",
     menuItemCreate: "/api/MenuItem",
   },
 });
@@ -52,10 +52,11 @@ interface AddMenuModalProps {
   isOpen: boolean;
   onClose: () => void;
   restaurantId?: string;
+  branchId?: number;
   editMenuItem?: any; // MenuItem type for edit mode
 }
 
-export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuItem }: AddMenuModalProps) {
+export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId = 3, editMenuItem }: AddMenuModalProps) {
   const isEditMode = !!editMenuItem;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -70,14 +71,19 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, editMenuIt
 
   // Fetch categories for dropdown
   const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ["/api/MenuCategory"],
+    queryKey: ["/api/MenuCategory", "GetBranchById", branchId],
     queryFn: async () => {
-      const response = await apiRepository.call<{ items: MenuCategory[] }>(
-        'menuCategoryList',
-        'GET'
+      const response = await apiRepository.call<MenuCategory[]>(
+        'menuCategoryByBranch',
+        'GET',
+        undefined,
+        undefined,
+        true,
+        { branchId: branchId }
       );
-      return response.data?.items || [];
+      return response.data || [];
     },
+    enabled: !!branchId, // Only fetch when branchId is available
   });
 
   const form = useForm<AddMenuFormData>({

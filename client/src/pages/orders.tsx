@@ -1165,6 +1165,7 @@ export default function Orders() {
         isOpen={showAddMenuModal}
         onClose={() => setShowAddMenuModal(false)}
         restaurantId="1"
+        branchId={3}
       />
 
       {/* Add Category Modal */}
@@ -1223,6 +1224,7 @@ export default function Orders() {
             setSelectedMenuItem(null);
           }}
           restaurantId="1"
+          branchId={3}
           editMenuItem={selectedMenuItem}
         />
       )}
