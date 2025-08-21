@@ -81,5 +81,7 @@ Technical preferences:
 - **wouter**: Minimalist routing library.
 
 ### API Endpoints
-- **Signup API**: `https://f040v9mc-7261.inc1.devtunnels.ms/api/User/restaurant-owner`
-- **Entity API**: `https://f040v9mc-7261.inc1.devtunnels.ms/api/Entity`
+- **Base URL**: `https://5dtrtpzg-7261.inc1.devtunnels.ms`
+- **Signup API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/User/restaurant-owner`
+- **Entity API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/Entity`
+- **MenuCategory API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/MenuCategory`

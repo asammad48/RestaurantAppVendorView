@@ -334,7 +334,7 @@ export class ApiRepository {
 }
 
 // API Base URL and Endpoints
-export const API_BASE_URL = 'https://f040v9mc-7261.inc1.devtunnels.ms';
+export const API_BASE_URL = 'https://5dtrtpzg-7261.inc1.devtunnels.ms';
 
 export const API_ENDPOINTS = {
   // Authentication endpoints
