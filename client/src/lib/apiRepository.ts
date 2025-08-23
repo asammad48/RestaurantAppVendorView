@@ -784,6 +784,98 @@ export const dealsApi = {
   },
 };
 
+// Discount API endpoints using Generic API repository  
+export const discountsApi = {
+  // Get discounts by branch with pagination
+  getDiscountsByBranch: async (branchId: number, page: number = 1, pageSize: number = 10) => {
+    const response = await apiRepository.call<any>(
+      'getDiscountsByBranch',
+      'GET',
+      undefined,
+      { page: page.toString(), pageSize: pageSize.toString() },
+      true,
+      { branchId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Get discount by ID
+  getDiscountById: async (discountId: number) => {
+    const response = await apiRepository.call<any>(
+      'getDiscountById',
+      'GET',
+      undefined,
+      {},
+      true,
+      { id: discountId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Create discount
+  createDiscount: async (discountData: any) => {
+    const response = await apiRepository.call<any>(
+      'createDiscount',
+      'POST',
+      discountData,
+      {},
+      true
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Update discount
+  updateDiscount: async (discountId: number, discountData: any) => {
+    const response = await apiRepository.call<void>(
+      'updateDiscount',
+      'PUT',
+      discountData,
+      {},
+      true,
+      { id: discountId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Delete discount
+  deleteDiscount: async (discountId: number) => {
+    const response = await apiRepository.call<void>(
+      'deleteDiscount',
+      'DELETE',
+      undefined,
+      {},
+      true,
+      { id: discountId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+};
+
 // Helper to get full URL for images
 export const getImageUrl = (relativePath: string): string => {
   if (!relativePath) return '';

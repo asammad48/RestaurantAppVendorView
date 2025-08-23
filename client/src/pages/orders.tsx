@@ -18,14 +18,15 @@ import AddCategoryModal from "@/components/add-category-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
 import AddDealsModal from "@/components/add-deals-modal";
 import AddServicesModal from "@/components/add-services-modal";
+import AddDiscountModal from "@/components/add-discount-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi, branchApi, dealsApi, apiRepository } from "@/lib/apiRepository";
+import { locationApi, branchApi, dealsApi, discountsApi, apiRepository } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
-import type { MenuItem, MenuCategory, Deal } from "@/types/schema";
+import type { MenuItem, MenuCategory, Deal, Discount } from "@/types/schema";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 
 // Deal interface is now imported from schema
@@ -190,9 +191,11 @@ export default function Orders() {
   const [menuCurrentPage, setMenuCurrentPage] = useState(1);
   const [categoryCurrentPage, setCategoryCurrentPage] = useState(1);
   const [dealsCurrentPage, setDealsCurrentPage] = useState(1);
+  const [discountsCurrentPage, setDiscountsCurrentPage] = useState(1);
   const [menuItemsPerPage] = useState(6);
   const [categoryItemsPerPage] = useState(6);
   const [dealsItemsPerPage, setDealsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
+  const [discountsItemsPerPage, setDiscountsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
@@ -201,6 +204,9 @@ export default function Orders() {
   const [showAddDealsModal, setShowAddDealsModal] = useState(false);
   const [showEditDealsModal, setShowEditDealsModal] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<any>(null);
+  const [showAddDiscountModal, setShowAddDiscountModal] = useState(false);
+  const [showEditDiscountModal, setShowEditDiscountModal] = useState(false);
+  const [selectedDiscount, setSelectedDiscount] = useState<any>(null);
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditTableModal, setShowEditTableModal] = useState(false);
@@ -262,7 +268,7 @@ export default function Orders() {
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'deal' | 'table', id: string, name: string} | null>(null);
+  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
   const [activeMainTab, setActiveMainTab] = useState("orders");
 
   const filteredOrders = mockOrders.filter(order => {
@@ -405,6 +411,16 @@ export default function Orders() {
     setShowDeleteModal(true);
   };
 
+  const handleEditDiscount = (discount: any) => {
+    setSelectedDiscount(discount);
+    setShowEditDiscountModal(true);
+  };
+
+  const handleDeleteDiscount = (discount: any) => {
+    setDeleteItem({ type: 'discount', id: discount.id, name: discount.name });
+    setShowDeleteModal(true);
+  };
+
   // Filter menu items based on search
   // Since API handles filtering and pagination, we use the items directly
   const filteredMenuItems = menuItems;
@@ -456,6 +472,22 @@ export default function Orders() {
   const dealsHasNext = dealsResponse?.hasNext || false;
   const dealsHasPrevious = dealsResponse?.hasPrevious || false;
 
+  // Fetch discounts with pagination using Generic API repository
+  const { data: discountsResponse, isLoading: discountsLoading, refetch: refetchDiscounts } = useQuery({
+    queryKey: [`discounts-branch-3`, discountsCurrentPage, discountsItemsPerPage],
+    queryFn: async () => {
+      const response = await discountsApi.getDiscountsByBranch(3, discountsCurrentPage, discountsItemsPerPage);
+      return response;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const discounts = discountsResponse?.items || [];
+  const discountsTotalCount = discountsResponse?.totalCount || 0;
+  const discountsTotalPages = discountsResponse?.totalPages || 0;
+  const discountsHasNext = discountsResponse?.hasNext || false;
+  const discountsHasPrevious = discountsResponse?.hasPrevious || false;
+
   // Format price from cents to rupees
   const formatPrice = (priceInCents: number) => {
     return `Rs${(priceInCents / 100).toFixed(0)}`;
@@ -495,7 +527,7 @@ export default function Orders() {
         }} 
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-5" data-testid="main-tabs">
+        <TabsList className="grid w-full grid-cols-6" data-testid="main-tabs">
           <TabsTrigger value="orders" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">
             Orders
           </TabsTrigger>
@@ -503,6 +535,7 @@ export default function Orders() {
           <TabsTrigger value="tables" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Tables</TabsTrigger>
           <TabsTrigger value="deals" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Deals</TabsTrigger>
           <TabsTrigger value="services" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Services</TabsTrigger>
+          <TabsTrigger value="discounts" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">Discounts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6">
@@ -1198,6 +1231,156 @@ export default function Orders() {
             </div>
           </div>
         </TabsContent>
+
+        <TabsContent value="discounts">
+          {/* Discounts Tab Content */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-end">
+              <Button 
+                className="bg-green-500 hover:bg-green-600 text-white"
+                onClick={() => setShowAddDiscountModal(true)}
+                data-testid="button-add-discount"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Discount
+              </Button>
+            </div>
+
+            {/* Discounts Table */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="font-semibold text-gray-700">Name</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Type</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Value</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Max Amount</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Valid Until</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {discountsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        Loading discounts...
+                      </TableCell>
+                    </TableRow>
+                  ) : discounts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        No discounts found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    discounts.map((discount: Discount) => (
+                      <TableRow key={discount.id} data-testid={`discount-row-${discount.id}`}>
+                        <TableCell className="font-medium" data-testid={`discount-name-${discount.id}`}>
+                          {discount.name}
+                        </TableCell>
+                        <TableCell data-testid={`discount-type-${discount.id}`}>
+                          <Badge className={discount.discountType === 'Percentage' ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"}>
+                            {discount.discountType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell data-testid={`discount-value-${discount.id}`}>
+                          {discount.discountType === 'Percentage' ? `${discount.discountValue}%` : `$${discount.discountValue}`}
+                        </TableCell>
+                        <TableCell data-testid={`discount-max-amount-${discount.id}`}>
+                          {discount.maxDiscountAmount ? `$${discount.maxDiscountAmount}` : 'No limit'}
+                        </TableCell>
+                        <TableCell data-testid={`discount-end-date-${discount.id}`}>
+                          {discount.endDate ? new Date(discount.endDate).toLocaleDateString() : 'No expiry'}
+                        </TableCell>
+                        <TableCell data-testid={`discount-status-${discount.id}`}>
+                          <Badge className={discount.isActive ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}>
+                            {discount.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                data-testid={`button-discount-options-${discount.id}`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditDiscount(discount)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Discount
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteDiscount(discount)}>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Discount
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              
+              {/* Discounts Pagination */}
+              <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Show result:</span>
+                  <Select 
+                    value={discountsItemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setDiscountsItemsPerPage(Number(value));
+                      setDiscountsCurrentPage(1); // Reset to first page
+                    }}
+                  >
+                    <SelectTrigger className="w-16">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEFAULT_PAGINATION_CONFIG.pageSizeOptions.map((pageSize) => (
+                        <SelectItem key={pageSize} value={pageSize.toString()}>
+                          {pageSize}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-gray-600">
+                    Showing {discountsCurrentPage === 1 ? 1 : (discountsCurrentPage - 1) * discountsItemsPerPage + 1} to{' '}
+                    {Math.min(discountsCurrentPage * discountsItemsPerPage, discountsTotalCount)} of {discountsTotalCount} results
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDiscountsCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={!discountsHasPrevious}
+                    data-testid="button-discounts-prev-page"
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Page {discountsCurrentPage} of {discountsTotalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDiscountsCurrentPage(prev => Math.min(prev + 1, discountsTotalPages))}
+                    disabled={!discountsHasNext}
+                    data-testid="button-discounts-next-page"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* QR Code Modal */}
@@ -1282,6 +1465,26 @@ export default function Orders() {
         onPlanSelect={() => setShowPricingModal(false)}
       />
 
+      {/* Add Discount Modal */}
+      <AddDiscountModal
+        open={showAddDiscountModal}
+        onOpenChange={setShowAddDiscountModal}
+        branchId={3}
+      />
+
+      {/* Edit Discount Modal */}
+      {selectedDiscount && (
+        <AddDiscountModal
+          open={showEditDiscountModal}
+          onOpenChange={(open) => {
+            setShowEditDiscountModal(open);
+            if (!open) setSelectedDiscount(null);
+          }}
+          branchId={3}
+          editDiscountId={selectedDiscount.id}
+        />
+      )}
+
       {/* Edit Menu Modal - uses same component as Add Menu */}
       {selectedMenuItem && (
         <AddMenuModal
@@ -1321,6 +1524,7 @@ export default function Orders() {
             deleteItem.type === 'menu' ? 'Delete Menu Item' :
             deleteItem.type === 'category' ? 'Delete Category' :
             deleteItem.type === 'deal' ? 'Delete Deal' :
+            deleteItem.type === 'discount' ? 'Delete Discount' :
             'Delete Table'
           }
           description={`Are you sure you want to delete this ${deleteItem.type}?`}
@@ -1387,13 +1591,25 @@ export default function Orders() {
             } else if (deleteItem.type === 'deal') {
               // Delete deal using Generic API repository
               try {
-                await dealsApi.deleteDeal(deleteItem.id);
+                await dealsApi.deleteDeal(Number(deleteItem.id));
                 
                 // Refresh the deals list after successful deletion
                 queryClient.invalidateQueries({ queryKey: ['deals'] });
                 queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
               } catch (error: any) {
                 console.error('Failed to delete deal:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
+              }
+            } else if (deleteItem.type === 'discount') {
+              // Delete discount using Generic API repository
+              try {
+                await discountsApi.deleteDiscount(Number(deleteItem.id));
+                
+                // Refresh the discounts list after successful deletion
+                queryClient.invalidateQueries({ queryKey: ['discounts'] });
+                queryClient.invalidateQueries({ queryKey: ['discounts-branch-3'] });
+              } catch (error: any) {
+                console.error('Failed to delete discount:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
             } else {
