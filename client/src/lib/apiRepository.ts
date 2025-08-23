@@ -1,3 +1,5 @@
+import { Deal } from '../types/schema';
+
 // Generic API Repository with error handling and token management
 export interface ApiResponse<T> {
   data?: T;
@@ -389,6 +391,7 @@ export const API_ENDPOINTS = {
   // Deals endpoints
   DEALS: '/api/Deals',
   DEAL_BY_ID: '/api/Deals/{id}',
+  DEALS_BY_BRANCH: '/api/Deals/branch/{branchId}',
   
   // Other endpoints
   ANALYTICS: '/api/analytics',
@@ -474,6 +477,7 @@ export const defaultApiConfig: ApiConfig = {
     getDealById: API_ENDPOINTS.DEAL_BY_ID,
     updateDeal: API_ENDPOINTS.DEAL_BY_ID,
     deleteDeal: API_ENDPOINTS.DEAL_BY_ID,
+    getDealsByBranch: API_ENDPOINTS.DEALS_BY_BRANCH,
     
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,
@@ -690,7 +694,33 @@ export const dealsApi = {
     return await apiRepository.call('createDeal', 'POST', dealData);
   },
 
-  // Get all deals with pagination
+  // Get deals by branch with pagination (using Generic API repository)
+  getDealsByBranch: async (branchId: number, queryParams?: { [key: string]: string }) => {
+    const response = await apiRepository.call<{
+      items: Deal[];
+      pageNumber: number;
+      pageSize: number;
+      totalCount: number;
+      totalPages: number;
+      hasPrevious: boolean;
+      hasNext: boolean;
+    }>(
+      'getDealsByBranch',
+      'GET',
+      undefined,
+      queryParams,
+      true,
+      { branchId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Get all deals with pagination (legacy method - kept for compatibility)
   getDeals: async (queryString?: string) => {
     const branchId = 3; // Using branch ID 3 as specified
     const endpoint = queryString 

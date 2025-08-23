@@ -414,32 +414,47 @@ export default function Orders() {
   const filteredCategories = categories;
   const paginatedCategories = categories;
 
-  // Fetch deals with pagination
-  const { data: dealsResponse, isLoading: dealsLoading } = useQuery<PaginationResponse<Deal>>({
-    queryKey: ["deals", dealsCurrentPage, dealsItemsPerPage, dealsSearchTerm],
+  // Query for deals with real API and pagination support using generic API repository
+  const { data: dealsResponse, isLoading: dealsLoading, refetch: refetchDeals } = useQuery({
+    queryKey: [`deals-branch-3`, dealsCurrentPage, dealsSearchTerm, dealsItemsPerPage],
     queryFn: async () => {
-      const paginationRequest: PaginationRequest = {
-        pageNumber: dealsCurrentPage,
-        pageSize: dealsItemsPerPage,
-        sortBy: 'name',
-        isAscending: true,
-        searchTerm: dealsSearchTerm || undefined,
-      };
-
-      const queryString = buildPaginationQuery(paginationRequest);
-      const response = await dealsApi.getDeals(queryString);
+      const response = await apiRepository.call<{
+        items: Deal[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        hasNext: boolean;
+      }>(
+        'getDealsByBranch',
+        'GET',
+        undefined,
+        {
+          PageNumber: dealsCurrentPage.toString(),
+          PageSize: dealsItemsPerPage.toString(),
+          SortBy: 'name',
+          IsAscending: 'true',
+          ...(dealsSearchTerm && { SearchTerm: dealsSearchTerm })
+        },
+        true,
+        { branchId: 3 }
+      );
       
       if (response.error) {
         throw new Error(response.error);
       }
-
-      return response.data as PaginationResponse<Deal>;
+      
+      return response.data;
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Extract deals data
   const deals = dealsResponse?.items || [];
-  const dealsTotalPages = dealsResponse?.totalPages || 1;
+  const dealsTotalCount = dealsResponse?.totalCount || 0;
+  const dealsTotalPages = dealsResponse?.totalPages || 0;
+  const dealsHasNext = dealsResponse?.hasNext || false;
+  const dealsHasPrevious = dealsResponse?.hasPrevious || false;
 
   // Format price from cents to rupees
   const formatPrice = (priceInCents: number) => {
