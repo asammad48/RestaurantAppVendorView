@@ -32,6 +32,7 @@ interface DealItem {
 export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId = 3, editDealId }: AddDealsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<DealItem[]>([]);
+  const [originalImage, setOriginalImage] = useState<string>("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -92,8 +93,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       
       // Set image if available
       if (dealData.packagePicture) {
-        // For editing, we don't set selectedFile since it's an existing image
-        // The packagePicture field contains the image path/base64
+        setOriginalImage(dealData.packagePicture); // Store original for comparison
       }
       
       // Set selected items (convert to local format for UI)
@@ -119,16 +119,24 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       });
       setSelectedItems([]);
       setSelectedFile(null);
+      setOriginalImage("");
     }
   }, [isEditMode, dealData, isDealLoading, form, branchId]);
 
   const createDealMutation = useMutation({
     mutationFn: async (data: InsertDeal) => {
-      const response = await dealsApi.createDeal(data);
-      if (response.error) {
-        throw new Error(response.error);
+      if (isEditMode && editDealId) {
+        // Update existing deal
+        const response = await dealsApi.updateDeal(editDealId, data);
+        return response;
+      } else {
+        // Create new deal
+        const response = await dealsApi.createDeal(data);
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        return response.data;
       }
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
@@ -140,6 +148,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       form.reset();
       setSelectedFile(null);
       setSelectedItems([]);
+      setOriginalImage("");
       onOpenChange(false);
     },
     onError: (error: any) => {
@@ -184,12 +193,27 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   };
 
   const onSubmit = (data: InsertDeal) => {
+    // Handle image logic: only send base64 if image is updated, else send empty string
+    let packagePicture = "";
+    if (selectedFile) {
+      // New image selected - use the base64 from form
+      packagePicture = data.packagePicture || "";
+    } else if (isEditMode && !selectedFile) {
+      // Editing but no new image - send empty string as per requirements
+      packagePicture = "";
+    }
+
     const dealData = {
-      ...data,
-      // menuItems is already in the form data from handleItemToggle/handleQuantityChange
-      // Convert price to cents if needed (API expects price in cents)
-      price: Math.round(data.price * 100),
-      expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : undefined,
+      name: data.name,
+      description: data.description,
+      price: data.price, // API expects price as is (not in cents based on curl example)
+      packagePicture: packagePicture,
+      expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : new Date().toISOString(),
+      isActive: true,
+      menuItems: selectedItems.map(item => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity
+      }))
     };
 
     createDealMutation.mutate(dealData);
