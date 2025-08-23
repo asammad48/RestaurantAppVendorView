@@ -99,36 +99,43 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   const handleItemToggle = (item: SimpleMenuItem) => {
     setSelectedItems(prev => {
       const exists = prev.find(i => i.menuItemId === item.menuItemId);
+      let newItems;
       if (exists) {
-        return prev.filter(i => i.menuItemId !== item.menuItemId);
+        newItems = prev.filter(i => i.menuItemId !== item.menuItemId);
       } else {
-        return [...prev, { menuItemId: item.menuItemId, menuItemName: item.menuItemName, quantity: 1 }];
+        newItems = [...prev, { menuItemId: item.menuItemId, menuItemName: item.menuItemName, quantity: 1 }];
       }
+      
+      // Update form's menuItems field
+      const formMenuItems = newItems.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity }));
+      form.setValue('menuItems', formMenuItems);
+      
+      return newItems;
     });
   };
 
   const handleQuantityChange = (menuItemId: number, quantity: number) => {
-    setSelectedItems(prev => 
-      prev.map(item => 
+    setSelectedItems(prev => {
+      const newItems = prev.map(item => 
         item.menuItemId === menuItemId ? { ...item, quantity } : item
-      )
-    );
+      );
+      
+      // Update form's menuItems field
+      const formMenuItems = newItems.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity }));
+      form.setValue('menuItems', formMenuItems);
+      
+      return newItems;
+    });
   };
 
   const onSubmit = (data: InsertDeal) => {
     console.log('Form submitted with data:', data);
     console.log('Selected items:', selectedItems);
     console.log('Form errors:', form.formState.errors);
-    
-    // Convert selected items to the format expected by the API
-    const menuItems = selectedItems.map(item => ({
-      menuItemId: item.menuItemId,
-      quantity: item.quantity
-    }));
 
     const dealData = {
       ...data,
-      menuItems,
+      // menuItems is already in the form data from handleItemToggle/handleQuantityChange
       // Convert price to cents if needed (API expects price in cents)
       price: Math.round(data.price * 100),
       packagePicture: selectedFile ? "base64/image" : "",
@@ -320,12 +327,6 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                 type="submit"
                 disabled={createDealMutation.isPending || selectedItems.length === 0}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
-                onClick={() => {
-                  console.log('Button clicked!');
-                  console.log('Selected items count:', selectedItems.length);
-                  console.log('Form valid:', form.formState.isValid);
-                  console.log('Form errors:', form.formState.errors);
-                }}
               >
                 {createDealMutation.isPending ? (editDeal ? "Updating..." : "Creating...") : (editDeal ? "Update Deal" : "Create Deal")}
               </Button>
