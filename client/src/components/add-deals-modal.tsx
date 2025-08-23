@@ -62,19 +62,11 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
   const createDealMutation = useMutation({
     mutationFn: async (data: InsertDeal) => {
-      console.log('Mutation function called with:', data);
-      try {
-        const response = await dealsApi.createDeal(data);
-        console.log('API response:', response);
-        if (response.error) {
-          console.error('API error:', response.error);
-          throw new Error(response.error);
-        }
-        return response.data;
-      } catch (error) {
-        console.error('Mutation error:', error);
-        throw error;
+      const response = await dealsApi.createDeal(data);
+      if (response.error) {
+        throw new Error(response.error);
       }
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
@@ -129,20 +121,14 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   };
 
   const onSubmit = (data: InsertDeal) => {
-    console.log('Form submitted with data:', data);
-    console.log('Selected items:', selectedItems);
-    console.log('Form errors:', form.formState.errors);
-
     const dealData = {
       ...data,
       // menuItems is already in the form data from handleItemToggle/handleQuantityChange
       // Convert price to cents if needed (API expects price in cents)
       price: Math.round(data.price * 100),
-      packagePicture: selectedFile ? "base64/image" : "",
       expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : undefined,
     };
 
-    console.log('Sending deal data to API:', dealData);
     createDealMutation.mutate(dealData);
   };
 
@@ -150,7 +136,16 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      form.setValue("packagePicture", `deal_${file.name}`);
+      
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        // Remove the data:image/png;base64, prefix and keep only the base64 data
+        const base64Data = base64String.split(',')[1];
+        form.setValue("packagePicture", base64Data);
+      };
+      reader.readAsDataURL(file);
     }
   };
 

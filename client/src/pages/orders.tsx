@@ -22,18 +22,13 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi, branchApi, apiRepository } from "@/lib/apiRepository";
+import { locationApi, branchApi, dealsApi } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
-import type { MenuItem, MenuCategory } from "@/types/schema";
+import type { MenuItem, MenuCategory, Deal } from "@/types/schema";
+import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 
-interface Deal {
-  id: string;
-  name: string;
-  items: string;
-  status: string;
-  price: string;
-}
+// Deal interface is now imported from schema
 
 interface Service {
   id: string;
@@ -419,25 +414,32 @@ export default function Orders() {
   const filteredCategories = categories;
   const paginatedCategories = categories;
 
-  // Mock deals data
-  const mockDeals = [
-    { id: "1", name: "Family Feast Deal", items: "1 large Pizza, 6 wings, 2 Drinks, 1 Fries", status: "Active", price: "$10.62" },
-    { id: "2", name: "Lunch Special", items: "1 medium Pizza, 1 Drink", status: "Active", price: "$8.50" },
-    { id: "3", name: "Weekend Combo", items: "2 large Pizza, 4 wings, 2 Drinks", status: "Inactive", price: "$15.99" },
-    { id: "4", name: "Student Deal", items: "1 small Pizza, 1 Drink", status: "Active", price: "$6.25" },
-    { id: "5", name: "Party Pack", items: "3 large Pizza, 12 wings, 4 Drinks, 2 Fries", status: "Active", price: "$32.50" },
-  ];
+  // Fetch deals with pagination
+  const { data: dealsResponse, isLoading: dealsLoading } = useQuery<PaginationResponse<Deal>>({
+    queryKey: ["deals", dealsCurrentPage, dealsItemsPerPage, dealsSearchTerm],
+    queryFn: async () => {
+      const paginationRequest: PaginationRequest = {
+        pageNumber: dealsCurrentPage,
+        pageSize: dealsItemsPerPage,
+        sortBy: 'name',
+        isAscending: true,
+        searchTerm: dealsSearchTerm || undefined,
+      };
 
-  // Filter deals based on search
-  const filteredDeals = mockDeals.filter(deal =>
-    deal.name.toLowerCase().includes(dealsSearchTerm.toLowerCase()) ||
-    deal.items.toLowerCase().includes(dealsSearchTerm.toLowerCase())
-  );
+      const queryString = buildPaginationQuery(paginationRequest);
+      const response = await dealsApi.getDeals(queryString);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
 
-  // Deals pagination
-  const dealsTotalPages = Math.ceil(filteredDeals.length / dealsItemsPerPage);
-  const dealsStartIndex = (dealsCurrentPage - 1) * dealsItemsPerPage;
-  const paginatedDeals = filteredDeals.slice(dealsStartIndex, dealsStartIndex + dealsItemsPerPage);
+      return response.data as PaginationResponse<Deal>;
+    },
+  });
+
+  // Extract deals data
+  const deals = dealsResponse?.items || [];
+  const dealsTotalPages = dealsResponse?.totalPages || 1;
 
   // Format price from cents to rupees
   const formatPrice = (priceInCents: number) => {
@@ -1084,14 +1086,22 @@ export default function Orders() {
               <div className="flex items-center justify-between p-4 border-t bg-gray-50">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">Show result:</span>
-                  <Select defaultValue="6">
+                  <Select 
+                    value={dealsItemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setDealsItemsPerPage(Number(value));
+                      setDealsCurrentPage(1); // Reset to first page
+                    }}
+                  >
                     <SelectTrigger className="w-16">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="6">6</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
+                      {DEFAULT_PAGINATION_CONFIG.pageSizeOptions.map((pageSize) => (
+                        <SelectItem key={pageSize} value={pageSize.toString()}>
+                          {pageSize}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1104,13 +1114,9 @@ export default function Orders() {
                   >
                     &lt;
                   </Button>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="bg-green-500 hover:bg-green-600"
-                  >
-                    {dealsCurrentPage}
-                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Page {dealsCurrentPage} of {dealsTotalPages}
+                  </span>
                   <Button 
                     variant="outline" 
                     size="sm"

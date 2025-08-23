@@ -690,9 +690,13 @@ export const dealsApi = {
     return await apiRepository.call('createDeal', 'POST', dealData);
   },
 
-  // Get all deals
-  getDeals: async () => {
-    return await apiRepository.call('getDeals', 'GET');
+  // Get all deals with pagination
+  getDeals: async (queryString?: string) => {
+    const branchId = 3; // Using branch ID 3 as specified
+    const endpoint = queryString 
+      ? `/api/Deals/branch/${branchId}?${queryString}`
+      : `/api/Deals/branch/${branchId}`;
+    return await apiRepository.get(endpoint);
   },
 
   // Get deal by ID
