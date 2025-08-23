@@ -9,33 +9,42 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { insertDealSchema, type InsertDeal, type MenuItem } from "@/types/schema";
+import { insertDealSchema, type InsertDeal, type SimpleMenuItem } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { menuItemApi } from "@/lib/apiRepository";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddDealsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   restaurantId?: string;
+  branchId?: number;
   editDeal?: any;
 }
 
 interface DealItem {
-  itemId: string;
+  itemId: number;
   name: string;
   quantity: number;
 }
 
-export default function AddDealsModal({ open, onOpenChange, restaurantId, editDeal }: AddDealsModalProps) {
+export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId = 3, editDeal }: AddDealsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<DealItem[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: menuItems = [] } = useQuery<MenuItem[]>({
-    queryKey: ["/api/menu-items"],
-    enabled: open,
+  const { data: menuItems = [], isLoading: menuItemsLoading } = useQuery({
+    queryKey: ['menu-items-simple', branchId],
+    queryFn: async (): Promise<SimpleMenuItem[]> => {
+      const response = await menuItemApi.getSimpleMenuItemsByBranch(branchId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return (response.data as SimpleMenuItem[]) || [];
+    },
+    enabled: open && !!branchId,
   });
 
   const form = useForm<InsertDeal>({
@@ -43,7 +52,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, editDe
     defaultValues: editDeal ? {
       name: editDeal.name || "",
       items: editDeal.items || [],
-      dealPrice: editDeal.price ? parseFloat(editDeal.price.replace('$', '')) : 0,
+      dealPrice: editDeal.price ? parseFloat(editDeal.price.replace('$', '')) * 100 : 0,
       image: editDeal.image || "",
       expiryTime: editDeal.expiryTime || undefined,
       restaurantId: restaurantId || undefined,
@@ -83,18 +92,18 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, editDe
     },
   });
 
-  const handleItemToggle = (item: MenuItem) => {
+  const handleItemToggle = (item: SimpleMenuItem) => {
     setSelectedItems(prev => {
-      const exists = prev.find(i => i.itemId === item.id);
+      const exists = prev.find(i => i.itemId === item.menuItemId);
       if (exists) {
-        return prev.filter(i => i.itemId !== item.id);
+        return prev.filter(i => i.itemId !== item.menuItemId);
       } else {
-        return [...prev, { itemId: item.id, name: item.name, quantity: 1 }];
+        return [...prev, { itemId: item.menuItemId, name: item.menuItemName, quantity: 1 }];
       }
     });
   };
 
-  const handleQuantityChange = (itemId: string, quantity: number) => {
+  const handleQuantityChange = (itemId: number, quantity: number) => {
     setSelectedItems(prev => 
       prev.map(item => 
         item.itemId === itemId ? { ...item, quantity } : item
@@ -150,33 +159,43 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, editDe
                 Select Items for Deal
               </Label>
               <div className="max-h-48 overflow-y-auto border rounded-lg p-4 space-y-3">
-                {menuItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        checked={selectedItems.some(i => i.itemId === item.id)}
-                        onCheckedChange={() => handleItemToggle(item)}
-                      />
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-500">${(item.price / 100).toFixed(2)}</p>
-                      </div>
-                    </div>
-                    
-                    {selectedItems.some(i => i.itemId === item.id) && (
-                      <div className="flex items-center space-x-2">
-                        <Label className="text-sm">Qty:</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={selectedItems.find(i => i.itemId === item.id)?.quantity || 1}
-                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                          className="w-16 text-center"
-                        />
-                      </div>
-                    )}
+                {menuItemsLoading ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">Loading menu items...</p>
                   </div>
-                ))}
+                ) : menuItems.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">No menu items available</p>
+                  </div>
+                ) : (
+                  menuItems.map((item) => (
+                    <div key={item.menuItemId} className="flex items-center justify-between p-2 border rounded">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          checked={selectedItems.some(i => i.itemId === item.menuItemId)}
+                          onCheckedChange={() => handleItemToggle(item)}
+                        />
+                        <div>
+                          <p className="font-medium">{item.menuItemName}</p>
+                          <p className="text-sm text-gray-500">Available for deals</p>
+                        </div>
+                      </div>
+                      
+                      {selectedItems.some(i => i.itemId === item.menuItemId) && (
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-sm">Qty:</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={selectedItems.find(i => i.itemId === item.menuItemId)?.quantity || 1}
+                            onChange={(e) => handleQuantityChange(item.menuItemId, parseInt(e.target.value) || 1)}
+                            className="w-16 text-center"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -192,8 +211,8 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, editDe
                         type="number"
                         step="0.01"
                         {...field}
-                        onChange={(e) => field.onChange(Math.round(parseFloat(e.target.value) * 100))}
-                        value={field.value ? (field.value / 100).toFixed(2) : ""}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        value={field.value ? field.value.toString() : ""}
                         placeholder="0.00"
                         className="w-full"
                       />
@@ -214,7 +233,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, editDe
                         type="datetime-local"
                         {...field}
                         value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
                         className="w-full"
                       />
                     </FormControl>

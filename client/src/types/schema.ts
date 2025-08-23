@@ -168,19 +168,22 @@ export const insertCategorySchema = z.object({
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = InsertCategory & { id: string; createdAt: Date; };
 
+// Simple Menu Item types for deals (from API response)
+export interface SimpleMenuItem {
+  menuItemId: number;
+  menuItemName: string;
+}
+
 // Deal types
 export const insertDealSchema = z.object({
   name: z.string().min(1, "Deal name is required"),
   description: z.string().optional(),
-  items: z.array(z.object({
-    itemId: z.string(),
-    quantity: z.number().min(1),
-  })),
-  originalPrice: z.number().min(0),
-  discountedPrice: z.number().min(0),
+  items: z.array(z.string()).optional(), // Array of stringified items
+  dealPrice: z.number().min(0),
   status: z.string().default("active"),
-  expiryDate: z.date().optional(),
+  expiryTime: z.date().optional(),
   image: z.string().optional(),
+  restaurantId: z.string().optional(),
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;

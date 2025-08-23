@@ -1224,6 +1224,7 @@ export default function Orders() {
         open={showAddDealsModal}
         onOpenChange={setShowAddDealsModal}
         restaurantId="1"
+        branchId={3}
       />
 
       {/* Edit Deals Modal */}
@@ -1235,6 +1236,7 @@ export default function Orders() {
             if (!open) setSelectedDeal(null);
           }}
           restaurantId="1"
+          branchId={3}
           editDeal={selectedDeal}
         />
       )}

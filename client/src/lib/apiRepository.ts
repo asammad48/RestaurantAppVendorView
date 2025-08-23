@@ -383,6 +383,7 @@ export const API_ENDPOINTS = {
 
   // MenuItem endpoints
   MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
+  MENU_ITEMS_SIMPLE_BY_BRANCH: '/api/MenuItem/branch/{branchId}/simple',
   MENU_ITEM_BY_ID: '/api/MenuItem/{id}',
 
   // Other endpoints
@@ -458,6 +459,7 @@ export const defaultApiConfig: ApiConfig = {
 
     // MenuItem endpoints
     getMenuItemsByBranch: API_ENDPOINTS.MENU_ITEMS_BY_BRANCH,
+    getMenuItemsSimpleByBranch: API_ENDPOINTS.MENU_ITEMS_SIMPLE_BY_BRANCH,
     getMenuItemById: API_ENDPOINTS.MENU_ITEM_BY_ID,
     updateMenuItem: API_ENDPOINTS.UPDATE_MENU_ITEM,
     deleteMenuItem: API_ENDPOINTS.DELETE_MENU_ITEM,
@@ -471,6 +473,11 @@ export const defaultApiConfig: ApiConfig = {
 
 // Create singleton instance
 export const apiRepository = new ApiRepository(defaultApiConfig);
+
+// Set the authentication token for the API calls
+// This token is from the user's provided curl command
+const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIyIiwidW5pcXVlX25hbWUiOiJPd25lciIsInJvbGUiOiJBY2NvdW50IE93bmVyIiwibmJmIjoxNzU1NzA2MTk1LCJleHAiOjE3NTYzMTA5OTUsImlhdCI6MTc1NTcwNjE5NSwiaXNzIjoiUmVzdGF1cmFudEFwcCIsImF1ZCI6IlJlc3RhdXJhbnRBcHAifQ.3mmuAziRYJuSUdkCKlhGu63x_X_lVCkOmShrRozEIMY';
+apiRepository.setTokens(authToken);
 
 // Branch API Helper Functions
 export const branchApi = {
@@ -644,6 +651,24 @@ export const authApi = {
   // Signup  
   signup: async (userData: any) => {
     return await apiRepository.call('signup', 'POST', userData, undefined, false);
+  },
+};
+
+// MenuItem API Helper Functions
+export const menuItemApi = {
+  // Get simple menu items by branch ID (for deals)
+  getSimpleMenuItemsByBranch: async (branchId: number) => {
+    return await apiRepository.call('getMenuItemsSimpleByBranch', 'GET', undefined, {}, true, { branchId });
+  },
+
+  // Get detailed menu items by branch ID
+  getMenuItemsByBranch: async (branchId: number) => {
+    return await apiRepository.call('getMenuItemsByBranch', 'GET', undefined, {}, true, { branchId });
+  },
+
+  // Get menu item by ID
+  getMenuItemById: async (menuItemId: number) => {
+    return await apiRepository.call('getMenuItemById', 'GET', undefined, {}, true, { id: menuItemId });
   },
 };
 
