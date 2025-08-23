@@ -52,6 +52,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [image, setImage] = useState<string>("");
+  const [originalImage, setOriginalImage] = useState<string>(""); // Track original image for comparison
   const [addOns, setAddOns] = useState<AddOn[]>([{ name: "", price: 0 }]);
   const [customizations, setCustomizations] = useState<Customization[]>([{ name: "", options: [""] }]);
   const [variants, setVariants] = useState<Variant[]>([{ option: "", price: 0 }]);
@@ -138,6 +139,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
       // Set image if available
       if (menuItemData.menuItemPicture) {
         setImage(menuItemData.menuItemPicture);
+        setOriginalImage(menuItemData.menuItemPicture); // Store original for comparison
       }
       
       // Set variants (convert to local format)
@@ -187,12 +189,51 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
       setCustomizations([{ name: "", options: [""] }]);
       setVariants([{ option: "", price: 0 }]);
       setImage("");
+      setOriginalImage("");
       setShowAddOns(true);
       setShowCustomizations(true);
     },
     onError: (error: any) => {
       toast({
         title: "Error adding menu item",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMenuItemMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRepository.call(
+        'updateMenuItem',
+        'PUT',
+        data,
+        undefined,
+        true,
+        { id: editMenuItem!.id }
+      );
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`menu-items-branch-${branchId}`] });
+      queryClient.invalidateQueries({ queryKey: [`menu-item-${editMenuItem!.id}`] });
+      toast({ title: "Menu item updated successfully" });
+      onClose();
+      form.reset();
+      setAddOns([{ name: "", price: 0 }]);
+      setCustomizations([{ name: "", options: [""] }]);
+      setVariants([{ option: "", price: 0 }]);
+      setImage("");
+      setOriginalImage("");
+      setShowAddOns(true);
+      setShowCustomizations(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating menu item",
         description: error.message || "Something went wrong",
         variant: "destructive",
       });
@@ -321,13 +362,18 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
   };
 
   const onSubmit = (data: AddMenuFormData) => {
+    // Determine if image has changed (for update mode)
+    const imageChanged = isEditMode && image !== originalImage;
+    const imageData = isEditMode ? (imageChanged ? image : "") : image || "";
+
     // Prepare API payload according to the real API structure
     const menuItemData = {
       menuCategoryId: data.categoryId,
       name: data.name,
       description: data.description || "",
+      isActive: true, // Required field for update
       preparationTime: data.preparationTime,
-      menuItemPicture: image || "", // Base64 image data
+      MenuItemPicture: imageData, // Use capital M as per API spec
       variants: variants
         .filter(variant => variant.option.trim())
         .map(variant => ({
@@ -354,7 +400,44 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
         : []
     };
 
-    createMenuItemMutation.mutate(menuItemData);
+    // Use appropriate mutation based on mode
+    if (isEditMode) {
+      updateMenuItemMutation.mutate(menuItemData);
+    } else {
+      // For create mode, use different field name for image and exclude update-specific fields
+      const createData = {
+        menuCategoryId: data.categoryId,
+        name: data.name,
+        description: data.description || "",
+        preparationTime: data.preparationTime,
+        menuItemPicture: imageData, // lowercase for create
+        variants: variants
+          .filter(variant => variant.option.trim())
+          .map(variant => ({
+            name: variant.option,
+            price: variant.price
+          })),
+        modifiers: showAddOns 
+          ? addOns
+            .filter(addon => addon.name.trim())
+            .map(addon => ({
+              name: addon.name,
+              price: addon.price
+            }))
+          : [],
+        customizations: showCustomizations
+          ? customizations
+            .filter(cust => cust.name.trim() && cust.options.some(opt => opt.trim()))
+            .map(cust => ({
+              name: cust.name,
+              options: cust.options
+                .filter(opt => opt.trim())
+                .map(opt => ({ name: opt }))
+            }))
+          : []
+      };
+      createMenuItemMutation.mutate(createData);
+    }
   };
 
   return (
@@ -722,10 +805,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
             <Button
               type="submit"
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg"
-              disabled={createMenuItemMutation.isPending || (isEditMode && isLoadingMenuItem)}
+              disabled={createMenuItemMutation.isPending || updateMenuItemMutation.isPending || (isEditMode && isLoadingMenuItem)}
               data-testid="button-add-menu-item"
             >
-              {createMenuItemMutation.isPending 
+              {(createMenuItemMutation.isPending || updateMenuItemMutation.isPending)
                 ? (isEditMode ? "Updating..." : "Adding...") 
                 : (isEditMode ? "Update Menu Item" : "Add")
               }
