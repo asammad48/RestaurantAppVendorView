@@ -729,9 +729,22 @@ export const dealsApi = {
     return await apiRepository.get(endpoint);
   },
 
-  // Get deal by ID
+  // Get deal by ID (using Generic API repository)
   getDealById: async (dealId: number) => {
-    return await apiRepository.call('getDealById', 'GET', undefined, {}, true, { id: dealId });
+    const response = await apiRepository.call<Deal>(
+      'getDealById',
+      'GET',
+      undefined,
+      {},
+      true,
+      { id: dealId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
   },
 
   // Update deal

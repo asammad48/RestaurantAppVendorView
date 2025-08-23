@@ -1264,7 +1264,7 @@ export default function Orders() {
           }}
           restaurantId="1"
           branchId={3}
-          editDeal={selectedDeal}
+          editDealId={selectedDeal.id}
         />
       )}
 

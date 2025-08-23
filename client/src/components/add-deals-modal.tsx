@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { insertDealSchema, type InsertDeal, type SimpleMenuItem, type DealMenuItem } from "@/types/schema";
+import { insertDealSchema, type InsertDeal, type SimpleMenuItem, type DealMenuItem, type Deal } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { menuItemApi, dealsApi } from "@/lib/apiRepository";
@@ -20,7 +20,7 @@ interface AddDealsModalProps {
   onOpenChange: (open: boolean) => void;
   restaurantId?: string;
   branchId?: number;
-  editDeal?: any;
+  editDealId?: number; // Changed from editDeal to editDealId
 }
 
 interface DealItem {
@@ -29,7 +29,7 @@ interface DealItem {
   quantity: number;
 }
 
-export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId = 3, editDeal }: AddDealsModalProps) {
+export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId = 3, editDealId }: AddDealsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<DealItem[]>([]);
   const queryClient = useQueryClient();
@@ -47,18 +47,80 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     enabled: open && !!branchId,
   });
 
+  // Fetch deal data when editing
+  const { data: dealData, isLoading: isDealLoading } = useQuery({
+    queryKey: ['deal', editDealId],
+    queryFn: async (): Promise<Deal> => {
+      if (!editDealId) throw new Error('Deal ID is required');
+      const response = await dealsApi.getDealById(editDealId);
+      return response;
+    },
+    enabled: open && !!editDealId,
+  });
+
+  const isEditMode = !!editDealId;
+
   const form = useForm<InsertDeal>({
     resolver: zodResolver(insertDealSchema),
     defaultValues: {
       branchId: branchId,
-      name: editDeal?.name || "",
-      description: editDeal?.description || "",
-      price: editDeal?.price || 0,
-      packagePicture: editDeal?.packagePicture || "",
-      expiryDate: editDeal?.expiryDate || "",
-      menuItems: editDeal?.menuItems || [],
+      name: "",
+      description: "",
+      price: 0,
+      packagePicture: "",
+      expiryDate: "",
+      menuItems: [],
     },
   });
+
+  // Effect to populate form when editing and deal data is loaded
+  useEffect(() => {
+    if (isEditMode && dealData && !isDealLoading) {
+      // Populate form with API data
+      form.reset({
+        branchId: dealData.branchId,
+        name: dealData.name || "",
+        description: dealData.description || "",
+        price: dealData.price ? dealData.price / 100 : 0, // Convert cents to rupees
+        packagePicture: dealData.packagePicture || "",
+        expiryDate: dealData.expiryDate ? dealData.expiryDate.split('T')[0] : "", // Format date for input
+        menuItems: dealData.menuItems?.map(item => ({
+          menuItemId: item.menuItemId,
+          quantity: item.quantity
+        })) || [],
+      });
+      
+      // Set image if available
+      if (dealData.packagePicture) {
+        // For editing, we don't set selectedFile since it's an existing image
+        // The packagePicture field contains the image path/base64
+      }
+      
+      // Set selected items (convert to local format for UI)
+      if (dealData.menuItems && dealData.menuItems.length > 0) {
+        setSelectedItems(dealData.menuItems.map(item => ({
+          menuItemId: item.menuItemId,
+          menuItemName: item.menuItemName,
+          quantity: item.quantity
+        })));
+      } else {
+        setSelectedItems([]);
+      }
+    } else if (!isEditMode) {
+      // Reset form for add mode
+      form.reset({
+        branchId: branchId,
+        name: "",
+        description: "",
+        price: 0,
+        packagePicture: "",
+        expiryDate: "",
+        menuItems: [],
+      });
+      setSelectedItems([]);
+      setSelectedFile(null);
+    }
+  }, [isEditMode, dealData, isDealLoading, form, branchId]);
 
   const createDealMutation = useMutation({
     mutationFn: async (data: InsertDeal) => {
@@ -70,9 +132,10 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
+      queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
       toast({
         title: "Success",
-        description: editDeal ? "Deal updated successfully" : "Deal created successfully",
+        description: isEditMode ? "Deal updated successfully" : "Deal created successfully",
       });
       form.reset();
       setSelectedFile(null);
@@ -153,8 +216,14 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6 bg-white rounded-lg max-h-[85vh] overflow-y-auto">
         <DialogTitle className="text-xl font-semibold text-gray-900 mb-6">
-          {editDeal ? 'Edit Deal' : 'Add Deal'}
+          {isEditMode ? 'Edit Deal' : 'Add Deal'}
         </DialogTitle>
+
+        {isDealLoading && isEditMode && (
+          <div className="text-center py-4">
+            <div className="text-gray-600">Loading deal data...</div>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -323,7 +392,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                 disabled={createDealMutation.isPending || selectedItems.length === 0}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
               >
-                {createDealMutation.isPending ? (editDeal ? "Updating..." : "Creating...") : (editDeal ? "Update Deal" : "Create Deal")}
+                {createDealMutation.isPending ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Deal" : "Create Deal")}
               </Button>
             </div>
           </form>
