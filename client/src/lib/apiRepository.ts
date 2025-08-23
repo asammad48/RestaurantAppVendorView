@@ -386,6 +386,10 @@ export const API_ENDPOINTS = {
   MENU_ITEMS_SIMPLE_BY_BRANCH: '/api/MenuItem/branch/{branchId}/simple',
   MENU_ITEM_BY_ID: '/api/MenuItem/{id}',
 
+  // Deals endpoints
+  DEALS: '/api/Deals',
+  DEAL_BY_ID: '/api/Deals/{id}',
+  
   // Other endpoints
   ANALYTICS: '/api/analytics',
   FEEDBACKS: '/api/feedbacks',
@@ -464,6 +468,13 @@ export const defaultApiConfig: ApiConfig = {
     updateMenuItem: API_ENDPOINTS.UPDATE_MENU_ITEM,
     deleteMenuItem: API_ENDPOINTS.DELETE_MENU_ITEM,
 
+    // Deals endpoints
+    getDeals: API_ENDPOINTS.DEALS,
+    createDeal: API_ENDPOINTS.DEALS,
+    getDealById: API_ENDPOINTS.DEAL_BY_ID,
+    updateDeal: API_ENDPOINTS.DEAL_BY_ID,
+    deleteDeal: API_ENDPOINTS.DEAL_BY_ID,
+    
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,
     getFeedbacks: API_ENDPOINTS.FEEDBACKS,
@@ -669,6 +680,34 @@ export const menuItemApi = {
   // Get menu item by ID
   getMenuItemById: async (menuItemId: number) => {
     return await apiRepository.call('getMenuItemById', 'GET', undefined, {}, true, { id: menuItemId });
+  },
+};
+
+// Deals API Helper Functions
+export const dealsApi = {
+  // Create a new deal
+  createDeal: async (dealData: any) => {
+    return await apiRepository.call('createDeal', 'POST', dealData);
+  },
+
+  // Get all deals
+  getDeals: async () => {
+    return await apiRepository.call('getDeals', 'GET');
+  },
+
+  // Get deal by ID
+  getDealById: async (dealId: number) => {
+    return await apiRepository.call('getDealById', 'GET', undefined, {}, true, { id: dealId });
+  },
+
+  // Update deal
+  updateDeal: async (dealId: number, dealData: any) => {
+    return await apiRepository.call('updateDeal', 'PUT', dealData, {}, true, { id: dealId });
+  },
+
+  // Delete deal
+  deleteDeal: async (dealId: number) => {
+    return await apiRepository.call('deleteDeal', 'DELETE', undefined, {}, true, { id: dealId });
   },
 };
 

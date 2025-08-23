@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { insertDealSchema, type InsertDeal, type SimpleMenuItem } from "@/types/schema";
+import { insertDealSchema, type InsertDeal, type SimpleMenuItem, type DealMenuItem } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { menuItemApi } from "@/lib/apiRepository";
+import { menuItemApi, dealsApi } from "@/lib/apiRepository";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddDealsModalProps {
@@ -24,8 +24,8 @@ interface AddDealsModalProps {
 }
 
 interface DealItem {
-  itemId: number;
-  name: string;
+  menuItemId: number;
+  menuItemName: string;
   quantity: number;
 }
 
@@ -49,34 +49,30 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
   const form = useForm<InsertDeal>({
     resolver: zodResolver(insertDealSchema),
-    defaultValues: editDeal ? {
-      name: editDeal.name || "",
-      items: editDeal.items || [],
-      dealPrice: editDeal.price ? parseFloat(editDeal.price.replace('$', '')) * 100 : 0,
-      image: editDeal.image || "",
-      expiryTime: editDeal.expiryTime || undefined,
-      restaurantId: restaurantId || undefined,
-      status: editDeal.status || "active",
-    } : {
-      name: "",
-      items: [],
-      dealPrice: 0,
-      image: "",
-      expiryTime: undefined,
-      restaurantId: restaurantId || undefined,
-      status: "active",
+    defaultValues: {
+      branchId: branchId,
+      name: editDeal?.name || "",
+      description: editDeal?.description || "",
+      price: editDeal?.price || 0,
+      packagePicture: editDeal?.packagePicture || "",
+      expiryDate: editDeal?.expiryDate || "",
+      menuItems: editDeal?.menuItems || [],
     },
   });
 
   const createDealMutation = useMutation({
     mutationFn: async (data: InsertDeal) => {
-      return await apiRequest("POST", "/api/deals", data);
+      const response = await dealsApi.createDeal(data);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast({
         title: "Success",
-        description: "Deal added successfully",
+        description: editDeal ? "Deal updated successfully" : "Deal created successfully",
       });
       form.reset();
       setSelectedFile(null);
@@ -86,7 +82,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add deal",
+        description: error.message || "Failed to save deal",
         variant: "destructive",
       });
     },
@@ -94,36 +90,47 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
   const handleItemToggle = (item: SimpleMenuItem) => {
     setSelectedItems(prev => {
-      const exists = prev.find(i => i.itemId === item.menuItemId);
+      const exists = prev.find(i => i.menuItemId === item.menuItemId);
       if (exists) {
-        return prev.filter(i => i.itemId !== item.menuItemId);
+        return prev.filter(i => i.menuItemId !== item.menuItemId);
       } else {
-        return [...prev, { itemId: item.menuItemId, name: item.menuItemName, quantity: 1 }];
+        return [...prev, { menuItemId: item.menuItemId, menuItemName: item.menuItemName, quantity: 1 }];
       }
     });
   };
 
-  const handleQuantityChange = (itemId: number, quantity: number) => {
+  const handleQuantityChange = (menuItemId: number, quantity: number) => {
     setSelectedItems(prev => 
       prev.map(item => 
-        item.itemId === itemId ? { ...item, quantity } : item
+        item.menuItemId === menuItemId ? { ...item, quantity } : item
       )
     );
   };
 
   const onSubmit = (data: InsertDeal) => {
-    const itemsData = selectedItems.map(item => JSON.stringify(item));
-    createDealMutation.mutate({
+    // Convert selected items to the format expected by the API
+    const menuItems = selectedItems.map(item => ({
+      menuItemId: item.menuItemId,
+      quantity: item.quantity
+    }));
+
+    const dealData = {
       ...data,
-      items: itemsData,
-    });
+      menuItems,
+      // Convert price to cents if needed (API expects price in cents)
+      price: Math.round(data.price * 100),
+      packagePicture: selectedFile ? "base64/image" : "",
+      expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : undefined,
+    };
+
+    createDealMutation.mutate(dealData);
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      form.setValue("image", `deal_${file.name}`);
+      form.setValue("packagePicture", `deal_${file.name}`);
     }
   };
 
@@ -154,6 +161,24 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">Description</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter deal description"
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">
                 Select Items for Deal
@@ -172,22 +197,27 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                     <div key={item.menuItemId} className="flex items-center justify-between p-2 border rounded">
                       <div className="flex items-center space-x-3">
                         <Checkbox
-                          checked={selectedItems.some(i => i.itemId === item.menuItemId)}
+                          checked={selectedItems.some(i => i.menuItemId === item.menuItemId)}
                           onCheckedChange={() => handleItemToggle(item)}
                         />
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{item.menuItemName}</p>
-                          <p className="text-sm text-gray-500">Available for deals</p>
+                          <p className="text-sm text-gray-500">Menu Item ID: {item.menuItemId}</p>
+                          {selectedItems.some(i => i.menuItemId === item.menuItemId) && (
+                            <p className="text-sm text-blue-600 font-medium">
+                              Quantity: {selectedItems.find(i => i.menuItemId === item.menuItemId)?.quantity || 1}
+                            </p>
+                          )}
                         </div>
                       </div>
                       
-                      {selectedItems.some(i => i.itemId === item.menuItemId) && (
+                      {selectedItems.some(i => i.menuItemId === item.menuItemId) && (
                         <div className="flex items-center space-x-2">
                           <Label className="text-sm">Qty:</Label>
                           <Input
                             type="number"
                             min="1"
-                            value={selectedItems.find(i => i.itemId === item.menuItemId)?.quantity || 1}
+                            value={selectedItems.find(i => i.menuItemId === item.menuItemId)?.quantity || 1}
                             onChange={(e) => handleQuantityChange(item.menuItemId, parseInt(e.target.value) || 1)}
                             className="w-16 text-center"
                           />
@@ -202,7 +232,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="dealPrice"
+                name="price"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-gray-700">Deal Price ($)</FormLabel>
@@ -224,7 +254,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
               <FormField
                 control={form.control}
-                name="expiryTime"
+                name="expiryDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-gray-700">Expiry Date & Time</FormLabel>
@@ -233,7 +263,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                         type="datetime-local"
                         {...field}
                         value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                        onChange={(e) => field.onChange(e.target.value || "")}
                         className="w-full"
                       />
                     </FormControl>
@@ -243,27 +273,6 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <div>
               <Label className="text-sm font-medium text-gray-700">Deal Image</Label>
@@ -299,7 +308,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                 disabled={createDealMutation.isPending || selectedItems.length === 0}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
               >
-                {createDealMutation.isPending ? "Adding..." : "Add Deal"}
+                {createDealMutation.isPending ? (editDeal ? "Updating..." : "Creating...") : (editDeal ? "Update Deal" : "Create Deal")}
               </Button>
             </div>
           </form>

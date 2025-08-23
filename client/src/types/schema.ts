@@ -174,20 +174,42 @@ export interface SimpleMenuItem {
   menuItemName: string;
 }
 
-// Deal types
+// Deal types (matching API structure)
+export interface DealMenuItem {
+  menuItemId: number;
+  quantity: number;
+}
+
+export interface Deal {
+  id: number;
+  branchId: number;
+  name: string;
+  description: string;
+  price: number;
+  packagePicture: string;
+  expiryDate: string;
+  isActive: boolean;
+  menuItems: Array<{
+    menuItemId: number;
+    menuItemName: string;
+    quantity: number;
+  }>;
+}
+
 export const insertDealSchema = z.object({
+  branchId: z.number().min(1, "Branch ID is required"),
   name: z.string().min(1, "Deal name is required"),
-  description: z.string().optional(),
-  items: z.array(z.string()).optional(), // Array of stringified items
-  dealPrice: z.number().min(0),
-  status: z.string().default("active"),
-  expiryTime: z.date().optional(),
-  image: z.string().optional(),
-  restaurantId: z.string().optional(),
+  description: z.string().min(1, "Description is required"),
+  price: z.number().min(0, "Price must be positive"),
+  packagePicture: z.string().optional(),
+  expiryDate: z.string().optional(),
+  menuItems: z.array(z.object({
+    menuItemId: z.number(),
+    quantity: z.number().min(1),
+  })).min(1, "At least one menu item is required"),
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;
-export type Deal = InsertDeal & { id: string; createdAt: Date; };
 
 // Ticket types
 export const insertTicketSchema = z.object({
