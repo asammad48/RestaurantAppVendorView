@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertDiscountSchema, type InsertDiscount, type Discount } from "@/types/schema";
+import { insertDiscountSchema, type InsertDiscount, type Discount, DISCOUNT_TYPES, getDiscountTypeLabel } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { discountsApi } from "@/lib/apiRepository";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +35,7 @@ export default function AddDiscountModal({
     queryFn: async (): Promise<Discount> => {
       if (!editDiscountId) throw new Error('Discount ID is required');
       const response = await discountsApi.getDiscountById(editDiscountId);
-      return response;
+      return response as Discount;
     },
     enabled: open && !!editDiscountId,
   });
@@ -46,7 +46,7 @@ export default function AddDiscountModal({
     resolver: zodResolver(insertDiscountSchema),
     defaultValues: {
       name: "",
-      discountType: "Flat",
+      discountType: DISCOUNT_TYPES.FLAT,
       discountValue: 0,
       maxDiscountAmount: 0,
       startDate: "",
@@ -60,7 +60,7 @@ export default function AddDiscountModal({
       // Populate form with API data
       form.reset({
         name: discountData.name || "",
-        discountType: discountData.discountType || "Flat",
+        discountType: discountData.discountType || DISCOUNT_TYPES.FLAT,
         discountValue: discountData.discountValue || 0,
         maxDiscountAmount: discountData.maxDiscountAmount || 0,
         startDate: discountData.startDate ? discountData.startDate.split('T')[0] : "", // Format date for input
@@ -70,7 +70,7 @@ export default function AddDiscountModal({
       // Reset form for new discount
       form.reset({
         name: "",
-        discountType: "Flat",
+        discountType: DISCOUNT_TYPES.FLAT,
         discountValue: 0,
         maxDiscountAmount: 0,
         startDate: "",
@@ -84,27 +84,26 @@ export default function AddDiscountModal({
       if (isEditMode && editDiscountId) {
         // Update existing discount
         const discountData = {
+          branchId: branchId,
           name: data.name,
           discountType: data.discountType,
           discountValue: data.discountValue,
-          maxDiscountAmount: data.maxDiscountAmount,
+          maxDiscountAmount: data.maxDiscountAmount || 0,
           startDate: new Date(data.startDate).toISOString(),
           endDate: new Date(data.endDate).toISOString(),
-          isActive: true,
         };
         const response = await discountsApi.updateDiscount(editDiscountId, discountData);
         return response;
       } else {
         // Create new discount
         const discountData = {
+          branchId: branchId,
           name: data.name,
           discountType: data.discountType,
           discountValue: data.discountValue,
-          maxDiscountAmount: data.maxDiscountAmount,
+          maxDiscountAmount: data.maxDiscountAmount || 0,
           startDate: new Date(data.startDate).toISOString(),
           endDate: new Date(data.endDate).toISOString(),
-          isActive: true,
-          branchId: branchId,
         };
         const response = await discountsApi.createDiscount(discountData);
         if (response.error) {
@@ -185,15 +184,22 @@ export default function AddDiscountModal({
                   <FormLabel className="text-sm font-medium text-gray-700">
                     Discount Type *
                   </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    value={field.value?.toString()}
+                  >
                     <FormControl>
                       <SelectTrigger data-testid="select-discount-type">
                         <SelectValue placeholder="Select discount type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Flat">Flat</SelectItem>
-                      <SelectItem value="Percentage">Percentage</SelectItem>
+                      <SelectItem value={DISCOUNT_TYPES.FLAT.toString()}>
+                        {getDiscountTypeLabel(DISCOUNT_TYPES.FLAT)}
+                      </SelectItem>
+                      <SelectItem value={DISCOUNT_TYPES.PERCENTAGE.toString()}>
+                        {getDiscountTypeLabel(DISCOUNT_TYPES.PERCENTAGE)}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

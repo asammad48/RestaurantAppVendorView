@@ -393,6 +393,11 @@ export const API_ENDPOINTS = {
   DEAL_BY_ID: '/api/Deals/{id}',
   DEALS_BY_BRANCH: '/api/Deals/branch/{branchId}',
   
+  // Discount endpoints
+  DISCOUNTS: '/api/Discount',
+  DISCOUNT_BY_ID: '/api/Discount/{id}',
+  DISCOUNTS_BY_BRANCH: '/api/Discount/branch/{branchId}',
+  
   // Other endpoints
   ANALYTICS: '/api/analytics',
   FEEDBACKS: '/api/feedbacks',
@@ -478,6 +483,14 @@ export const defaultApiConfig: ApiConfig = {
     updateDeal: API_ENDPOINTS.DEAL_BY_ID,
     deleteDeal: API_ENDPOINTS.DEAL_BY_ID,
     getDealsByBranch: API_ENDPOINTS.DEALS_BY_BRANCH,
+    
+    // Discount endpoints
+    getDiscounts: API_ENDPOINTS.DISCOUNTS,
+    createDiscount: API_ENDPOINTS.DISCOUNTS,
+    getDiscountById: API_ENDPOINTS.DISCOUNT_BY_ID,
+    updateDiscount: API_ENDPOINTS.DISCOUNT_BY_ID,
+    deleteDiscount: API_ENDPOINTS.DISCOUNT_BY_ID,
+    getDiscountsByBranch: API_ENDPOINTS.DISCOUNTS_BY_BRANCH,
     
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,
@@ -784,95 +797,67 @@ export const dealsApi = {
   },
 };
 
-// Discount API endpoints using Generic API repository  
+// Discount API endpoints using Generic API repository with new pagination format
 export const discountsApi = {
-  // Get discounts by branch with pagination
-  getDiscountsByBranch: async (branchId: number, page: number = 1, pageSize: number = 10) => {
-    const response = await apiRepository.call<any>(
-      'getDiscountsByBranch',
-      'GET',
-      undefined,
-      { page: page.toString(), pageSize: pageSize.toString() },
-      true,
-      { branchId }
-    );
-    
-    if (response.error) {
-      throw new Error(response.error);
+  // Get discounts by branch with pagination (matching new API format)
+  getDiscountsByBranch: async (branchId: number, queryParams?: { 
+    PageNumber?: number; 
+    PageSize?: number; 
+    SortBy?: string; 
+    IsAscending?: boolean; 
+    SearchTerm?: string; 
+  }) => {
+    const params = new URLSearchParams({
+      PageNumber: (queryParams?.PageNumber || 1).toString(),
+      PageSize: (queryParams?.PageSize || 10).toString(),
+    });
+
+    if (queryParams?.SortBy) {
+      params.append('SortBy', queryParams.SortBy);
     }
     
-    return response.data;
+    if (queryParams?.IsAscending !== undefined) {
+      params.append('IsAscending', queryParams.IsAscending.toString());
+    }
+    
+    if (queryParams?.SearchTerm) {
+      params.append('SearchTerm', queryParams.SearchTerm);
+    }
+
+    // For query parameters, modify the endpoint temporarily
+    const originalEndpoint = apiRepository.getConfig().endpoints['getDiscountsByBranch'];
+    apiRepository.updateEndpoint('getDiscountsByBranch', `${originalEndpoint}?${params.toString()}`);
+    
+    const response = await apiRepository.call('getDiscountsByBranch', 'GET', undefined, {}, true, { branchId });
+    
+    // Restore original endpoint
+    apiRepository.updateEndpoint('getDiscountsByBranch', originalEndpoint);
+    
+    return response;
   },
 
   // Get discount by ID
   getDiscountById: async (discountId: number) => {
-    const response = await apiRepository.call<any>(
-      'getDiscountById',
-      'GET',
-      undefined,
-      {},
-      true,
-      { id: discountId }
-    );
-    
-    if (response.error) {
-      throw new Error(response.error);
-    }
-    
+    const response = await apiRepository.call('getDiscountById', 'GET', undefined, {}, true, { id: discountId });
     return response.data;
   },
 
   // Create discount
   createDiscount: async (discountData: any) => {
-    const response = await apiRepository.call<any>(
-      'createDiscount',
-      'POST',
-      discountData,
-      {},
-      true
-    );
-    
-    if (response.error) {
-      throw new Error(response.error);
-    }
-    
-    return response.data;
+    const response = await apiRepository.call('createDiscount', 'POST', discountData, {}, true);
+    return response;
   },
 
   // Update discount
   updateDiscount: async (discountId: number, discountData: any) => {
-    const response = await apiRepository.call<void>(
-      'updateDiscount',
-      'PUT',
-      discountData,
-      {},
-      true,
-      { id: discountId }
-    );
-    
-    if (response.error) {
-      throw new Error(response.error);
-    }
-    
-    return response.data;
+    const response = await apiRepository.call('updateDiscount', 'PUT', discountData, {}, true, { id: discountId });
+    return response;
   },
 
   // Delete discount
   deleteDiscount: async (discountId: number) => {
-    const response = await apiRepository.call<void>(
-      'deleteDiscount',
-      'DELETE',
-      undefined,
-      {},
-      true,
-      { id: discountId }
-    );
-    
-    if (response.error) {
-      throw new Error(response.error);
-    }
-    
-    return response.data;
+    const response = await apiRepository.call('deleteDiscount', 'DELETE', undefined, {}, true, { id: discountId });
+    return response;
   },
 };
 

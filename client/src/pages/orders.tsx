@@ -196,6 +196,7 @@ export default function Orders() {
   const [categoryItemsPerPage] = useState(6);
   const [dealsItemsPerPage, setDealsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [discountsItemsPerPage, setDiscountsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
+  const [discountsSearchTerm, setDiscountsSearchTerm] = useState("");
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
@@ -411,12 +412,13 @@ export default function Orders() {
     setShowDeleteModal(true);
   };
 
-  const handleEditDiscount = (discount: any) => {
+  // Discount handlers
+  const handleEditDiscount = (discount: Discount) => {
     setSelectedDiscount(discount);
     setShowEditDiscountModal(true);
   };
 
-  const handleDeleteDiscount = (discount: any) => {
+  const handleDeleteDiscount = (discount: Discount) => {
     setDeleteItem({ type: 'discount', id: discount.id, name: discount.name });
     setShowDeleteModal(true);
   };
@@ -472,12 +474,23 @@ export default function Orders() {
   const dealsHasNext = dealsResponse?.hasNext || false;
   const dealsHasPrevious = dealsResponse?.hasPrevious || false;
 
-  // Fetch discounts with pagination using Generic API repository
-  const { data: discountsResponse, isLoading: discountsLoading, refetch: refetchDiscounts } = useQuery({
-    queryKey: [`discounts-branch-3`, discountsCurrentPage, discountsItemsPerPage],
+  // Fetch discounts with pagination using Generic API repository  
+  const { data: discountsResponse, isLoading: discountsLoading, refetch: refetchDiscounts } = useQuery<PaginationResponse<Discount>>({
+    queryKey: [`discounts-branch-3`, discountsCurrentPage, discountsItemsPerPage, discountsSearchTerm],
     queryFn: async () => {
-      const response = await discountsApi.getDiscountsByBranch(3, discountsCurrentPage, discountsItemsPerPage);
-      return response;
+      const response = await discountsApi.getDiscountsByBranch(3, {
+        PageNumber: discountsCurrentPage,
+        PageSize: discountsItemsPerPage,
+        SortBy: 'name',
+        IsAscending: true,
+        ...(discountsSearchTerm && { SearchTerm: discountsSearchTerm })
+      });
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data as PaginationResponse<Discount>;
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
@@ -1280,12 +1293,12 @@ export default function Orders() {
                           {discount.name}
                         </TableCell>
                         <TableCell data-testid={`discount-type-${discount.id}`}>
-                          <Badge className={discount.discountType === 'Percentage' ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"}>
-                            {discount.discountType}
+                          <Badge className={discount.discountType === 2 ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"}>
+                            {discount.discountType === 2 ? 'Percentage' : 'Flat'}
                           </Badge>
                         </TableCell>
                         <TableCell data-testid={`discount-value-${discount.id}`}>
-                          {discount.discountType === 'Percentage' ? `${discount.discountValue}%` : `$${discount.discountValue}`}
+                          {discount.discountType === 2 ? `${discount.discountValue}%` : `$${discount.discountValue}`}
                         </TableCell>
                         <TableCell data-testid={`discount-max-amount-${discount.id}`}>
                           {discount.maxDiscountAmount ? `$${discount.maxDiscountAmount}` : 'No limit'}

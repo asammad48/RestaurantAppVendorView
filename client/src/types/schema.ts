@@ -196,12 +196,10 @@ export interface Deal {
   }>;
 }
 
-// Discount types
+// Discount types (matching new API format)
 export const insertDiscountSchema = z.object({
   name: z.string().min(1, "Discount name is required"),
-  discountType: z.enum(["Flat", "Percentage"], {
-    required_error: "Please select discount type"
-  }),
+  discountType: z.number().min(1).max(2, "Please select a valid discount type"),
   discountValue: z.number().min(0, "Discount value must be positive"),
   maxDiscountAmount: z.number().min(0, "Max discount amount must be positive").optional(),
   startDate: z.string().min(1, "Start date is required"),
@@ -212,15 +210,32 @@ export type InsertDiscount = z.infer<typeof insertDiscountSchema>;
 
 export interface Discount {
   id: number;
+  branchId: number;
   name: string;
-  discountType: "Flat" | "Percentage";
+  discountType: number; // 1 = Flat, 2 = Percentage  
   discountValue: number;
-  maxDiscountAmount?: number;
+  maxDiscountAmount: number;
   startDate: string;
   endDate: string;
   isActive: boolean;
-  branchId: number;
 }
+
+// Helper functions for discount type conversion
+export const DISCOUNT_TYPES = {
+  FLAT: 1,
+  PERCENTAGE: 2,
+} as const;
+
+export const getDiscountTypeLabel = (type: number): string => {
+  switch (type) {
+    case DISCOUNT_TYPES.FLAT:
+      return "Flat";
+    case DISCOUNT_TYPES.PERCENTAGE:
+      return "Percentage";
+    default:
+      return "Unknown";
+  }
+};
 
 export const insertDealSchema = z.object({
   branchId: z.number().min(1, "Branch ID is required"),
