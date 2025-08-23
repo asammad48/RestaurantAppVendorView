@@ -847,21 +847,36 @@ export const discountsApi = {
     return response.data;
   },
 
-  // Create discount
+  // Create discount using Generic API repository
   createDiscount: async (discountData: any) => {
     const response = await apiRepository.call('createDiscount', 'POST', discountData, {}, true);
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
     return response;
   },
 
-  // Update discount
+  // Update discount using Generic API repository
   updateDiscount: async (discountId: number, discountData: any) => {
     const response = await apiRepository.call('updateDiscount', 'PUT', discountData, {}, true, { id: discountId });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
     return response;
   },
 
-  // Delete discount
+  // Delete discount using Generic API repository
   deleteDiscount: async (discountId: number) => {
     const response = await apiRepository.call('deleteDiscount', 'DELETE', undefined, {}, true, { id: discountId });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
     return response;
   },
 };

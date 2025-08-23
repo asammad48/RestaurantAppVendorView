@@ -82,20 +82,20 @@ export default function AddDiscountModal({
   const createDiscountMutation = useMutation({
     mutationFn: async (data: InsertDiscount) => {
       if (isEditMode && editDiscountId) {
-        // Update existing discount
+        // Update existing discount - API format matching curl request
         const discountData = {
-          branchId: branchId,
           name: data.name,
           discountType: data.discountType,
           discountValue: data.discountValue,
           maxDiscountAmount: data.maxDiscountAmount || 0,
           startDate: new Date(data.startDate).toISOString(),
           endDate: new Date(data.endDate).toISOString(),
+          isActive: true // Required field as per API
         };
         const response = await discountsApi.updateDiscount(editDiscountId, discountData);
         return response;
       } else {
-        // Create new discount
+        // Create new discount - API format matching curl request
         const discountData = {
           branchId: branchId,
           name: data.name,
@@ -104,12 +104,10 @@ export default function AddDiscountModal({
           maxDiscountAmount: data.maxDiscountAmount || 0,
           startDate: new Date(data.startDate).toISOString(),
           endDate: new Date(data.endDate).toISOString(),
+          isActive: true // Required field as per API
         };
         const response = await discountsApi.createDiscount(discountData);
-        if (response.error) {
-          throw new Error(response.error);
-        }
-        return response.data;
+        return response;
       }
     },
     onSuccess: () => {
