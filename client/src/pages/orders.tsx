@@ -22,7 +22,7 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi, branchApi, dealsApi } from "@/lib/apiRepository";
+import { locationApi, branchApi, dealsApi, apiRepository } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
 import type { MenuItem, MenuCategory, Deal } from "@/types/schema";
@@ -192,7 +192,7 @@ export default function Orders() {
   const [dealsCurrentPage, setDealsCurrentPage] = useState(1);
   const [menuItemsPerPage] = useState(6);
   const [categoryItemsPerPage] = useState(6);
-  const [dealsItemsPerPage] = useState(6);
+  const [dealsItemsPerPage, setDealsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
@@ -1028,30 +1028,36 @@ export default function Orders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredDeals.length === 0 ? (
+                  {dealsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        Loading deals...
+                      </TableCell>
+                    </TableRow>
+                  ) : deals.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8">
                         No deals found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    paginatedDeals.map((deal) => (
+                    deals.map((deal: Deal) => (
                       <TableRow key={deal.id} data-testid={`deal-row-${deal.id}`}>
                         <TableCell className="font-medium" data-testid={`deal-name-${deal.id}`}>
                           {deal.name}
                         </TableCell>
                         <TableCell>
                           <div className="text-sm text-gray-600" data-testid={`deal-items-${deal.id}`}>
-                            {deal.items}
+                            {deal.menuItems?.map(item => `${item.quantity}x ${item.menuItemName}`).join(', ')}
                           </div>
                         </TableCell>
                         <TableCell data-testid={`deal-status-${deal.id}`}>
-                          <Badge className={deal.status === "Active" ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}>
-                            {deal.status}
+                          <Badge className={deal.isActive ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}>
+                            {deal.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`deal-price-${deal.id}`}>
-                          {deal.price}
+                          ${(deal.price / 100).toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
