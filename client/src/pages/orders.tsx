@@ -268,6 +268,7 @@ export default function Orders() {
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'deal' | 'table', id: string, name: string} | null>(null);
+  const [activeMainTab, setActiveMainTab] = useState("orders");
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -307,7 +308,7 @@ export default function Orders() {
 
   // Query for menu items
   // Query for menu items with real API and pagination support using generic API repository
-  const { data: menuItemsResponse, isLoading: isLoadingMenu } = useQuery({
+  const { data: menuItemsResponse, isLoading: isLoadingMenu, refetch: refetchMenuItems } = useQuery({
     queryKey: [`menu-items-branch-3`, menuCurrentPage, menuSearchTerm, menuItemsPerPage],
     queryFn: async () => {
       const response = await apiRepository.call<{
@@ -349,7 +350,7 @@ export default function Orders() {
   const menuHasPrevious = menuItemsResponse?.hasPrevious || false;
 
   // Query for categories with real API and pagination support using generic API repository
-  const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
+  const { data: categoriesResponse, isLoading: isLoadingCategories, refetch: refetchCategories } = useQuery({
     queryKey: [`menu-categories-branch-3`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
     queryFn: async () => {
       const response = await apiRepository.call<{
@@ -465,7 +466,18 @@ export default function Orders() {
       </div>
 
       {/* Navigation Tabs */}
-      <Tabs defaultValue="orders" className="space-y-6">
+      <Tabs 
+        value={activeMainTab} 
+        onValueChange={(value) => {
+          setActiveMainTab(value);
+          // Refresh menu items when switching to menu tab
+          if (value === "menu") {
+            refetchMenuItems();
+            refetchCategories();
+          }
+        }} 
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-5" data-testid="main-tabs">
           <TabsTrigger value="orders" className="bg-gray-100 text-gray-700 data-[state=active]:bg-green-500 data-[state=active]:text-white">
             Orders
