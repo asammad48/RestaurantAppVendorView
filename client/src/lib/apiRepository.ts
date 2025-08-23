@@ -765,9 +765,22 @@ export const dealsApi = {
     return response.data;
   },
 
-  // Delete deal
+  // Delete deal (using Generic API repository)
   deleteDeal: async (dealId: number) => {
-    return await apiRepository.call('deleteDeal', 'DELETE', undefined, {}, true, { id: dealId });
+    const response = await apiRepository.call<void>(
+      'deleteDeal',
+      'DELETE',
+      undefined,
+      {},
+      true,
+      { id: dealId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
   },
 };
 

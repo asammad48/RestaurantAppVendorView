@@ -1384,6 +1384,18 @@ export default function Orders() {
                 console.error('Failed to delete menu item:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
+            } else if (deleteItem.type === 'deal') {
+              // Delete deal using Generic API repository
+              try {
+                await dealsApi.deleteDeal(deleteItem.id);
+                
+                // Refresh the deals list after successful deletion
+                queryClient.invalidateQueries({ queryKey: ['deals'] });
+                queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
+              } catch (error: any) {
+                console.error('Failed to delete deal:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
+              }
             } else {
               // Handle other types if needed
               console.log(`Deleting ${deleteItem.type}: ${deleteItem.name}`);
