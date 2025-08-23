@@ -156,6 +156,9 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
           name: m.name,
           price: m.price
         })));
+        setShowAddOns(true);
+      } else {
+        setShowAddOns(false); // Hide section if no modifiers
       }
       
       // Set customizations (convert to local format)
@@ -164,6 +167,9 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
           name: c.name,
           options: c.options.map(o => o.name)
         })));
+        setShowCustomizations(true);
+      } else {
+        setShowCustomizations(false); // Hide section if no customizations
       }
     }
   }, [isEditMode, menuItemData, form, restaurantId]);

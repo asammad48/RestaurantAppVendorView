@@ -1321,8 +1321,30 @@ export default function Orders() {
                 console.error('Failed to delete category:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
+            } else if (deleteItem.type === 'menu') {
+              // Delete menu item using real API endpoint
+              try {
+                const response = await apiRepository.call(
+                  'deleteMenuItem',
+                  'DELETE',
+                  undefined,
+                  undefined,
+                  true,
+                  { id: deleteItem.id }
+                );
+                
+                if (response.error) {
+                  throw new Error(response.error);
+                }
+                
+                // Refresh the menu items list after successful deletion
+                queryClient.invalidateQueries({ queryKey: [`menu-items-branch-3`] });
+              } catch (error: any) {
+                console.error('Failed to delete menu item:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
+              }
             } else {
-              // Here you would typically call an API to delete the item
+              // Handle other types if needed
               console.log(`Deleting ${deleteItem.type}: ${deleteItem.name}`);
             }
             setShowDeleteModal(false);
