@@ -839,6 +839,11 @@ export const discountsApi = {
   // Get discount by ID
   getDiscountById: async (discountId: number) => {
     const response = await apiRepository.call('getDiscountById', 'GET', undefined, {}, true, { id: discountId });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
     return response.data;
   },
 
