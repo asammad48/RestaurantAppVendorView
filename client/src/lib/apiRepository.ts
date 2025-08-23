@@ -369,7 +369,6 @@ export const API_ENDPOINTS = {
   
   // Menu endpoints
   MENU_ITEMS: '/api/menu-items',
-  MENU_ITEM_BY_ID: '/api/menu-items/{id}',
   
   // Order endpoints
   ORDERS: '/api/orders',
@@ -382,6 +381,7 @@ export const API_ENDPOINTS = {
 
   // MenuItem endpoints
   MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
+  MENU_ITEM_BY_ID: '/api/MenuItem/{id}',
 
   // Other endpoints
   ANALYTICS: '/api/analytics',
@@ -458,6 +458,7 @@ export const defaultApiConfig: ApiConfig = {
 
     // MenuItem endpoints
     getMenuItemsByBranch: API_ENDPOINTS.MENU_ITEMS_BY_BRANCH,
+    getMenuItemById: API_ENDPOINTS.MENU_ITEM_BY_ID,
 
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,

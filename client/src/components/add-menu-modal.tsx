@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -11,17 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ApiRepository } from "@/lib/apiRepository";
-import type { InsertMenuItem, MenuCategory } from "@/types/schema";
-
-// Create apiRepository instance
-const apiRepository = new ApiRepository({
-  baseUrl: "https://5dtrtpzg-7261.inc1.devtunnels.ms",
-  endpoints: {
-    menuCategoryByBranch: "/api/MenuCategory/GetBranchById/{branchId}",
-    menuItemCreate: "/api/MenuItem",
-  },
-});
+import { apiRepository } from "@/lib/apiRepository";
+import type { InsertMenuItem, MenuCategory, MenuItem } from "@/types/schema";
 
 const addMenuSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -53,7 +44,7 @@ interface AddMenuModalProps {
   onClose: () => void;
   restaurantId?: string;
   branchId?: number;
-  editMenuItem?: any; // MenuItem type for edit mode
+  editMenuItem?: MenuItem; // MenuItem type for edit mode
 }
 
 export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId = 3, editMenuItem }: AddMenuModalProps) {
@@ -71,31 +62,109 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
 
   // Fetch categories for dropdown
   const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ["/api/MenuCategory", "GetBranchById", branchId],
+    queryKey: [`menu-categories-branch-${branchId}`],
     queryFn: async () => {
-      const response = await apiRepository.call<MenuCategory[]>(
-        'menuCategoryByBranch',
+      const response = await apiRepository.call<{
+        items: MenuCategory[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        hasNext: boolean;
+      }>(
+        'getMenuCategoriesByBranch',
         'GET',
         undefined,
-        undefined,
+        {
+          PageNumber: '1',
+          PageSize: '100',
+          SortBy: 'name',
+          IsAscending: 'true'
+        },
         true,
         { branchId: branchId }
       );
-      return response.data || [];
+      return response.data?.items || [];
     },
     enabled: !!branchId, // Only fetch when branchId is available
+  });
+
+  // Fetch menu item data for editing
+  const { data: menuItemData, isLoading: isLoadingMenuItem } = useQuery({
+    queryKey: [`menu-item-${editMenuItem?.id}`],
+    queryFn: async () => {
+      const response = await apiRepository.call<MenuItem>(
+        'getMenuItemById',
+        'GET',
+        undefined,
+        {},
+        true,
+        { id: editMenuItem!.id }
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+    enabled: !!editMenuItem?.id && isEditMode, // Only fetch when editing and we have an ID
   });
 
   const form = useForm<AddMenuFormData>({
     resolver: zodResolver(addMenuSchema),
     defaultValues: {
-      name: editMenuItem?.name || "",
-      categoryId: editMenuItem?.categoryId || 0,
-      description: editMenuItem?.description || "",
-      preparationTime: editMenuItem?.preparationTime || 15,
+      name: "",
+      categoryId: 0,
+      description: "",
+      preparationTime: 15,
       restaurantId: restaurantId || "",
     },
   });
+
+  // Effect to populate form when editing
+  useEffect(() => {
+    if (isEditMode && menuItemData) {
+      // Populate form with API data
+      form.reset({
+        name: menuItemData.name || "",
+        categoryId: menuItemData.menuCategoryId || 0,
+        description: menuItemData.description || "",
+        preparationTime: menuItemData.preparationTime || 15,
+        restaurantId: restaurantId || "",
+      });
+      
+      // Set image if available
+      if (menuItemData.menuItemPicture) {
+        setImage(menuItemData.menuItemPicture);
+      }
+      
+      // Set variants (convert to local format)
+      if (menuItemData.variants && menuItemData.variants.length > 0) {
+        setVariants(menuItemData.variants.map(v => ({
+          option: v.name,
+          price: v.price
+        })));
+      }
+      
+      // Set modifiers/addOns (convert to local format)
+      if (menuItemData.modifiers && menuItemData.modifiers.length > 0) {
+        setAddOns(menuItemData.modifiers.map(m => ({
+          name: m.name,
+          price: m.price
+        })));
+      }
+      
+      // Set customizations (convert to local format)
+      if (menuItemData.customizations && menuItemData.customizations.length > 0) {
+        setCustomizations(menuItemData.customizations.map(c => ({
+          name: c.name,
+          options: c.options.map(o => o.name)
+        })));
+      }
+    }
+  }, [isEditMode, menuItemData, form, restaurantId]);
 
   const createMenuItemMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -110,7 +179,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/MenuItem"] });
+      queryClient.invalidateQueries({ queryKey: [`menu-items-branch-${branchId}`] });
       toast({ title: "Menu item added successfully" });
       onClose();
       form.reset();
@@ -295,7 +364,16 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
           <DialogTitle className="text-xl font-semibold">{isEditMode ? 'Edit Menu Item' : 'Add Menu'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Loading state for edit mode */}
+        {isEditMode && isLoadingMenuItem ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Loading menu item data...</p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -315,7 +393,8 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
               <Select 
                 onValueChange={(value) => form.setValue("categoryId", parseInt(value))} 
                 data-testid="select-category"
-                disabled={categoriesLoading}
+                disabled={categoriesLoading || (isEditMode && isLoadingMenuItem)}
+                value={form.watch("categoryId")?.toString() || ""}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select category"} />
@@ -643,7 +722,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
             <Button
               type="submit"
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg"
-              disabled={createMenuItemMutation.isPending}
+              disabled={createMenuItemMutation.isPending || (isEditMode && isLoadingMenuItem)}
               data-testid="button-add-menu-item"
             >
               {createMenuItemMutation.isPending 
@@ -653,6 +732,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
