@@ -380,6 +380,9 @@ export const API_ENDPOINTS = {
   MENU_CATEGORY_BY_ID: '/api/MenuCategory/{id}',
   MENU_CATEGORIES_BY_BRANCH: '/api/MenuCategory/branch/{branchId}',
 
+  // MenuItem endpoints
+  MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
+
   // Other endpoints
   ANALYTICS: '/api/analytics',
   FEEDBACKS: '/api/feedbacks',
@@ -452,6 +455,9 @@ export const defaultApiConfig: ApiConfig = {
     updateMenuCategory: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
     deleteMenuCategory: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
     getMenuCategoriesByBranch: API_ENDPOINTS.MENU_CATEGORIES_BY_BRANCH,
+
+    // MenuItem endpoints
+    getMenuItemsByBranch: API_ENDPOINTS.MENU_ITEMS_BY_BRANCH,
 
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,

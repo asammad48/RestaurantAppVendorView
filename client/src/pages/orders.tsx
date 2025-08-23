@@ -24,19 +24,8 @@ import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi, apiRepository } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
-// Temporary interface definitions until proper schema is set up
-interface MenuItem {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  description?: string;
-  imageUrl?: string;
-  image?: string;
-}
-
-// Use MenuCategory from schema instead of local interface
-import type { MenuCategory } from "@/types/schema";
+// Use MenuItem and MenuCategory from schema
+import type { MenuItem, MenuCategory } from "@/types/schema";
 
 interface Deal {
   id: string;
@@ -317,10 +306,47 @@ export default function Orders() {
   };
 
   // Query for menu items
-  const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery<MenuItem[]>({
-    queryKey: ["menu-items"],
-    queryFn: () => fetch("/api/menu-items").then(res => res.json()),
+  // Query for menu items with real API and pagination support using generic API repository
+  const { data: menuItemsResponse, isLoading: isLoadingMenu } = useQuery({
+    queryKey: [`menu-items-branch-3`, menuCurrentPage, menuSearchTerm, menuItemsPerPage],
+    queryFn: async () => {
+      const response = await apiRepository.call<{
+        items: MenuItem[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        hasNext: boolean;
+      }>(
+        'getMenuItemsByBranch',
+        'GET',
+        undefined,
+        {
+          PageNumber: menuCurrentPage.toString(),
+          PageSize: menuItemsPerPage.toString(),
+          SortBy: 'name',
+          IsAscending: 'true',
+          ...(menuSearchTerm && { SearchTerm: menuSearchTerm })
+        },
+        true,
+        { branchId: 3 }
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
+
+  const menuItems = menuItemsResponse?.items || [];
+  const menuTotalCount = menuItemsResponse?.totalCount || 0;
+  const menuTotalPages = menuItemsResponse?.totalPages || 0;
+  const menuHasNext = menuItemsResponse?.hasNext || false;
+  const menuHasPrevious = menuItemsResponse?.hasPrevious || false;
 
   // Query for categories with real API and pagination support using generic API repository
   const { data: categoriesResponse, isLoading: isLoadingCategories } = useQuery({
@@ -384,15 +410,9 @@ export default function Orders() {
   };
 
   // Filter menu items based on search
-  const filteredMenuItems = menuItems.filter(item =>
-    item.name.toLowerCase().includes(menuSearchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(menuSearchTerm.toLowerCase())
-  );
-
-  // Menu pagination
-  const menuTotalPages = Math.ceil(filteredMenuItems.length / menuItemsPerPage);
-  const menuStartIndex = (menuCurrentPage - 1) * menuItemsPerPage;
-  const paginatedMenuItems = filteredMenuItems.slice(menuStartIndex, menuStartIndex + menuItemsPerPage);
+  // Since API handles filtering and pagination, we use the items directly
+  const filteredMenuItems = menuItems;
+  const paginatedMenuItems = menuItems;
 
   // Categories are already filtered and paginated by the API
   const filteredCategories = categories;
@@ -654,8 +674,14 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    paginatedMenuItems.map((item) => (
-                      <TableRow key={item.id} data-testid={`menu-item-row-${item.id}`}>
+                    paginatedMenuItems.map((item) => {
+                      // Get category name from categories list
+                      const categoryName = categories.find(cat => cat.id === item.menuCategoryId)?.name || 'Unknown Category';
+                      // Get price from first variant
+                      const price = item.variants && item.variants.length > 0 ? item.variants[0].price : 0;
+                      
+                      return (
+                      <TableRow key={item.id.toString()} data-testid={`menu-item-row-${item.id}`}>
                         <TableCell className="font-medium" data-testid={`menu-item-name-${item.id}`}>
                           {item.name}
                         </TableCell>
@@ -664,15 +690,15 @@ export default function Orders() {
                         </TableCell>
                         <TableCell data-testid={`menu-item-category-${item.id}`}>
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                            {item.category}
+                            {categoryName}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
-                          {formatPrice(item.price)}
+                          {formatPrice(price)}
                         </TableCell>
                         <TableCell data-testid={`menu-item-image-${item.id}`}>
                           <span className="text-gray-500">
-                            {item.image ? "Image" : "No image"}
+                            {item.menuItemPicture ? "Image" : "No image"}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -698,7 +724,7 @@ export default function Orders() {
                               <DropdownMenuItem 
                                 className="text-red-600"
                                 onClick={() => {
-                                  setDeleteItem({type: 'menu', id: item.id, name: item.name});
+                                  setDeleteItem({type: 'menu', id: item.id.toString(), name: item.name});
                                   setShowDeleteModal(true);
                                 }}
                               >
@@ -709,7 +735,7 @@ export default function Orders() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))
+                    );})
                   )}
                 </TableBody>
               </Table>
@@ -811,7 +837,7 @@ export default function Orders() {
               <Button 
                 variant="outline" 
                 size="sm"
-                disabled={activeMenuTab === "Menu" ? menuCurrentPage === 1 : categoryCurrentPage === 1}
+                disabled={activeMenuTab === "Menu" ? !menuHasPrevious || isLoadingMenu : categoryCurrentPage === 1}
                 onClick={() => {
                   if (activeMenuTab === "Menu") {
                     setMenuCurrentPage(Math.max(1, menuCurrentPage - 1));
@@ -835,7 +861,7 @@ export default function Orders() {
               <Button 
                 variant="outline" 
                 size="sm"
-                disabled={activeMenuTab === "Menu" ? menuCurrentPage === menuTotalPages : categoryCurrentPage === categoryTotalPages}
+                disabled={activeMenuTab === "Menu" ? !menuHasNext || isLoadingMenu : categoryCurrentPage === categoryTotalPages}
                 onClick={() => {
                   if (activeMenuTab === "Menu") {
                     const maxPage = menuTotalPages || 1;

@@ -106,7 +106,42 @@ export const insertBranchSchema = z.object({
 
 export type InsertBranch = z.infer<typeof insertBranchSchema>;
 
-// Menu item types
+// Menu item types for API
+export interface MenuItemVariant {
+  name: string;
+  price: number;
+}
+
+export interface MenuItemModifier {
+  name: string;
+  price: number;
+}
+
+export interface MenuItemCustomizationOption {
+  id: number;
+  name: string;
+}
+
+export interface MenuItemCustomization {
+  id: number;
+  name: string;
+  options: MenuItemCustomizationOption[];
+}
+
+export interface MenuItem {
+  id: number;
+  menuCategoryId: number;
+  name: string;
+  description: string;
+  isActive: boolean;
+  preparationTime: number;
+  menuItemPicture: string;
+  variants: MenuItemVariant[];
+  modifiers: MenuItemModifier[];
+  customizations: MenuItemCustomization[];
+}
+
+// Menu item creation/update schema for forms
 export const insertMenuItemSchema = z.object({
   name: z.string().min(1, "Item name is required"),
   description: z.string().optional(),
@@ -122,7 +157,6 @@ export const insertMenuItemSchema = z.object({
 });
 
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
-export type MenuItem = InsertMenuItem & { id: string; createdAt: Date; };
 
 // Category types
 export const insertCategorySchema = z.object({
