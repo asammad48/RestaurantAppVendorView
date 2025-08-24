@@ -13,11 +13,12 @@ import { servicesApi } from "@/lib/apiRepository";
 interface AddServicesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId?: string;
+  branchId?: number;
+  onServicesUpdated?: () => void;
 }
 
 
-export default function AddServicesModal({ open, onOpenChange, restaurantId }: AddServicesModalProps) {
+export default function AddServicesModal({ open, onOpenChange, branchId = 3, onServicesUpdated }: AddServicesModalProps) {
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -33,26 +34,26 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
     enabled: open,
   });
 
-  const createServicesMutation = useMutation({
-    mutationFn: async (services: InsertService[]) => {
-      const promises = services.map(service => 
-        apiRequest("POST", "/api/services", service)
-      );
-      return Promise.all(promises);
+  const updateBranchServicesMutation = useMutation({
+    mutationFn: async (serviceIds: number[]) => {
+      return await servicesApi.updateBranchServices(branchId, serviceIds);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      queryClient.invalidateQueries({ queryKey: ['branch-services', branchId] });
       toast({
         title: "Success",
-        description: `${selectedServices.length} service(s) added successfully`,
+        description: `${selectedServices.length} service(s) added to branch successfully`,
       });
       setSelectedServices([]);
       onOpenChange(false);
+      if (onServicesUpdated) {
+        onServicesUpdated();
+      }
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add services",
+        description: error.message || "Failed to add services to branch",
         variant: "destructive",
       });
     },
@@ -69,23 +70,7 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
 
 
   const handleSubmit = () => {
-    const servicesToAdd: InsertService[] = [];
-    
-    // Add selected services
-    selectedServices.forEach(serviceId => {
-      const service = availableServices.find(s => s.id === serviceId);
-      if (service) {
-        servicesToAdd.push({
-          name: service.name,
-          type: service.price > 0 ? "paid" : "service", // Convert API type to UI type
-          price: service.price,
-          description: service.description,
-          status: "active",
-        });
-      }
-    });
-
-    if (servicesToAdd.length === 0) {
+    if (selectedServices.length === 0) {
       toast({
         title: "Warning",
         description: "Please select at least one service",
@@ -94,7 +79,7 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
       return;
     }
 
-    createServicesMutation.mutate(servicesToAdd);
+    updateBranchServicesMutation.mutate(selectedServices);
   };
 
   return (
@@ -154,10 +139,10 @@ export default function AddServicesModal({ open, onOpenChange, restaurantId }: A
           <div className="flex justify-center pt-6 border-t">
             <Button
               onClick={handleSubmit}
-              disabled={createServicesMutation.isPending || selectedServices.length === 0}
+              disabled={updateBranchServicesMutation.isPending || selectedServices.length === 0}
               className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
             >
-              {createServicesMutation.isPending ? "Adding..." : `Add ${selectedServices.length} Service(s)`}
+              {updateBranchServicesMutation.isPending ? "Adding..." : `Add ${selectedServices.length} Service(s)`}
             </Button>
           </div>
         </div>

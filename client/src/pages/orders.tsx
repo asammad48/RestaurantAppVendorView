@@ -23,21 +23,13 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi, branchApi, dealsApi, discountsApi, apiRepository } from "@/lib/apiRepository";
+import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
-import type { MenuItem, MenuCategory, Deal, Discount } from "@/types/schema";
+import type { MenuItem, MenuCategory, Deal, Discount, BranchService } from "@/types/schema";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 
 // Deal interface is now imported from schema
-
-interface Service {
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-  price: string;
-}
 
 interface Order {
   id: string;
@@ -209,6 +201,14 @@ export default function Orders() {
   const [showEditDiscountModal, setShowEditDiscountModal] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState<any>(null);
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
+
+  // Query for branch services with real API
+  const { data: branchServices = [], isLoading: isLoadingBranchServices, refetch: refetchBranchServices } = useQuery<BranchService[]>({
+    queryKey: ['branch-services', 3],
+    queryFn: async (): Promise<BranchService[]> => {
+      return await servicesApi.getBranchServices(3); // Branch ID 3
+    },
+  });
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditTableModal, setShowEditTableModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableWithBranchData | null>(null);
@@ -1226,33 +1226,42 @@ export default function Orders() {
               </Button>
             </div>
 
-            {/* Mock Services Grid */}
+            {/* Branch Services Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                { name: "Request for Bottle", type: "Free", description: "Request a water bottle for the table" },
-                { name: "Request for Song", type: "Paid - $2.00", description: "Request a specific song to be played" },
-                { name: "Table Cleaning", type: "Free", description: "Request additional table cleaning" },
-                { name: "Extra Napkins", type: "Free", description: "Request additional napkins" },
-                { name: "Birthday Celebration", type: "Paid - $5.00", description: "Special birthday celebration setup" },
-                { name: "Photo Service", type: "Paid - $3.00", description: "Professional photo service" },
-              ].map((service, index) => (
-                <Card key={index} className="bg-white border border-gray-100 hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-medium text-gray-900">{service.name}</h4>
-                      <Badge 
-                        className={service.type.startsWith('Free') 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-blue-100 text-blue-800'
-                        }
-                      >
-                        {service.type}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">{service.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              {isLoadingBranchServices ? (
+                <div className="col-span-3 text-center py-8 text-gray-500">
+                  Loading services...
+                </div>
+              ) : branchServices.length === 0 ? (
+                <div className="col-span-3 text-center py-8 text-gray-500">
+                  No services added yet. Click "Add Services" to get started.
+                </div>
+              ) : (
+                branchServices.map((service) => (
+                  <Card key={service.serviceId} className="bg-white border border-gray-100 hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="font-medium text-gray-900" data-testid={`service-name-${service.serviceId}`}>
+                          {service.serviceName}
+                        </h4>
+                        <Badge 
+                          className={service.price === 0 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-blue-100 text-blue-800'
+                          }
+                        >
+                          {service.price === 0 ? 'Free' : `$${(service.price / 100).toFixed(2)}`}
+                        </Badge>
+                      </div>
+                      {service.picture && (
+                        <div className="text-sm text-gray-500">
+                          📷 Image Available
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </TabsContent>
@@ -1481,7 +1490,10 @@ export default function Orders() {
       <AddServicesModal
         open={showAddServicesModal}
         onOpenChange={setShowAddServicesModal}
-        restaurantId="1"
+        branchId={3}
+        onServicesUpdated={() => {
+          refetchBranchServices();
+        }}
       />
 
       {/* Pricing Plans Modal */}

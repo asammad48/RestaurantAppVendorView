@@ -342,6 +342,14 @@ export interface Service {
   picture: string;
 }
 
+// Branch Service types (matching branch services API response)
+export interface BranchService {
+  serviceId: number;
+  serviceName: string;
+  price: number;
+  picture: string;
+}
+
 export const insertServiceSchema = z.object({
   name: z.string().min(1, "Service name is required"),
   type: z.enum(["service", "paid"]),

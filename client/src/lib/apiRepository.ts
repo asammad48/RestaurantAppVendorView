@@ -1,4 +1,4 @@
-import { Deal, Service } from '../types/schema';
+import { Deal, Service, BranchService } from '../types/schema';
 
 // Generic API Repository with error handling and token management
 export interface ApiResponse<T> {
@@ -404,6 +404,7 @@ export const API_ENDPOINTS = {
   
   // Services endpoints
   SERVICES_BY_TYPE: '/api/Generic/services/{entityType}',
+  BRANCH_SERVICES: '/api/BranchServices/{branchId}/services',
   
   // Other endpoints
   ANALYTICS: '/api/analytics',
@@ -435,6 +436,8 @@ export const defaultApiConfig: ApiConfig = {
     getRoles: API_ENDPOINTS.ROLES,
     getEntitiesAndBranches: API_ENDPOINTS.ENTITIES_AND_BRANCHES,
     getServicesByType: API_ENDPOINTS.SERVICES_BY_TYPE,
+    getBranchServices: API_ENDPOINTS.BRANCH_SERVICES,
+    updateBranchServices: API_ENDPOINTS.BRANCH_SERVICES,
     
     // Entity endpoints
     getEntities: API_ENDPOINTS.ENTITIES,
@@ -984,6 +987,42 @@ export const servicesApi = {
     }
     
     return response.data || [];
+  },
+
+  // Get branch services
+  getBranchServices: async (branchId: number): Promise<BranchService[]> => {
+    const response = await apiRepository.call<BranchService[]>(
+      'getBranchServices',
+      'GET',
+      undefined,
+      {},
+      true,
+      { branchId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data || [];
+  },
+
+  // Update branch services (PUT with array of service IDs)
+  updateBranchServices: async (branchId: number, serviceIds: number[]) => {
+    const response = await apiRepository.call(
+      'updateBranchServices',
+      'PUT',
+      serviceIds,
+      {},
+      true,
+      { branchId }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response;
   },
 };
 
