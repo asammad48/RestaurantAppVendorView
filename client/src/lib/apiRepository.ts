@@ -1,4 +1,4 @@
-import { Deal } from '../types/schema';
+import { Deal, Service } from '../types/schema';
 
 // Generic API Repository with error handling and token management
 export interface ApiResponse<T> {
@@ -402,6 +402,9 @@ export const API_ENDPOINTS = {
   BULK_DISCOUNT_DEALS: '/api/Deals/bulk-discount',
   BULK_DISCOUNT_MENU: '/api/MenuItem/bulk-discount',
   
+  // Services endpoints
+  SERVICES_BY_TYPE: '/api/Generic/services/{entityType}',
+  
   // Other endpoints
   ANALYTICS: '/api/analytics',
   FEEDBACKS: '/api/feedbacks',
@@ -431,6 +434,7 @@ export const defaultApiConfig: ApiConfig = {
     // Generic endpoints
     getRoles: API_ENDPOINTS.ROLES,
     getEntitiesAndBranches: API_ENDPOINTS.ENTITIES_AND_BRANCHES,
+    getServicesByType: API_ENDPOINTS.SERVICES_BY_TYPE,
     
     // Entity endpoints
     getEntities: API_ENDPOINTS.ENTITIES,
@@ -959,6 +963,27 @@ export const discountsApi = {
     }
     
     return response;
+  },
+};
+
+// Services API Helper Functions
+export const servicesApi = {
+  // Get services by entity type (2 for restaurant)
+  getServicesByType: async (entityType: number): Promise<Service[]> => {
+    const response = await apiRepository.call<Service[]>(
+      'getServicesByType',
+      'GET',
+      undefined,
+      {},
+      true,
+      { entityType }
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data || [];
   },
 };
 

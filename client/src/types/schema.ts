@@ -332,7 +332,16 @@ export interface Order {
   customerName?: string;
 }
 
-// Service types
+// Service types (matching API response structure)
+export interface Service {
+  id: number;
+  name: string;
+  type: number; // Type from API (2 for restaurant services)
+  description: string;
+  price: number; // Price in cents
+  picture: string;
+}
+
 export const insertServiceSchema = z.object({
   name: z.string().min(1, "Service name is required"),
   type: z.enum(["service", "paid"]),
@@ -342,4 +351,3 @@ export const insertServiceSchema = z.object({
 });
 
 export type InsertService = z.infer<typeof insertServiceSchema>;
-export type Service = InsertService & { id: string; createdAt: Date; };
