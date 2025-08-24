@@ -730,6 +730,7 @@ export default function Orders() {
                     </TableHead>
                     <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Discount <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Image <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead></TableHead>
@@ -738,13 +739,13 @@ export default function Orders() {
                 <TableBody>
                   {isLoadingMenu ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         Loading menu items...
                       </TableCell>
                     </TableRow>
                   ) : filteredMenuItems.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         No menu items found
                       </TableCell>
                     </TableRow>
@@ -767,6 +768,11 @@ export default function Orders() {
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
                             {categoryName}
                           </Badge>
+                        </TableCell>
+                        <TableCell data-testid={`menu-item-discount-${item.id}`}>
+                          <span className="text-sm text-gray-600">
+                            {item.discountName || 'No Discount'}
+                          </span>
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
                           {formatPrice(price)}
@@ -1083,6 +1089,7 @@ export default function Orders() {
                       </div>
                     </TableHead>
                     <TableHead>Items <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                    <TableHead>Discount <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead className="w-12"></TableHead>
@@ -1091,13 +1098,13 @@ export default function Orders() {
                 <TableBody>
                   {dealsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         Loading deals...
                       </TableCell>
                     </TableRow>
                   ) : deals.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         No deals found
                       </TableCell>
                     </TableRow>
@@ -1111,6 +1118,11 @@ export default function Orders() {
                           <div className="text-sm text-gray-600" data-testid={`deal-items-${deal.id}`}>
                             {deal.menuItems?.map(item => `${item.quantity}x ${item.menuItemName}`).join(', ')}
                           </div>
+                        </TableCell>
+                        <TableCell data-testid={`deal-discount-${deal.id}`}>
+                          <span className="text-sm text-gray-600">
+                            {deal.discountName || 'No Discount'}
+                          </span>
                         </TableCell>
                         <TableCell data-testid={`deal-status-${deal.id}`}>
                           <Badge className={deal.isActive ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}>

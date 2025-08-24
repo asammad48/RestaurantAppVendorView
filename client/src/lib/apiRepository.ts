@@ -399,6 +399,8 @@ export const API_ENDPOINTS = {
   DISCOUNT_BY_ID: '/api/Discount/{id}',
   DISCOUNTS_BY_BRANCH: '/api/Discount/branch/{branchId}',
   DISCOUNTS_SIMPLE_BY_BRANCH: '/api/Discount/branch/{branchId}/simple',
+  BULK_DISCOUNT_DEALS: '/api/Deals/bulk-discount',
+  BULK_DISCOUNT_MENU: '/api/MenuItem/bulk-discount',
   
   // Other endpoints
   ANALYTICS: '/api/analytics',
@@ -495,6 +497,8 @@ export const defaultApiConfig: ApiConfig = {
     deleteDiscount: API_ENDPOINTS.DISCOUNT_BY_ID,
     getDiscountsByBranch: API_ENDPOINTS.DISCOUNTS_BY_BRANCH,
     getDiscountsSimpleByBranch: API_ENDPOINTS.DISCOUNTS_SIMPLE_BY_BRANCH,
+    bulkDiscountDeals: API_ENDPOINTS.BULK_DISCOUNT_DEALS,
+    bulkDiscountMenu: API_ENDPOINTS.BULK_DISCOUNT_MENU,
     
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,
@@ -915,6 +919,46 @@ export const discountsApi = {
     }
     
     return response.data;
+  },
+
+  // Apply bulk discount to deals
+  applyBulkDiscountToDeals: async (dealIds: number[], discountId: number) => {
+    const response = await apiRepository.call(
+      'bulkDiscountDeals',
+      'PUT',
+      {
+        dealIds,
+        discountId
+      },
+      {},
+      true
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response;
+  },
+
+  // Apply bulk discount to menu items
+  applyBulkDiscountToMenu: async (menuItemIds: number[], discountId: number) => {
+    const response = await apiRepository.call(
+      'bulkDiscountMenu',
+      'PUT',
+      {
+        menuItemIds,
+        discountId
+      },
+      {},
+      true
+    );
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response;
   },
 };
 

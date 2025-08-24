@@ -93,18 +93,28 @@ export default function ApplyDiscountModal({ isOpen, onClose, mode }: ApplyDisco
 
   const applyDiscountMutation = useMutation({
     mutationFn: async (data: ApplyDiscountFormData) => {
-      // This would call the actual apply discount API
-      // For now, we'll simulate the process
-      return new Promise((resolve) => {
-        setTimeout(() => resolve({ success: true }), 1000);
-      });
+      const itemIds = selectedItems.map(id => parseInt(id));
+      const discountId = parseInt(data.discountId);
+      
+      if (mode === 'deals') {
+        return await discountsApi.applyBulkDiscountToDeals(itemIds, discountId);
+      } else {
+        return await discountsApi.applyBulkDiscountToMenu(itemIds, discountId);
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['menu-items-branch-3'] });
-      queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
+      // Invalidate relevant queries to refresh tables
+      if (mode === 'menu') {
+        queryClient.invalidateQueries({ queryKey: ['menu-items-branch-3'] });
+        queryClient.invalidateQueries({ queryKey: ['menu-items-simple', 3] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
+        queryClient.invalidateQueries({ queryKey: ['deals-simple', 3] });
+      }
+      
       toast({ 
         title: "Success",
-        description: "Discount applied successfully"
+        description: `Discount applied successfully to ${mode === 'deals' ? 'deals' : 'menu items'}`
       });
       onClose();
       form.reset();

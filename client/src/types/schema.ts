@@ -136,6 +136,7 @@ export interface MenuItem {
   isActive: boolean;
   preparationTime: number;
   menuItemPicture: string;
+  discountName?: string;
   variants: MenuItemVariant[];
   modifiers: MenuItemModifier[];
   customizations: MenuItemCustomization[];
@@ -189,6 +190,7 @@ export interface Deal {
   packagePicture: string;
   expiryDate: string;
   isActive: boolean;
+  discountName?: string;
   menuItems: Array<{
     menuItemId: number;
     menuItemName: string;
