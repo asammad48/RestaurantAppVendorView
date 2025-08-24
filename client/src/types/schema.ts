@@ -136,7 +136,7 @@ export interface MenuItem {
   isActive: boolean;
   preparationTime: number;
   menuItemPicture: string;
-  discountName?: string;
+  disountName?: string;  // Note: API has typo in field name
   variants: MenuItemVariant[];
   modifiers: MenuItemModifier[];
   customizations: MenuItemCustomization[];
@@ -190,7 +190,7 @@ export interface Deal {
   packagePicture: string;
   expiryDate: string;
   isActive: boolean;
-  discountName?: string;
+  disountName?: string;  // Note: API has typo in field name
   menuItems: Array<{
     menuItemId: number;
     menuItemName: string;

@@ -419,7 +419,7 @@ export default function Orders() {
   };
 
   const handleDeleteDiscount = (discount: Discount) => {
-    setDeleteItem({ type: 'discount', id: discount.id, name: discount.name });
+    setDeleteItem({ type: 'discount', id: discount.id.toString(), name: discount.name });
     setShowDeleteModal(true);
   };
 
@@ -771,7 +771,7 @@ export default function Orders() {
                         </TableCell>
                         <TableCell data-testid={`menu-item-discount-${item.id}`}>
                           <span className="text-sm text-gray-600">
-                            {item.discountName || 'No Discount'}
+                            {item.disountName || 'No Discount'}
                           </span>
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
@@ -1121,7 +1121,7 @@ export default function Orders() {
                         </TableCell>
                         <TableCell data-testid={`deal-discount-${deal.id}`}>
                           <span className="text-sm text-gray-600">
-                            {deal.discountName || 'No Discount'}
+                            {deal.disountName || 'No Discount'}
                           </span>
                         </TableCell>
                         <TableCell data-testid={`deal-status-${deal.id}`}>
