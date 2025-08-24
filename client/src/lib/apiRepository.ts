@@ -392,11 +392,13 @@ export const API_ENDPOINTS = {
   DEALS: '/api/Deals',
   DEAL_BY_ID: '/api/Deals/{id}',
   DEALS_BY_BRANCH: '/api/Deals/branch/{branchId}',
+  DEALS_SIMPLE_BY_BRANCH: '/api/Deals/branch/{branchId}/simple',
   
   // Discount endpoints
   DISCOUNTS: '/api/Discount',
   DISCOUNT_BY_ID: '/api/Discount/{id}',
   DISCOUNTS_BY_BRANCH: '/api/Discount/branch/{branchId}',
+  DISCOUNTS_SIMPLE_BY_BRANCH: '/api/Discount/branch/{branchId}/simple',
   
   // Other endpoints
   ANALYTICS: '/api/analytics',
@@ -483,6 +485,7 @@ export const defaultApiConfig: ApiConfig = {
     updateDeal: API_ENDPOINTS.DEAL_BY_ID,
     deleteDeal: API_ENDPOINTS.DEAL_BY_ID,
     getDealsByBranch: API_ENDPOINTS.DEALS_BY_BRANCH,
+    getDealsSimpleByBranch: API_ENDPOINTS.DEALS_SIMPLE_BY_BRANCH,
     
     // Discount endpoints
     getDiscounts: API_ENDPOINTS.DISCOUNTS,
@@ -491,6 +494,7 @@ export const defaultApiConfig: ApiConfig = {
     updateDiscount: API_ENDPOINTS.DISCOUNT_BY_ID,
     deleteDiscount: API_ENDPOINTS.DISCOUNT_BY_ID,
     getDiscountsByBranch: API_ENDPOINTS.DISCOUNTS_BY_BRANCH,
+    getDiscountsSimpleByBranch: API_ENDPOINTS.DISCOUNTS_SIMPLE_BY_BRANCH,
     
     // Other endpoints
     getAnalytics: API_ENDPOINTS.ANALYTICS,
@@ -878,6 +882,39 @@ export const discountsApi = {
     }
     
     return response;
+  },
+
+  // Get simple menu items by branch using Generic API repository
+  getMenuItemsSimpleByBranch: async (branchId: number) => {
+    const response = await apiRepository.call('getMenuItemsSimpleByBranch', 'GET', undefined, {}, true, { branchId });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Get simple deals by branch using Generic API repository
+  getDealsSimpleByBranch: async (branchId: number) => {
+    const response = await apiRepository.call('getDealsSimpleByBranch', 'GET', undefined, {}, true, { branchId });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
+  },
+
+  // Get simple discounts by branch using Generic API repository
+  getDiscountsSimpleByBranch: async (branchId: number) => {
+    const response = await apiRepository.call('getDiscountsSimpleByBranch', 'GET', undefined, {}, true, { branchId });
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
   },
 };
 

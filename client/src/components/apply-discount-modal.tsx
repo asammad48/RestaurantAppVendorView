@@ -1,20 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import type { MenuItem } from "@shared/schema";
+import { discountsApi } from "@/lib/apiRepository";
 
 const applyDiscountSchema = z.object({
   selectedItems: z.array(z.string()).min(1, "Please select at least one item"),
-  discountPercentage: z.number().min(1, "Discount must be at least 1%").max(100, "Discount cannot exceed 100%"),
+  discountId: z.string().min(1, "Please select a discount"),
 });
 
 type ApplyDiscountFormData = z.infer<typeof applyDiscountSchema>;
@@ -22,38 +21,91 @@ type ApplyDiscountFormData = z.infer<typeof applyDiscountSchema>;
 interface ApplyDiscountModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode: 'menu' | 'deals';
 }
 
-export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountModalProps) {
+interface SimpleMenuItem {
+  menuItemId: number;
+  menuItemName: string;
+}
+
+interface SimpleDeal {
+  id: number;
+  name: string;
+}
+
+interface SimpleDiscount {
+  id: number;
+  name: string;
+  discountValue: number;
+}
+
+export default function ApplyDiscountModal({ isOpen, onClose, mode }: ApplyDiscountModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
-  // Query for menu items to select from
-  const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery<MenuItem[]>({
-    queryKey: ["/api/menu-items"],
-    queryFn: () => fetch("/api/menu-items").then(res => res.json()),
+  // Query for menu items (only when mode is 'menu')
+  const { data: menuItems = [], isLoading: isLoadingMenuItems } = useQuery<SimpleMenuItem[]>({
+    queryKey: ['menu-items-simple', 3],
+    queryFn: async (): Promise<SimpleMenuItem[]> => {
+      const response = await discountsApi.getMenuItemsSimpleByBranch(3);
+      return Array.isArray(response) ? response : [];
+    },
+    enabled: isOpen && mode === 'menu',
+  });
+
+  // Query for deals (only when mode is 'deals')
+  const { data: deals = [], isLoading: isLoadingDeals } = useQuery<SimpleDeal[]>({
+    queryKey: ['deals-simple', 3],
+    queryFn: async (): Promise<SimpleDeal[]> => {
+      const response = await discountsApi.getDealsSimpleByBranch(3);
+      return Array.isArray(response) ? response : [];
+    },
+    enabled: isOpen && mode === 'deals',
+  });
+
+  // Query for discounts (for both modes)
+  const { data: discounts = [], isLoading: isLoadingDiscounts } = useQuery<SimpleDiscount[]>({
+    queryKey: ['discounts-simple', 3],
+    queryFn: async (): Promise<SimpleDiscount[]> => {
+      const response = await discountsApi.getDiscountsSimpleByBranch(3);
+      return Array.isArray(response) ? response : [];
+    },
+    enabled: isOpen,
   });
 
   const form = useForm<ApplyDiscountFormData>({
     resolver: zodResolver(applyDiscountSchema),
     defaultValues: {
       selectedItems: [],
-      discountPercentage: 10,
+      discountId: "",
     },
   });
 
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      form.reset();
+      setSelectedItems([]);
+    }
+  }, [isOpen, form]);
+
   const applyDiscountMutation = useMutation({
     mutationFn: async (data: ApplyDiscountFormData) => {
-      // This would typically call an API to apply discounts
-      // For now, we'll just simulate the process
+      // This would call the actual apply discount API
+      // For now, we'll simulate the process
       return new Promise((resolve) => {
         setTimeout(() => resolve({ success: true }), 1000);
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/menu-items"] });
-      toast({ title: "Discount applied successfully" });
+      queryClient.invalidateQueries({ queryKey: ['menu-items-branch-3'] });
+      queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
+      toast({ 
+        title: "Success",
+        description: "Discount applied successfully"
+      });
       onClose();
       form.reset();
       setSelectedItems([]);
@@ -67,9 +119,27 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
     },
   });
 
+  const getItemsData = () => {
+    if (mode === 'menu') {
+      return menuItems.map((item: SimpleMenuItem) => ({
+        id: item.menuItemId.toString(),
+        name: item.menuItemName,
+      }));
+    } else {
+      return deals.map((deal: SimpleDeal) => ({
+        id: deal.id.toString(),
+        name: deal.name,
+      }));
+    }
+  };
+
+  const getIsLoading = () => {
+    return mode === 'menu' ? isLoadingMenuItems : isLoadingDeals;
+  };
+
   const handleItemSelect = (itemId: string) => {
     const newSelectedItems = selectedItems.includes(itemId)
-      ? selectedItems.filter(id => id !== itemId)
+      ? selectedItems.filter((id: string) => id !== itemId)
       : [...selectedItems, itemId];
     
     setSelectedItems(newSelectedItems);
@@ -77,8 +147,9 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
   };
 
   const handleSelectAll = () => {
-    const allItemIds = menuItems.map(item => item.id);
-    const allSelected = allItemIds.length > 0 && allItemIds.every(id => selectedItems.includes(id));
+    const itemsData = getItemsData();
+    const allItemIds = itemsData.map((item: { id: string; name: string }) => item.id);
+    const allSelected = allItemIds.length > 0 && allItemIds.every((id: string) => selectedItems.includes(id));
     
     const newSelectedItems = allSelected ? [] : allItemIds;
     setSelectedItems(newSelectedItems);
@@ -93,22 +164,24 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
     applyDiscountMutation.mutate(formData);
   };
 
-  const formatPrice = (priceInCents: number) => {
-    return `Rs${(priceInCents / 100).toFixed(0)}`;
-  };
+  const itemsData = getItemsData();
+  const isLoading = getIsLoading();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" data-testid="modal-apply-discount">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-center">Apply Discount</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-center">
+            Apply Discount to {mode === 'menu' ? 'Menu Items' : 'Deals'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
+            {/* Items Selection */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Select Items</Label>
+                <Label>Select {mode === 'menu' ? 'Menu Items' : 'Deals'}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -117,21 +190,21 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
                   className="h-8 px-3 text-xs"
                   data-testid="button-select-all"
                 >
-                  {menuItems.length > 0 && menuItems.every(item => selectedItems.includes(item.id)) ? "Deselect All" : "Select All"}
+                  {itemsData.length > 0 && itemsData.every((item: { id: string; name: string }) => selectedItems.includes(item.id)) ? "Deselect All" : "Select All"}
                 </Button>
               </div>
               <div className="border rounded-lg max-h-64 overflow-y-auto" data-testid="items-selection-area">
-                {isLoadingMenu ? (
+                {isLoading ? (
                   <div className="p-4 text-center text-gray-500">
-                    Loading menu items...
+                    Loading {mode === 'menu' ? 'menu items' : 'deals'}...
                   </div>
-                ) : menuItems.length === 0 ? (
+                ) : itemsData.length === 0 ? (
                   <div className="p-4 text-center text-gray-500">
-                    No menu items available
+                    No {mode === 'menu' ? 'menu items' : 'deals'} available
                   </div>
                 ) : (
                   <div className="p-2 space-y-2">
-                    {menuItems.map((item) => (
+                    {itemsData.map((item: { id: string; name: string }) => (
                       <div
                         key={item.id}
                         className={`p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -145,10 +218,6 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="font-medium text-sm">{item.name}</div>
-                            <div className="text-xs text-gray-500">{item.category}</div>
-                          </div>
-                          <div className="text-sm font-medium text-green-600">
-                            {formatPrice(item.price)}
                           </div>
                           <input
                             type="checkbox"
@@ -168,24 +237,33 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
               )}
             </div>
 
+            {/* Discount Selection */}
             <div className="space-y-2">
-              <Label htmlFor="discountPercentage">Discount Percentage</Label>
-              <div className="relative">
-                <Input
-                  id="discountPercentage"
-                  type="number"
-                  min="1"
-                  max="100"
-                  {...form.register("discountPercentage", { valueAsNumber: true })}
-                  className="pr-8"
-                  data-testid="input-discount-percentage"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                  %
-                </div>
-              </div>
-              {form.formState.errors.discountPercentage && (
-                <p className="text-sm text-red-500">{form.formState.errors.discountPercentage.message}</p>
+              <Label htmlFor="discountId">Select Discount</Label>
+              <Select onValueChange={(value) => form.setValue("discountId", value)}>
+                <SelectTrigger data-testid="select-discount">
+                  <SelectValue placeholder={isLoadingDiscounts ? "Loading discounts..." : "Select a discount"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoadingDiscounts ? (
+                    <SelectItem value="loading" disabled>Loading discounts...</SelectItem>
+                  ) : discounts.length === 0 ? (
+                    <SelectItem value="no-discounts" disabled>No discounts available</SelectItem>
+                  ) : (
+                    discounts.map((discount: SimpleDiscount) => (
+                      <SelectItem 
+                        key={discount.id} 
+                        value={discount.id.toString()}
+                        data-testid={`discount-option-${discount.id}`}
+                      >
+                        {discount.name} ({discount.discountValue}%)
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.discountId && (
+                <p className="text-sm text-red-500">{form.formState.errors.discountId.message}</p>
               )}
             </div>
           </div>
@@ -197,7 +275,7 @@ export default function ApplyDiscountModal({ isOpen, onClose }: ApplyDiscountMod
               disabled={applyDiscountMutation.isPending || selectedItems.length === 0}
               data-testid="button-apply-discount"
             >
-              {applyDiscountMutation.isPending ? "Applying..." : "Add"}
+              {applyDiscountMutation.isPending ? "Applying..." : "Apply Discount"}
             </Button>
           </div>
         </form>

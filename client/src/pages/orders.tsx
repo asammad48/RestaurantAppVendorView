@@ -1440,6 +1440,7 @@ export default function Orders() {
       <ApplyDiscountModal
         isOpen={showApplyDiscountModal}
         onClose={() => setShowApplyDiscountModal(false)}
+        mode={activeMainTab === "menu" ? "menu" : "deals"}
       />
 
       {/* Add Deals Modal */}
