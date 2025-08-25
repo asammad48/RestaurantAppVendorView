@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, MapPin, Phone, Edit, Trash2, Store } from "lucide-react";
+import { Settings, MapPin, Phone, Edit, Trash2, Store, Cog } from "lucide-react";
 import type { Branch } from "@/types/schema";
 import { getBranchImageUrl } from "@/lib/imageUtils";
 
@@ -10,9 +10,10 @@ interface BranchCardProps {
   onManage: (branch: Branch) => void;
   onEdit?: (branch: Branch) => void;
   onDelete?: (branch: Branch) => void;
+  onConfigure?: (branch: Branch) => void;
 }
 
-export default function BranchCard({ branch, onManage, onEdit, onDelete }: BranchCardProps) {
+export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfigure }: BranchCardProps) {
   return (
     <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-branch-${branch.id}`}>
       <div className="relative">
@@ -78,6 +79,22 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete }: Branc
               <span className="text-xs font-medium truncate">Manage</span>
             </div>
           </Button>
+          
+          {onConfigure && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 min-w-0 border-2 border-blue-400 text-blue-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-blue-300/50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/30 relative overflow-hidden group px-3 py-2"
+              onClick={() => onConfigure(branch)}
+              data-testid={`button-configure-${branch.id}`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-300/20 to-indigo-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="flex items-center justify-center gap-1 relative z-10">
+                <Cog className="w-3 h-3 group-hover:rotate-180 group-hover:scale-110 transition-all duration-500 flex-shrink-0" />
+                <span className="text-xs font-medium truncate">Config</span>
+              </div>
+            </Button>
+          )}
           
           {onEdit && (
             <Button

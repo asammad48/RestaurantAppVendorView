@@ -12,6 +12,7 @@ import BranchCard from "../components/branch-card";
 import AddBranchModal from "@/components/add-branch-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
+import BranchConfigModal from "@/components/branch-config-modal";
 import type { Branch, Entity } from "@/types/schema";
 import { branchApi } from "@/lib/apiRepository";
 
@@ -22,6 +23,7 @@ export default function Branches() {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [currentEntity, setCurrentEntity] = useState<Entity | null>(null);
   const [isTrialUser, setIsTrialUser] = useState(true); // Assume trial for demo
@@ -98,6 +100,11 @@ export default function Branches() {
   const handleDelete = (branch: Branch) => {
     setSelectedBranch(branch);
     setShowDeleteModal(true);
+  };
+
+  const handleConfigure = (branch: Branch) => {
+    setSelectedBranch(branch);
+    setShowConfigModal(true);
   };
 
   if (isLoading) {
@@ -205,6 +212,7 @@ export default function Branches() {
               onManage={handleManage}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onConfigure={handleConfigure}
             />
           ))}
         </div>
@@ -287,6 +295,17 @@ export default function Branches() {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {showConfigModal && selectedBranch && (
+        <BranchConfigModal
+          open={showConfigModal}
+          onClose={() => {
+            setShowConfigModal(false);
+            setSelectedBranch(null);
+          }}
+          branch={selectedBranch}
+        />
       )}
 
       {showPricingModal && (
