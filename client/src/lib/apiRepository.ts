@@ -386,6 +386,11 @@ export const API_ENDPOINTS = {
   MENU_CATEGORY_BY_ID: '/api/MenuCategory/{id}',
   MENU_CATEGORIES_BY_BRANCH: '/api/MenuCategory/branch/{branchId}',
 
+  // SubMenu endpoints
+  SUBMENUS: '/api/SubMenu',
+  SUBMENU_BY_ID: '/api/SubMenu/{id}',
+  SUBMENUS_BY_BRANCH: '/api/SubMenu/branch/{branchId}',
+
   // MenuItem endpoints
   MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
   MENU_ITEMS_SIMPLE_BY_BRANCH: '/api/MenuItem/branch/{branchId}/simple',
@@ -487,6 +492,14 @@ export const defaultApiConfig: ApiConfig = {
     updateMenuCategory: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
     deleteMenuCategory: API_ENDPOINTS.MENU_CATEGORY_BY_ID,
     getMenuCategoriesByBranch: API_ENDPOINTS.MENU_CATEGORIES_BY_BRANCH,
+
+    // SubMenu endpoints
+    getSubMenus: API_ENDPOINTS.SUBMENUS,
+    createSubMenu: API_ENDPOINTS.SUBMENUS,
+    getSubMenuById: API_ENDPOINTS.SUBMENU_BY_ID,
+    updateSubMenu: API_ENDPOINTS.SUBMENU_BY_ID,
+    deleteSubMenu: API_ENDPOINTS.SUBMENU_BY_ID,
+    getSubMenusByBranch: API_ENDPOINTS.SUBMENUS_BY_BRANCH,
 
     // MenuItem endpoints
     getMenuItemsByBranch: API_ENDPOINTS.MENU_ITEMS_BY_BRANCH,

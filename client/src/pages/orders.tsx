@@ -15,6 +15,7 @@ import AddTableModal from "@/components/add-table-modal";
 import EditTableModal from "@/components/edit-table-modal";
 import AddMenuModal from "@/components/add-menu-modal";
 import AddCategoryModal from "@/components/add-category-modal";
+import AddSubMenuModal from "@/components/add-submenu-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
 import AddDealsModal from "@/components/add-deals-modal";
 import AddServicesModal from "@/components/add-services-modal";
@@ -26,7 +27,7 @@ import { useLocation } from "wouter";
 import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
-import type { MenuItem, MenuCategory, Deal, Discount, BranchService } from "@/types/schema";
+import type { MenuItem, MenuCategory, SubMenu, Deal, Discount, BranchService } from "@/types/schema";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 
 // Deal interface is now imported from schema
@@ -187,17 +188,22 @@ export default function Orders() {
   // Pagination states for different tables
   const [menuCurrentPage, setMenuCurrentPage] = useState(1);
   const [categoryCurrentPage, setCategoryCurrentPage] = useState(1);
+  const [subMenuCurrentPage, setSubMenuCurrentPage] = useState(1);
   const [dealsCurrentPage, setDealsCurrentPage] = useState(1);
   const [discountsCurrentPage, setDiscountsCurrentPage] = useState(1);
   const [menuItemsPerPage] = useState(6);
   const [categoryItemsPerPage] = useState(6);
+  const [subMenuItemsPerPage] = useState(6);
   const [dealsItemsPerPage, setDealsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [discountsItemsPerPage, setDiscountsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [discountsSearchTerm, setDiscountsSearchTerm] = useState("");
+  const [subMenuSearchTerm, setSubMenuSearchTerm] = useState("");
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [showAddSubMenuModal, setShowAddSubMenuModal] = useState(false);
+  const [editSubMenu, setEditSubMenu] = useState<SubMenu | null>(null);
   const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
   const [showAddDealsModal, setShowAddDealsModal] = useState(false);
   const [showEditDealsModal, setShowEditDealsModal] = useState(false);
@@ -271,10 +277,12 @@ export default function Orders() {
   const [activeMenuTab, setActiveMenuTab] = useState("Menu");
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
+  const [selectedSubMenu, setSelectedSubMenu] = useState<SubMenu | null>(null);
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [showEditSubMenuModal, setShowEditSubMenuModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
+  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'submenu' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
   const [activeMainTab, setActiveMainTab] = useState("orders");
 
   const filteredOrders = mockOrders.filter(order => {
@@ -394,6 +402,45 @@ export default function Orders() {
 
   const categories = categoriesResponse?.items || [];
   const categoryTotalPages = categoriesResponse?.totalPages || 1;
+
+  // Query for submenus with real API and pagination support using generic API repository
+  const { data: subMenusResponse, isLoading: isLoadingSubMenus, refetch: refetchSubMenus } = useQuery({
+    queryKey: [`submenus-branch-${branchId}`, subMenuCurrentPage, subMenuSearchTerm, subMenuItemsPerPage],
+    queryFn: async () => {
+      const response = await apiRepository.call<{
+        items: SubMenu[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        hasNext: boolean;
+      }>(
+        'getSubMenusByBranch',
+        'GET',
+        undefined,
+        {
+          PageNumber: subMenuCurrentPage.toString(),
+          PageSize: subMenuItemsPerPage.toString(),
+          SortBy: 'name',
+          IsAscending: 'true',
+          ...(subMenuSearchTerm && { SearchTerm: subMenuSearchTerm })
+        },
+        true,
+        { branchId }
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const subMenus = subMenusResponse?.items || [];
+  const subMenuTotalPages = subMenusResponse?.totalPages || 1;
 
   // Refresh tables after adding a new one
   const handleRefreshTables = () => {
@@ -679,6 +726,12 @@ export default function Orders() {
                 >
                   Category
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="SubMenu"
+                  className="bg-gray-100 text-gray-700 border-b-2 border-transparent data-[state=active]:bg-gray-100 data-[state=active]:border-green-500 data-[state=active]:text-gray-900 rounded-none"
+                >
+                  SubMenu
+                </TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -701,7 +754,7 @@ export default function Orders() {
                     Add Item
                   </Button>
                 </>
-              ) : (
+              ) : activeMenuTab === "Category" ? (
                 <Button 
                   className="bg-green-500 hover:bg-green-600 text-white"
                   onClick={() => setShowAddCategoryModal(true)}
@@ -710,7 +763,16 @@ export default function Orders() {
                   <Plus className="w-4 h-4 mr-2" />
                   Add Category
                 </Button>
-              )}
+              ) : activeMenuTab === "SubMenu" ? (
+                <Button 
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                  onClick={() => setShowAddSubMenuModal(true)}
+                  data-testid="button-add-submenu"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add SubMenu
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -901,6 +963,87 @@ export default function Orders() {
                 </TableBody>
               </Table>
             )}
+
+          {activeMenuTab === "SubMenu" && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <div className="flex items-center space-x-2">
+                        <span>SubMenu Name</span>
+                        <SearchTooltip
+                          placeholder="Search submenus..."
+                          onSearch={setSubMenuSearchTerm}
+                          onClear={() => setSubMenuSearchTerm('')}
+                          currentValue={subMenuSearchTerm}
+                        />
+                      </div>
+                    </TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingSubMenus ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-8">
+                        Loading submenus...
+                      </TableCell>
+                    </TableRow>
+                  ) : subMenus.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-8">
+                        No submenus found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    subMenus.map((subMenu: SubMenu) => (
+                      <TableRow key={subMenu.id} data-testid={`submenu-row-${subMenu.id}`}>
+                        <TableCell className="font-medium" data-testid={`submenu-name-${subMenu.id}`}>
+                          {subMenu.name}
+                        </TableCell>
+                        <TableCell className="font-medium" data-testid={`submenu-price-${subMenu.id}`}>
+                          ${subMenu.price.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-gray-600 hover:text-gray-800"
+                                data-testid={`button-submenu-options-${subMenu.id}`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setEditSubMenu(subMenu);
+                                setShowAddSubMenuModal(true);
+                              }}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit SubMenu
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => {
+                                  setDeleteItem({type: 'submenu', id: subMenu.id.toString(), name: subMenu.name});
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete SubMenu
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
 
           {/* Menu/Category Pagination */}
@@ -923,12 +1066,14 @@ export default function Orders() {
               <Button 
                 variant="outline" 
                 size="sm"
-                disabled={activeMenuTab === "Menu" ? !menuHasPrevious || isLoadingMenu : categoryCurrentPage === 1}
+                disabled={activeMenuTab === "Menu" ? !menuHasPrevious || isLoadingMenu : activeMenuTab === "Category" ? categoryCurrentPage === 1 : subMenuCurrentPage === 1}
                 onClick={() => {
                   if (activeMenuTab === "Menu") {
                     setMenuCurrentPage(Math.max(1, menuCurrentPage - 1));
-                  } else {
+                  } else if (activeMenuTab === "Category") {
                     setCategoryCurrentPage(Math.max(1, categoryCurrentPage - 1));
+                  } else if (activeMenuTab === "SubMenu") {
+                    setSubMenuCurrentPage(Math.max(1, subMenuCurrentPage - 1));
                   }
                 }}
               >
@@ -941,7 +1086,7 @@ export default function Orders() {
                 size="sm" 
                 className="bg-green-500 hover:bg-green-600"
               >
-                {activeMenuTab === "Menu" ? menuCurrentPage : categoryCurrentPage}
+                {activeMenuTab === "Menu" ? menuCurrentPage : activeMenuTab === "Category" ? categoryCurrentPage : subMenuCurrentPage}
               </Button>
               
               <Button 
@@ -1462,6 +1607,17 @@ export default function Orders() {
         branchId={branchId}
       />
 
+      {/* Add SubMenu Modal */}
+      <AddSubMenuModal
+        isOpen={showAddSubMenuModal}
+        onClose={() => {
+          setShowAddSubMenuModal(false);
+          setEditSubMenu(null);
+        }}
+        branchId={branchId}
+        editSubMenu={editSubMenu || undefined}
+      />
+
       {/* Apply Discount Modal */}
       <ApplyDiscountModal
         isOpen={showApplyDiscountModal}
@@ -1567,6 +1723,7 @@ export default function Orders() {
           title={
             deleteItem.type === 'menu' ? 'Delete Menu Item' :
             deleteItem.type === 'category' ? 'Delete Category' :
+            deleteItem.type === 'submenu' ? 'Delete SubMenu' :
             deleteItem.type === 'deal' ? 'Delete Deal' :
             deleteItem.type === 'discount' ? 'Delete Discount' :
             'Delete Table'
@@ -1608,6 +1765,28 @@ export default function Orders() {
                 queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
               } catch (error: any) {
                 console.error('Failed to delete category:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
+              }
+            } else if (deleteItem.type === 'submenu') {
+              // Delete submenu using real API endpoint
+              try {
+                const response = await apiRepository.call(
+                  'deleteSubMenu',
+                  'DELETE',
+                  undefined,
+                  undefined,
+                  true,
+                  { id: deleteItem.id }
+                );
+                
+                if (response.error) {
+                  throw new Error(response.error);
+                }
+                
+                // Refresh the submenus list after successful deletion
+                queryClient.invalidateQueries({ queryKey: [`submenus-branch-${branchId}`] });
+              } catch (error: any) {
+                console.error('Failed to delete submenu:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
             } else if (deleteItem.type === 'menu') {

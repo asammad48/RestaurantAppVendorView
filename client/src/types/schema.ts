@@ -169,6 +169,23 @@ export const insertCategorySchema = z.object({
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = InsertCategory & { id: string; createdAt: Date; };
 
+// SubMenu types
+export const insertSubMenuSchema = z.object({
+  name: z.string().min(1, "SubMenu name is required"),
+  price: z.number().min(0, "Price must be positive"),
+  branchId: z.number().min(1, "Branch ID is required"),
+});
+
+export type InsertSubMenu = z.infer<typeof insertSubMenuSchema>;
+
+export interface SubMenu {
+  id: number;
+  branchId: number;
+  name: string;
+  price: number;
+  isActive: boolean;
+}
+
 // Simple Menu Item types for deals (from API response)
 export interface SimpleMenuItem {
   menuItemId: number;
