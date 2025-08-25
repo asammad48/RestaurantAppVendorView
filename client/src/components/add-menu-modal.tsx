@@ -84,7 +84,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
           IsAscending: 'true'
         },
         true,
-        { branchId: branchId || 3 }
+        { branchId: branchId || 0 }
       );
       return response.data?.items || [];
     },
