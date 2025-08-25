@@ -19,6 +19,10 @@ const branchConfigSchema = z.object({
   IsReservation: z.boolean(),
   IsDelivery: z.boolean(),
   
+  // Operating Hours
+  OpenTime: z.string().optional(),
+  CloseTime: z.string().optional(),
+  
   // Delivery Configuration
   DeliveryTime: z.number().min(0).optional(),
   DeliveryMinimumOrder: z.number().min(0).optional(),
@@ -49,6 +53,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       IsTakeaway: true,
       IsReservation: false,
       IsDelivery: false,
+      
+      // Operating Hours defaults
+      OpenTime: "09:00",
+      CloseTime: "22:00",
       
       // Delivery defaults
       DeliveryTime: 30,
@@ -161,6 +169,52 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Operating Hours */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Operating Hours</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="OpenTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Opening Time</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="time"
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="CloseTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Closing Time</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="time"
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
 
