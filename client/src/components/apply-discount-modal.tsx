@@ -22,6 +22,7 @@ interface ApplyDiscountModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: 'menu' | 'deals';
+  branchId: number;
 }
 
 interface SimpleMenuItem {
@@ -40,16 +41,16 @@ interface SimpleDiscount {
   discountValue: number;
 }
 
-export default function ApplyDiscountModal({ isOpen, onClose, mode }: ApplyDiscountModalProps) {
+export default function ApplyDiscountModal({ isOpen, onClose, mode, branchId }: ApplyDiscountModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   // Query for menu items (only when mode is 'menu')
   const { data: menuItems = [], isLoading: isLoadingMenuItems } = useQuery<SimpleMenuItem[]>({
-    queryKey: ['menu-items-simple', 3],
+    queryKey: ['menu-items-simple', branchId],
     queryFn: async (): Promise<SimpleMenuItem[]> => {
-      const response = await discountsApi.getMenuItemsSimpleByBranch(3);
+      const response = await discountsApi.getMenuItemsSimpleByBranch(branchId);
       return Array.isArray(response) ? response : [];
     },
     enabled: isOpen && mode === 'menu',
@@ -57,9 +58,9 @@ export default function ApplyDiscountModal({ isOpen, onClose, mode }: ApplyDisco
 
   // Query for deals (only when mode is 'deals')
   const { data: deals = [], isLoading: isLoadingDeals } = useQuery<SimpleDeal[]>({
-    queryKey: ['deals-simple', 3],
+    queryKey: ['deals-simple', branchId],
     queryFn: async (): Promise<SimpleDeal[]> => {
-      const response = await discountsApi.getDealsSimpleByBranch(3);
+      const response = await discountsApi.getDealsSimpleByBranch(branchId);
       return Array.isArray(response) ? response : [];
     },
     enabled: isOpen && mode === 'deals',
@@ -67,9 +68,9 @@ export default function ApplyDiscountModal({ isOpen, onClose, mode }: ApplyDisco
 
   // Query for discounts (for both modes)
   const { data: discounts = [], isLoading: isLoadingDiscounts } = useQuery<SimpleDiscount[]>({
-    queryKey: ['discounts-simple', 3],
+    queryKey: ['discounts-simple', branchId],
     queryFn: async (): Promise<SimpleDiscount[]> => {
-      const response = await discountsApi.getDiscountsSimpleByBranch(3);
+      const response = await discountsApi.getDiscountsSimpleByBranch(branchId);
       return Array.isArray(response) ? response : [];
     },
     enabled: isOpen,
@@ -105,11 +106,11 @@ export default function ApplyDiscountModal({ isOpen, onClose, mode }: ApplyDisco
     onSuccess: () => {
       // Invalidate relevant queries to refresh tables
       if (mode === 'menu') {
-        queryClient.invalidateQueries({ queryKey: ['menu-items-branch-3'] });
-        queryClient.invalidateQueries({ queryKey: ['menu-items-simple', 3] });
+        queryClient.invalidateQueries({ queryKey: [`menu-items-branch-${branchId}`] });
+        queryClient.invalidateQueries({ queryKey: ['menu-items-simple', branchId] });
       } else {
-        queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
-        queryClient.invalidateQueries({ queryKey: ['deals-simple', 3] });
+        queryClient.invalidateQueries({ queryKey: [`deals-branch-${branchId}`] });
+        queryClient.invalidateQueries({ queryKey: ['deals-simple', branchId] });
       }
       
       toast({ 

@@ -62,7 +62,7 @@ export default function AddTableModal({ open, onOpenChange, branchId }: AddTable
         title: "Success", 
         description: `Table "${responseData.name}" has been created successfully.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["tables", "branch", 3] });
+      if (branchId) queryClient.invalidateQueries({ queryKey: ["tables", "branch", branchId] });
       queryClient.invalidateQueries({ queryKey: ["branches"] });
       form.reset();
       onOpenChange(false);

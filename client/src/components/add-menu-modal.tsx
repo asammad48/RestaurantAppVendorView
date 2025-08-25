@@ -47,7 +47,7 @@ interface AddMenuModalProps {
   editMenuItem?: MenuItem; // MenuItem type for edit mode
 }
 
-export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId = 3, editMenuItem }: AddMenuModalProps) {
+export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, editMenuItem }: AddMenuModalProps) {
   const isEditMode = !!editMenuItem;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -84,7 +84,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
           IsAscending: 'true'
         },
         true,
-        { branchId: branchId }
+        { branchId: branchId || 3 }
       );
       return response.data?.items || [];
     },

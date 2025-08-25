@@ -18,7 +18,7 @@ interface AddServicesModalProps {
 }
 
 
-export default function AddServicesModal({ open, onOpenChange, branchId = 3, onServicesUpdated }: AddServicesModalProps) {
+export default function AddServicesModal({ open, onOpenChange, branchId, onServicesUpdated }: AddServicesModalProps) {
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -36,10 +36,11 @@ export default function AddServicesModal({ open, onOpenChange, branchId = 3, onS
 
   const updateBranchServicesMutation = useMutation({
     mutationFn: async (serviceIds: number[]) => {
+      if (!branchId) throw new Error('Branch ID is required');
       return await servicesApi.updateBranchServices(branchId, serviceIds);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['branch-services', branchId] });
+      if (branchId) queryClient.invalidateQueries({ queryKey: ['branch-services', branchId] });
       toast({
         title: "Success",
         description: `${selectedServices.length} service(s) added to branch successfully`,

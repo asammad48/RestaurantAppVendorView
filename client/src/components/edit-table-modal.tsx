@@ -95,7 +95,12 @@ export default function EditTableModal({ open, onOpenChange, table }: EditTableM
         title: "Success",
         description: "Table capacity updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ["tables", "branch", 3] });
+      // Get branchId from locationData or fallback to invalidate all tables
+      if (locationData?.branchId) {
+        queryClient.invalidateQueries({ queryKey: ["tables", "branch", locationData.branchId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["tables"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["location", table?.id] });
       form.reset();
       onOpenChange(false);

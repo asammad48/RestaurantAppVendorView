@@ -23,7 +23,7 @@ interface AddDiscountModalProps {
 export default function AddDiscountModal({ 
   open, 
   onOpenChange, 
-  branchId = 3, 
+  branchId, 
   editDiscountId 
 }: AddDiscountModalProps) {
   const queryClient = useQueryClient();
@@ -112,7 +112,7 @@ export default function AddDiscountModal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discounts'] });
-      queryClient.invalidateQueries({ queryKey: ['discounts-branch-3'] });
+      queryClient.invalidateQueries({ queryKey: [`discounts-branch-${branchId}`] });
       toast({
         title: "Success",
         description: isEditMode ? "Discount updated successfully" : "Discount created successfully",

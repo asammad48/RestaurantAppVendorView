@@ -174,6 +174,11 @@ const mockTables: TableData[] = [
 export default function Orders() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  
+  // Extract branchId from URL query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const branchId = parseInt(urlParams.get('branchId') || '3', 10); // Default to 3 for backward compatibility
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [orderFilter, setOrderFilter] = useState("All Orders");
   const [itemsPerPage, setItemsPerPage] = useState(6);
@@ -204,9 +209,9 @@ export default function Orders() {
 
   // Query for branch services with real API
   const { data: branchServices = [], isLoading: isLoadingBranchServices, refetch: refetchBranchServices } = useQuery<BranchService[]>({
-    queryKey: ['branch-services', 3],
+    queryKey: ['branch-services', branchId],
     queryFn: async (): Promise<BranchService[]> => {
-      return await servicesApi.getBranchServices(3); // Branch ID 3
+      return await servicesApi.getBranchServices(branchId);
     },
   });
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -221,11 +226,11 @@ export default function Orders() {
       setShowPricingModal(true);
     }
   }, []);
-  // Get branch details for branch 3
+  // Get branch details for the current branch
   const { data: branchData } = useQuery<Branch>({
-    queryKey: ["branch", 3],
+    queryKey: ["branch", branchId],
     queryFn: async () => {
-      const response = await branchApi.getBranchById(3);
+      const response = await branchApi.getBranchById(branchId);
       // getBranchById returns the data directly
       return response as Branch;
     },
@@ -233,11 +238,11 @@ export default function Orders() {
     retry: 2,
   });
 
-  // Real API query for tables from branch 3
+  // Real API query for tables from the current branch
   const { data: tablesData, isLoading: isLoadingTables, refetch: refetchTables } = useQuery<LocationApiResponse[]>({
-    queryKey: ["tables", "branch", 3],
+    queryKey: ["tables", "branch", branchId],
     queryFn: async () => {
-      const response = await locationApi.getLocationsByBranch(3);
+      const response = await locationApi.getLocationsByBranch(branchId);
       
       if (response.error) {
         throw new Error(response.error);
@@ -311,7 +316,7 @@ export default function Orders() {
   // Query for menu items
   // Query for menu items with real API and pagination support using generic API repository
   const { data: menuItemsResponse, isLoading: isLoadingMenu, refetch: refetchMenuItems } = useQuery({
-    queryKey: [`menu-items-branch-3`, menuCurrentPage, menuSearchTerm, menuItemsPerPage],
+    queryKey: [`menu-items-branch-${branchId}`, menuCurrentPage, menuSearchTerm, menuItemsPerPage],
     queryFn: async () => {
       const response = await apiRepository.call<{
         items: MenuItem[];
@@ -333,7 +338,7 @@ export default function Orders() {
           ...(menuSearchTerm && { SearchTerm: menuSearchTerm })
         },
         true,
-        { branchId: 3 }
+        { branchId }
       );
       
       if (response.error) {
@@ -353,7 +358,7 @@ export default function Orders() {
 
   // Query for categories with real API and pagination support using generic API repository
   const { data: categoriesResponse, isLoading: isLoadingCategories, refetch: refetchCategories } = useQuery({
-    queryKey: [`menu-categories-branch-3`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
+    queryKey: [`menu-categories-branch-${branchId}`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
     queryFn: async () => {
       const response = await apiRepository.call<{
         items: MenuCategory[];
@@ -375,7 +380,7 @@ export default function Orders() {
           ...(categorySearchTerm && { SearchTerm: categorySearchTerm })
         },
         true,
-        { branchId: 3 }
+        { branchId }
       );
       
       if (response.error) {
@@ -434,7 +439,7 @@ export default function Orders() {
 
   // Query for deals with real API and pagination support using generic API repository
   const { data: dealsResponse, isLoading: dealsLoading, refetch: refetchDeals } = useQuery({
-    queryKey: [`deals-branch-3`, dealsCurrentPage, dealsSearchTerm, dealsItemsPerPage],
+    queryKey: [`deals-branch-${branchId}`, dealsCurrentPage, dealsSearchTerm, dealsItemsPerPage],
     queryFn: async () => {
       const response = await apiRepository.call<{
         items: Deal[];
@@ -456,7 +461,7 @@ export default function Orders() {
           ...(dealsSearchTerm && { SearchTerm: dealsSearchTerm })
         },
         true,
-        { branchId: 3 }
+        { branchId }
       );
       
       if (response.error) {
@@ -476,7 +481,7 @@ export default function Orders() {
 
   // Fetch discounts with pagination using Generic API repository  
   const { data: discountsResponse, isLoading: discountsLoading, refetch: refetchDiscounts } = useQuery<PaginationResponse<Discount>>({
-    queryKey: [`discounts-branch-3`, discountsCurrentPage, discountsItemsPerPage, discountsSearchTerm],
+    queryKey: [`discounts-branch-${branchId}`, discountsCurrentPage, discountsItemsPerPage, discountsSearchTerm],
     queryFn: async () => {
       const response = await discountsApi.getDiscountsByBranch(3, {
         PageNumber: discountsCurrentPage,
@@ -1432,7 +1437,7 @@ export default function Orders() {
       <AddTableModal
         open={showAddTableModal}
         onOpenChange={setShowAddTableModal}
-        branchId={3}
+        branchId={branchId}
       />
 
       {/* Edit Table Modal */}
@@ -1447,14 +1452,14 @@ export default function Orders() {
         isOpen={showAddMenuModal}
         onClose={() => setShowAddMenuModal(false)}
         restaurantId="1"
-        branchId={3}
+        branchId={branchId}
       />
 
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
-        branchId={3}
+        branchId={branchId}
       />
 
       {/* Apply Discount Modal */}
@@ -1462,6 +1467,7 @@ export default function Orders() {
         isOpen={showApplyDiscountModal}
         onClose={() => setShowApplyDiscountModal(false)}
         mode={activeMainTab === "menu" ? "menu" : "deals"}
+        branchId={branchId}
       />
 
       {/* Add Deals Modal */}
@@ -1469,7 +1475,7 @@ export default function Orders() {
         open={showAddDealsModal}
         onOpenChange={setShowAddDealsModal}
         restaurantId="1"
-        branchId={3}
+        branchId={branchId}
       />
 
       {/* Edit Deals Modal */}
@@ -1481,7 +1487,7 @@ export default function Orders() {
             if (!open) setSelectedDeal(null);
           }}
           restaurantId="1"
-          branchId={3}
+          branchId={branchId}
           editDealId={selectedDeal.id}
         />
       )}
@@ -1490,7 +1496,7 @@ export default function Orders() {
       <AddServicesModal
         open={showAddServicesModal}
         onOpenChange={setShowAddServicesModal}
-        branchId={3}
+        branchId={branchId}
         onServicesUpdated={() => {
           refetchBranchServices();
         }}
@@ -1507,7 +1513,7 @@ export default function Orders() {
       <AddDiscountModal
         open={showAddDiscountModal}
         onOpenChange={setShowAddDiscountModal}
-        branchId={3}
+        branchId={branchId}
       />
 
       {/* Edit Discount Modal */}
@@ -1518,7 +1524,7 @@ export default function Orders() {
             setShowEditDiscountModal(open);
             if (!open) setSelectedDiscount(null);
           }}
-          branchId={3}
+          branchId={branchId}
           editDiscountId={selectedDiscount.id}
         />
       )}
@@ -1532,7 +1538,7 @@ export default function Orders() {
             setSelectedMenuItem(null);
           }}
           restaurantId="1"
-          branchId={3}
+          branchId={branchId}
           editMenuItem={selectedMenuItem}
         />
       )}
@@ -1545,7 +1551,7 @@ export default function Orders() {
             setShowEditCategoryModal(false);
             setSelectedCategory(null);
           }}
-          branchId={3}
+          branchId={branchId}
           editCategory={selectedCategory}
         />
       )}
@@ -1599,7 +1605,7 @@ export default function Orders() {
                 }
                 
                 // Refresh the categories list after successful deletion
-                queryClient.invalidateQueries({ queryKey: ['menu-categories-branch-3'] });
+                queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
               } catch (error: any) {
                 console.error('Failed to delete category:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
@@ -1621,7 +1627,7 @@ export default function Orders() {
                 }
                 
                 // Refresh the menu items list after successful deletion
-                queryClient.invalidateQueries({ queryKey: [`menu-items-branch-3`] });
+                queryClient.invalidateQueries({ queryKey: [`menu-items-branch-${branchId}`] });
               } catch (error: any) {
                 console.error('Failed to delete menu item:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
@@ -1633,7 +1639,7 @@ export default function Orders() {
                 
                 // Refresh the deals list after successful deletion
                 queryClient.invalidateQueries({ queryKey: ['deals'] });
-                queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
+                queryClient.invalidateQueries({ queryKey: [`deals-branch-${branchId}`] });
               } catch (error: any) {
                 console.error('Failed to delete deal:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
@@ -1645,7 +1651,7 @@ export default function Orders() {
                 
                 // Refresh the discounts list after successful deletion
                 queryClient.invalidateQueries({ queryKey: ['discounts'] });
-                queryClient.invalidateQueries({ queryKey: ['discounts-branch-3'] });
+                queryClient.invalidateQueries({ queryKey: [`discounts-branch-${branchId}`] });
               } catch (error: any) {
                 console.error('Failed to delete discount:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error

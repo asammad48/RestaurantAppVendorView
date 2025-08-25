@@ -29,7 +29,7 @@ interface DealItem {
   quantity: number;
 }
 
-export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId = 3, editDealId }: AddDealsModalProps) {
+export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId, editDealId }: AddDealsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<DealItem[]>([]);
   const [originalImage, setOriginalImage] = useState<string>("");
@@ -39,6 +39,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   const { data: menuItems = [], isLoading: menuItemsLoading } = useQuery({
     queryKey: ['menu-items-simple', branchId],
     queryFn: async (): Promise<SimpleMenuItem[]> => {
+      if (!branchId) return [];
       const response = await menuItemApi.getSimpleMenuItemsByBranch(branchId);
       if (response.error) {
         throw new Error(response.error);
@@ -54,6 +55,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     queryFn: async (): Promise<Deal> => {
       if (!editDealId) throw new Error('Deal ID is required');
       const response = await dealsApi.getDealById(editDealId);
+      if (!response) throw new Error('Deal not found');
       return response;
     },
     enabled: open && !!editDealId,
@@ -140,7 +142,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals-branch-3'] });
+      if (branchId) queryClient.invalidateQueries({ queryKey: [`deals-branch-${branchId}`] });
       toast({
         title: "Success",
         description: isEditMode ? "Deal updated successfully" : "Deal created successfully",
@@ -203,6 +205,10 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       packagePicture = "";
     }
 
+    if (!branchId) {
+      throw new Error('Branch ID is required');
+    }
+    
     const dealData = {
       branchId: branchId, // Include branchId in the API call
       name: data.name,
