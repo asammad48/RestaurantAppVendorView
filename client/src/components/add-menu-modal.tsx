@@ -412,6 +412,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId =
     } else {
       // For create mode, use different field name for image and exclude update-specific fields
       const createData = {
+        branchId: branchId, // Include branchId for creation
         menuCategoryId: data.categoryId,
         name: data.name,
         description: data.description || "",

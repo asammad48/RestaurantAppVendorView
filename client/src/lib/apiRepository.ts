@@ -371,6 +371,7 @@ export const API_ENDPOINTS = {
   
   // Menu endpoints
   MENU_ITEMS: '/api/menu-items',
+  CREATE_MENU_ITEM: '/api/MenuItem',
   UPDATE_MENU_ITEM: '/api/MenuItem/{id}',
   DELETE_MENU_ITEM: '/api/MenuItem/{id}',
   
@@ -464,7 +465,8 @@ export const defaultApiConfig: ApiConfig = {
     
     // Menu endpoints
     getMenuItems: API_ENDPOINTS.MENU_ITEMS,
-    createMenuItem: API_ENDPOINTS.MENU_ITEMS,
+    createMenuItem: API_ENDPOINTS.CREATE_MENU_ITEM,
+    menuItemCreate: API_ENDPOINTS.CREATE_MENU_ITEM,
     
     // Order endpoints
     getOrders: API_ENDPOINTS.ORDERS,

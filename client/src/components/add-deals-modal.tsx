@@ -204,6 +204,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     }
 
     const dealData = {
+      branchId: branchId, // Include branchId in the API call
       name: data.name,
       description: data.description,
       price: data.price, // API expects price as is (not in cents based on curl example)
