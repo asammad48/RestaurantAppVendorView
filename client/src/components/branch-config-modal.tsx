@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,31 +12,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import type { Branch } from "@/types/schema";
+import { branchApi } from "@/lib/apiRepository";
 
-// Configuration schema
+// Configuration schema - using lowercase to match API response
 const branchConfigSchema = z.object({
-  IsTakeaway: z.boolean(),
-  IsReservation: z.boolean(),
-  IsDelivery: z.boolean(),
+  isTakeaway: z.boolean(),
+  isReservation: z.boolean(),
+  isDelivery: z.boolean(),
   
   // Operating Hours
-  OpenTime: z.string().optional(),
-  CloseTime: z.string().optional(),
+  openTime: z.string().optional(),
+  closeTime: z.string().optional(),
   
   // Delivery Configuration
-  DeliveryTime: z.number().min(0).optional(),
-  DeliveryMinimumOrder: z.number().min(0).optional(),
-  DeliveryFee: z.number().min(0).optional(),
-  MaxDeliveryDistance: z.number().min(0).optional(),
+  deliveryTime: z.number().min(0).optional(),
+  deliveryMinimumOrder: z.number().min(0).optional(),
+  deliveryFee: z.number().min(0).optional(),
+  maxDeliveryDistance: z.number().min(0).optional(),
   
   // Reservation Configuration  
-  MaxAdvanceDays: z.number().min(0).optional(),
-  MinNoticeMinutes: z.number().min(0).optional(),
-  MaxGuestsPerReservation: z.number().min(1).optional(),
-  HoldTimeMinutes: z.number().min(0).optional(),
+  maxAdvanceDays: z.number().min(0).optional(),
+  minNoticeMinutes: z.number().min(0).optional(),
+  maxGuestsPerReservation: z.number().min(1).optional(),
+  holdTimeMinutes: z.number().min(0).optional(),
 });
 
 type BranchConfigData = z.infer<typeof branchConfigSchema>;
+
+// Type for API response
+interface BranchConfigResponse {
+  branchId: number;
+  isTakeaway: boolean;
+  isReservation: boolean;
+  isDelivery: boolean;
+  deliveryTime: number;
+  deliveryMinimumOrder: number;
+  deliveryFee: number;
+  maxDeliveryDistance: number;
+  maxAdvanceDays: number;
+  minNoticeMinutes: number;
+  maxGuestsPerReservation: number;
+  holdTimeMinutes: number;
+  openTime: string;
+  closeTime: string;
+}
 
 interface BranchConfigModalProps {
   open: boolean;
@@ -46,40 +65,102 @@ interface BranchConfigModalProps {
 
 export default function BranchConfigModal({ open, onClose, branch }: BranchConfigModalProps) {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const form = useForm<BranchConfigData>({
     resolver: zodResolver(branchConfigSchema),
     defaultValues: {
-      IsTakeaway: true,
-      IsReservation: false,
-      IsDelivery: false,
+      isTakeaway: true,
+      isReservation: false,
+      isDelivery: false,
       
       // Operating Hours defaults
-      OpenTime: "09:00",
-      CloseTime: "22:00",
+      openTime: "09:00",
+      closeTime: "22:00",
       
       // Delivery defaults
-      DeliveryTime: 30,
-      DeliveryMinimumOrder: 25.00,
-      DeliveryFee: 3.99,
-      MaxDeliveryDistance: 10,
+      deliveryTime: 30,
+      deliveryMinimumOrder: 25.00,
+      deliveryFee: 3.99,
+      maxDeliveryDistance: 10,
       
       // Reservation defaults
-      MaxAdvanceDays: 30,
-      MinNoticeMinutes: 120,
-      MaxGuestsPerReservation: 8,
-      HoldTimeMinutes: 15,
+      maxAdvanceDays: 30,
+      minNoticeMinutes: 120,
+      maxGuestsPerReservation: 8,
+      holdTimeMinutes: 15,
     },
   });
 
-  const isReservationEnabled = form.watch("IsReservation");
-  const isDeliveryEnabled = form.watch("IsDelivery");
+  const isReservationEnabled = form.watch("isReservation");
+  const isDeliveryEnabled = form.watch("isDelivery");
+
+  // Fetch configuration data when modal opens
+  useEffect(() => {
+    const fetchConfiguration = async () => {
+      if (!open || !branch.id) return;
+      
+      setIsLoading(true);
+      try {
+        const configData = await branchApi.getBranchConfiguration(branch.id) as BranchConfigResponse;
+        console.log("Fetched configuration:", configData);
+        
+        // Convert time format from HH:mm:ss to HH:mm for HTML time inputs
+        const formatTime = (timeString: string) => {
+          if (!timeString || timeString === "00:00:00") return "09:00";
+          return timeString.substring(0, 5); // Extract HH:mm from HH:mm:ss
+        };
+
+        // Reset form with fetched data
+        form.reset({
+          isTakeaway: configData.isTakeaway || false,
+          isReservation: configData.isReservation || false,
+          isDelivery: configData.isDelivery || false,
+          openTime: formatTime(configData.openTime),
+          closeTime: formatTime(configData.closeTime),
+          deliveryTime: configData.deliveryTime || 30,
+          deliveryMinimumOrder: configData.deliveryMinimumOrder || 25.00,
+          deliveryFee: configData.deliveryFee || 3.99,
+          maxDeliveryDistance: configData.maxDeliveryDistance || 10,
+          maxAdvanceDays: configData.maxAdvanceDays || 30,
+          minNoticeMinutes: configData.minNoticeMinutes || 120,
+          maxGuestsPerReservation: configData.maxGuestsPerReservation || 8,
+          holdTimeMinutes: configData.holdTimeMinutes || 15,
+        });
+      } catch (error: any) {
+        console.error("Failed to fetch configuration:", error);
+        toast({
+          title: "Warning",
+          description: "Could not load current configuration. Using defaults.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchConfiguration();
+  }, [open, branch.id, form, toast]);
 
   const onSubmit = async (data: BranchConfigData) => {
+    setIsSaving(true);
     try {
-      console.log("Branch configuration data:", data);
-      // TODO: Replace with actual API call when provided
-      // await branchApi.updateBranchConfig(branch.id, data);
+      console.log("Submitting configuration data:", data);
+      
+      // Convert time format from HH:mm to HH:mm:ss for API
+      const formatTimeForApi = (timeString: string) => {
+        if (!timeString) return "00:00:00";
+        return `${timeString}:00`;
+      };
+
+      const apiData = {
+        ...data,
+        openTime: formatTimeForApi(data.openTime || ""),
+        closeTime: formatTimeForApi(data.closeTime || ""),
+      };
+
+      await branchApi.updateBranchConfiguration(branch.id, apiData);
       
       toast({
         title: "Success",
@@ -87,11 +168,14 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       });
       onClose();
     } catch (error: any) {
+      console.error("Failed to update configuration:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update configuration",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -115,7 +199,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="IsTakeaway"
+                  name="isTakeaway"
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between space-y-0">
                       <div className="space-y-1">
@@ -134,7 +218,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                 <FormField
                   control={form.control}
-                  name="IsReservation"
+                  name="isReservation"
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between space-y-0">
                       <div className="space-y-1">
@@ -153,7 +237,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                 <FormField
                   control={form.control}
-                  name="IsDelivery"
+                  name="isDelivery"
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between space-y-0">
                       <div className="space-y-1">
@@ -181,7 +265,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="OpenTime"
+                    name="openTime"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Opening Time</FormLabel>
@@ -199,7 +283,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                   <FormField
                     control={form.control}
-                    name="CloseTime"
+                    name="closeTime"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Closing Time</FormLabel>
@@ -228,7 +312,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="DeliveryTime"
+                      name="deliveryTime"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Delivery Time (minutes)</FormLabel>
@@ -247,7 +331,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                     <FormField
                       control={form.control}
-                      name="DeliveryFee"
+                      name="deliveryFee"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Delivery Fee ($)</FormLabel>
@@ -267,7 +351,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                     <FormField
                       control={form.control}
-                      name="DeliveryMinimumOrder"
+                      name="deliveryMinimumOrder"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Minimum Order ($)</FormLabel>
@@ -287,7 +371,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                     <FormField
                       control={form.control}
-                      name="MaxDeliveryDistance"
+                      name="maxDeliveryDistance"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Max Distance (km)</FormLabel>
@@ -318,7 +402,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="MaxAdvanceDays"
+                      name="maxAdvanceDays"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Max Advance Days</FormLabel>
@@ -337,7 +421,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                     <FormField
                       control={form.control}
-                      name="MinNoticeMinutes"
+                      name="minNoticeMinutes"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Min Notice (minutes)</FormLabel>
@@ -356,7 +440,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                     <FormField
                       control={form.control}
-                      name="MaxGuestsPerReservation"
+                      name="maxGuestsPerReservation"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Max Guests per Reservation</FormLabel>
@@ -375,7 +459,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
                     <FormField
                       control={form.control}
-                      name="HoldTimeMinutes"
+                      name="holdTimeMinutes"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Hold Time (minutes)</FormLabel>
@@ -409,9 +493,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
               </Button>
               <Button
                 type="submit"
+                disabled={isSaving || isLoading}
                 className="bg-green-600 hover:bg-green-700"
               >
-                Save Configuration
+{isSaving ? "Saving..." : "Save Configuration"}
               </Button>
             </div>
           </form>

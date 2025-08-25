@@ -363,6 +363,7 @@ export const API_ENDPOINTS = {
   BRANCHES: '/api/Branch',
   BRANCH_BY_ID: '/api/Branch/{id}',
   BRANCHES_BY_ENTITY: '/api/Branch/entity/{entityId}',
+  BRANCH_CONFIGURATION: '/api/Branch/{id}/configuration',
   
   // Location/Table endpoints
   LOCATIONS: '/api/Location',
@@ -454,6 +455,8 @@ export const defaultApiConfig: ApiConfig = {
     createBranch: API_ENDPOINTS.BRANCHES,
     updateBranch: API_ENDPOINTS.BRANCH_BY_ID,
     deleteBranch: API_ENDPOINTS.BRANCH_BY_ID,
+    getBranchConfiguration: API_ENDPOINTS.BRANCH_CONFIGURATION,
+    updateBranchConfiguration: API_ENDPOINTS.BRANCH_CONFIGURATION,
     
     // Location/Table endpoints
     getLocations: API_ENDPOINTS.LOCATIONS,
@@ -604,6 +607,24 @@ export const branchApi = {
   // Delete branch
   deleteBranch: async (branchId: number) => {
     const response = await apiRepository.call('deleteBranch', 'DELETE', undefined, {}, true, { id: branchId });
+    return response.data;
+  },
+
+  // Get branch configuration
+  getBranchConfiguration: async (branchId: number) => {
+    const response = await apiRepository.call('getBranchConfiguration', 'GET', undefined, {}, true, { id: branchId });
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    return response.data;
+  },
+
+  // Update branch configuration
+  updateBranchConfiguration: async (branchId: number, configData: any) => {
+    const response = await apiRepository.call('updateBranchConfiguration', 'PUT', configData, {}, true, { id: branchId });
+    if (response.error) {
+      throw new Error(response.error);
+    }
     return response.data;
   },
 };
