@@ -1,14 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit } from "lucide-react";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { entityApi } from "@/lib/apiRepository";
 
 export default function Appearance() {
   const [selectedColor, setSelectedColor] = useState("rgb(22, 163, 74)"); // Green default
+  const [hexColor, setHexColor] = useState("#16A34A"); // Green default in hex
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [pickerPosition, setPickerPosition] = useState({ x: 85, y: 30 }); // Position as percentage
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  // Get entity ID from localStorage (assuming it's stored during login)
+  const getEntityId = () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.entityId || 3; // Default to 3 if not found
+    }
+    return 3; // Default entity ID
+  };
+
+  // Load primary color from API when component mounts
+  useEffect(() => {
+    const loadPrimaryColor = async () => {
+      setIsLoading(true);
+      try {
+        const entityId = getEntityId();
+        const response = await entityApi.getEntityPrimaryColor(entityId);
+        console.log("Fetched primary color:", response);
+        
+        const primaryColor = response.primaryColor || "#16A34A";
+        setHexColor(primaryColor);
+        
+        // Convert hex to RGB for the color picker
+        const hexToRgb = (hex: string) => {
+          const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+          } : { r: 22, g: 163, b: 74 };
+        };
+        
+        const rgb = hexToRgb(primaryColor);
+        setSelectedColor(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+        
+      } catch (error: any) {
+        console.error("Failed to load primary color:", error);
+        toast({
+          title: "Warning",
+          description: "Could not load current primary color. Using default.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPrimaryColor();
+  }, [toast]);
 
   // Extract RGB values from current color
   const getRGBValues = (color: string) => {
@@ -29,6 +85,11 @@ export default function Appearance() {
 
   const currentRGB = getRGBValues(selectedColor);
   const currentHex = rgbToHex(currentRGB.r, currentRGB.g, currentRGB.b);
+
+  // Update hex color when selected color changes
+  useEffect(() => {
+    setHexColor(currentHex);
+  }, [currentHex]);
 
   // Handle color picker interactions
   const handleColorStripClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -73,6 +134,29 @@ export default function Appearance() {
     const b = Math.round(baseColor.b * brightness);
     
     setSelectedColor(`rgb(${r}, ${g}, ${b})`);
+  };
+
+  // Save primary color to API
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      const entityId = getEntityId();
+      await entityApi.updateEntityPrimaryColor(entityId, hexColor);
+      
+      toast({
+        title: "Success",
+        description: "Primary color updated successfully",
+      });
+    } catch (error: any) {
+      console.error("Failed to save primary color:", error);
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to save primary color",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const previewItems = [
@@ -166,7 +250,7 @@ export default function Appearance() {
                   <div className="space-y-1" data-testid="color-hex-section">
                     <label className="text-gray-500 font-medium">Hex</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                      <span className="font-mono text-gray-800">{currentHex}</span>
+                      <span className="font-mono text-gray-800">{hexColor}</span>
                     </div>
                   </div>
                   <div className="space-y-1" data-testid="color-rgb-r-section">
@@ -193,10 +277,12 @@ export default function Appearance() {
               {/* Save Button */}
               <div className="pt-4 border-t">
                 <Button 
+                  onClick={handleSaveChanges}
+                  disabled={isSaving || isLoading}
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                   data-testid="button-save-appearance"
                 >
-                  Save Changes
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </CardContent>

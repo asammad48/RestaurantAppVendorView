@@ -358,6 +358,7 @@ export const API_ENDPOINTS = {
   // Entity endpoints
   ENTITIES: '/api/Entity',
   ENTITY_BY_ID: '/api/Entity/{id}',
+  ENTITY_PRIMARY_COLOR: '/api/Entity/{id}/primary-color',
   
   // Branch endpoints
   BRANCHES: '/api/Branch',
@@ -447,6 +448,8 @@ export const defaultApiConfig: ApiConfig = {
     getEntityById: API_ENDPOINTS.ENTITY_BY_ID,
     updateEntity: API_ENDPOINTS.ENTITY_BY_ID,
     deleteEntity: API_ENDPOINTS.ENTITY_BY_ID,
+    getEntityPrimaryColor: API_ENDPOINTS.ENTITY_PRIMARY_COLOR,
+    updateEntityPrimaryColor: API_ENDPOINTS.ENTITY_PRIMARY_COLOR,
     
     // Branch endpoints
     getBranches: API_ENDPOINTS.BRANCHES,
@@ -622,6 +625,28 @@ export const branchApi = {
   // Update branch configuration
   updateBranchConfiguration: async (branchId: number, configData: any) => {
     const response = await apiRepository.call('updateBranchConfiguration', 'PUT', configData, {}, true, { id: branchId });
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    return response.data;
+  },
+};
+
+// Entity API Helper Functions
+export const entityApi = {
+  // Get entity primary color
+  getEntityPrimaryColor: async (entityId: number) => {
+    const response = await apiRepository.call('getEntityPrimaryColor', 'GET', undefined, {}, true, { id: entityId });
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    return response.data;
+  },
+
+  // Update entity primary color
+  updateEntityPrimaryColor: async (entityId: number, primaryColor: string) => {
+    const requestData = { primaryColor };
+    const response = await apiRepository.call('updateEntityPrimaryColor', 'PUT', requestData, {}, true, { id: entityId });
     if (response.error) {
       throw new Error(response.error);
     }
