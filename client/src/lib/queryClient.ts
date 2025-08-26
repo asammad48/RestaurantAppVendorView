@@ -49,6 +49,10 @@ export async function mockLogin(email: string, password: string) {
 
     const data = response.data as any;
     
+    // Debug: Log the actual API response to see the structure
+    console.log('LOGIN API RESPONSE:', JSON.stringify(data, null, 2));
+    console.log('Available fields:', Object.keys(data));
+    
     // Store all user data in localStorage
     const userData = {
       token: data.token,
@@ -60,8 +64,11 @@ export async function mockLogin(email: string, password: string) {
       // Keep compatibility with existing code
       username: data.email,
       name: data.fullName,
-      id: data.userId || data.id || Date.now().toString() // Use actual user ID from API response
+      id: data.userId || data.id || data.user?.id || Date.now().toString() // Try multiple possible user ID fields
     };
+    
+    console.log('EXTRACTED USER ID:', userData.id);
+    console.log('FINAL USER DATA:', JSON.stringify(userData, null, 2));
     
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userData));
     localStorage.setItem('auth_token', data.token);
