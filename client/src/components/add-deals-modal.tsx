@@ -27,7 +27,11 @@ interface AddDealsModalProps {
 interface DealItem {
   menuItemId: number;
   menuItemName: string;
-  quantity: number;
+  variants: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
 }
 
 export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId, editDealId }: AddDealsModalProps) {
@@ -96,13 +100,32 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         setOriginalImage(dealData.packagePicture); // Store original for comparison
       }
       
-      // Set selected items (convert to local format for UI)
+      // Set selected items (convert to local format for UI with variants)
       if (dealData.menuItems && dealData.menuItems.length > 0) {
-        setSelectedItems(dealData.menuItems.map(item => ({
-          menuItemId: item.menuItemId,
-          menuItemName: item.menuItemName,
-          quantity: item.quantity
-        })));
+        // For backward compatibility, convert old format to new variant-based format
+        const selectedItemsMap = new Map<number, DealItem>();
+        
+        dealData.menuItems.forEach(item => {
+          if (!selectedItemsMap.has(item.menuItemId)) {
+            // Find the menu item to get variants
+            const menuItem = menuItems.find(mi => mi.menuItemId === item.menuItemId);
+            selectedItemsMap.set(item.menuItemId, {
+              menuItemId: item.menuItemId,
+              menuItemName: item.menuItemName,
+              variants: menuItem?.variants.map(v => ({
+                name: v.name,
+                price: v.price,
+                quantity: 1 // Default quantity
+              })) || [{
+                name: "Standard",
+                price: 0,
+                quantity: item.quantity || 1
+              }]
+            });
+          }
+        });
+        
+        setSelectedItems(Array.from(selectedItemsMap.values()));
       } else {
         setSelectedItems([]);
       }
@@ -167,25 +190,65 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       if (exists) {
         newItems = prev.filter(i => i.menuItemId !== item.menuItemId);
       } else {
-        newItems = [...prev, { menuItemId: item.menuItemId, menuItemName: item.menuItemName, quantity: 1 }];
+        // Add item with all variants and default quantity of 1
+        const itemWithVariants: DealItem = {
+          menuItemId: item.menuItemId,
+          menuItemName: item.menuItemName,
+          variants: item.variants.map(variant => ({
+            name: variant.name,
+            price: variant.price,
+            quantity: 1
+          }))
+        };
+        newItems = [...prev, itemWithVariants];
       }
       
-      // Update form's menuItems field
-      const formMenuItems = newItems.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity }));
+      // Update form's menuItems field - flatten variants for API
+      const formMenuItems: any[] = [];
+      newItems.forEach(item => {
+        item.variants.forEach(variant => {
+          if (variant.quantity > 0) {
+            formMenuItems.push({
+              menuItemId: item.menuItemId,
+              variantName: variant.name,
+              quantity: variant.quantity
+            });
+          }
+        });
+      });
       form.setValue('menuItems', formMenuItems);
       
       return newItems;
     });
   };
 
-  const handleQuantityChange = (menuItemId: number, quantity: number) => {
+  const handleVariantQuantityChange = (menuItemId: number, variantName: string, quantity: number) => {
     setSelectedItems(prev => {
-      const newItems = prev.map(item => 
-        item.menuItemId === menuItemId ? { ...item, quantity } : item
-      );
+      const newItems = prev.map(item => {
+        if (item.menuItemId === menuItemId) {
+          return {
+            ...item,
+            variants: item.variants.map(variant =>
+              variant.name === variantName ? { ...variant, quantity } : variant
+            )
+          };
+        }
+        return item;
+      });
       
-      // Update form's menuItems field
-      const formMenuItems = newItems.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity }));
+      // Update form's menuItems field - flatten variants for API
+      const formMenuItems: any[] = [];
+      newItems.forEach(item => {
+        item.variants.forEach(variant => {
+          if (variant.quantity > 0) {
+            formMenuItems.push({
+              menuItemId: item.menuItemId,
+              variantName: variant.name,
+              quantity: variant.quantity
+            });
+          }
+        });
+      });
       form.setValue('menuItems', formMenuItems);
       
       return newItems;
@@ -215,10 +278,15 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       packagePicture: packagePicture,
       expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : new Date().toISOString(),
       isActive: true,
-      menuItems: selectedItems.map(item => ({
-        menuItemId: item.menuItemId,
-        quantity: item.quantity
-      }))
+      menuItems: selectedItems.flatMap(item => 
+        item.variants
+          .filter(variant => variant.quantity > 0)
+          .map(variant => ({
+            menuItemId: item.menuItemId,
+            variantName: variant.name,
+            quantity: variant.quantity
+          }))
+      )
     };
 
     createDealMutation.mutate(dealData);
@@ -306,38 +374,53 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                     <p className="text-gray-500">No menu items available</p>
                   </div>
                 ) : (
-                  menuItems.map((item) => (
-                    <div key={item.menuItemId} className="flex items-center justify-between p-2 border rounded">
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          checked={selectedItems.some(i => i.menuItemId === item.menuItemId)}
-                          onCheckedChange={() => handleItemToggle(item)}
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium">{item.menuItemName}</p>
-                          <p className="text-sm text-gray-500">Menu Item ID: {item.menuItemId}</p>
-                          {selectedItems.some(i => i.menuItemId === item.menuItemId) && (
-                            <p className="text-sm text-blue-600 font-medium">
-                              Quantity: {selectedItems.find(i => i.menuItemId === item.menuItemId)?.quantity || 1}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {selectedItems.some(i => i.menuItemId === item.menuItemId) && (
-                        <div className="flex items-center space-x-2">
-                          <Label className="text-sm">Qty:</Label>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={selectedItems.find(i => i.menuItemId === item.menuItemId)?.quantity || 1}
-                            onChange={(e) => handleQuantityChange(item.menuItemId, parseInt(e.target.value) || 1)}
-                            className="w-16 text-center"
+                  menuItems.map((item) => {
+                    const selectedItem = selectedItems.find(i => i.menuItemId === item.menuItemId);
+                    const isSelected = !!selectedItem;
+                    
+                    return (
+                      <div key={item.menuItemId} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => handleItemToggle(item)}
                           />
+                          <div className="flex-1">
+                            <p className="font-medium text-lg">{item.menuItemName}</p>
+                            <p className="text-sm text-gray-500">ID: {item.menuItemId}</p>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))
+                        
+                        {isSelected && selectedItem && (
+                          <div className="ml-6 space-y-2">
+                            <p className="text-sm font-medium text-gray-700">Variants & Quantities:</p>
+                            {selectedItem.variants.map((variant, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <div className="flex-1">
+                                  <p className="font-medium">{variant.name}</p>
+                                  <p className="text-sm text-gray-600">₹{variant.price}</p>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Label className="text-sm">Qty:</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={variant.quantity}
+                                    onChange={(e) => handleVariantQuantityChange(
+                                      item.menuItemId, 
+                                      variant.name, 
+                                      parseInt(e.target.value) || 0
+                                    )}
+                                    className="w-16 text-center"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -418,7 +501,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             <div className="flex justify-center pt-4">
               <Button
                 type="submit"
-                disabled={createDealMutation.isPending || selectedItems.length === 0}
+                disabled={createDealMutation.isPending || selectedItems.length === 0 || !selectedItems.some(item => item.variants.some(v => v.quantity > 0))}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
               >
                 {createDealMutation.isPending ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Deal" : "Create Deal")}

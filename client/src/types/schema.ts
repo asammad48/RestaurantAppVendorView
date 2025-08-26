@@ -190,6 +190,10 @@ export interface SubMenu {
 export interface SimpleMenuItem {
   menuItemId: number;
   menuItemName: string;
+  variants: Array<{
+    name: string;
+    price: number;
+  }>;
 }
 
 // Deal types (matching API structure)
@@ -265,8 +269,9 @@ export const insertDealSchema = z.object({
   expiryDate: z.string().optional(),
   menuItems: z.array(z.object({
     menuItemId: z.number(),
+    variantName: z.string().optional(),
     quantity: z.number().min(1),
-  })).min(1, "At least one menu item is required"),
+  })).min(1, "At least one menu item variant is required"),
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;
