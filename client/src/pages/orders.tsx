@@ -1340,7 +1340,7 @@ export default function Orders() {
                               // Sub Menu Items
                               ...(deal.subMenuItems?.map(subItem => {
                                 const subMenuName = subMenuItemsLookup.get(subItem.subMenuItemId) || `SubItem ${subItem.subMenuItemId}`;
-                                const quantity = subItem.quantity || (subItem as any).quanity || 1; // Handle API typo "quanity"
+                                const quantity = subItem.quantity || 1;
                                 return `${quantity}x ${subMenuName}`;
                               }) || [])
                             ].join(', ') || 'No items'}

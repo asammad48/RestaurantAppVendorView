@@ -236,7 +236,6 @@ export interface Deal {
     subMenuItemId: number;
     subMenuItemName?: string; // Added for display
     quantity: number;
-    quanity?: number; // Handle API typo - remove once API is fixed
   }>;
 }
 

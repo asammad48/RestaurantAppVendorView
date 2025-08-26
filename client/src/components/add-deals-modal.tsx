@@ -161,7 +161,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             subMenuItemId: item.subMenuItemId,
             name: subMenuItem?.name || `SubItem ${item.subMenuItemId}`,
             price: subMenuItem?.price || 0,
-            quantity: item.quantity || (item as any).quanity || 1 // Handle API typo "quanity"
+            quantity: item.quantity || 1
           };
         });
         setSelectedSubMenuItems(selectedSubItems);
