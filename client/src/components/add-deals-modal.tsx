@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { insertDealSchema, type InsertDeal, type SimpleMenuItem, type DealMenuItem, type Deal } from "@/types/schema";
+import { insertDealSchema, type InsertDeal, type SimpleMenuItem, type SimpleSubMenuItem, type DealMenuItem, type Deal } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { menuItemApi, dealsApi } from "@/lib/apiRepository";
+import { menuItemApi, dealsApi, subMenuItemApi } from "@/lib/apiRepository";
 import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,9 +35,17 @@ interface DealItem {
   }>;
 }
 
+interface DealSubMenuItem {
+  subMenuItemId: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 export default function AddDealsModal({ open, onOpenChange, restaurantId, branchId, editDealId }: AddDealsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<DealItem[]>([]);
+  const [selectedSubMenuItems, setSelectedSubMenuItems] = useState<DealSubMenuItem[]>([]);
   const [originalImage, setOriginalImage] = useState<string>("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -48,6 +56,16 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       if (!branchId) return { data: [], error: undefined, status: 200 };
       const response = await menuItemApi.getSimpleMenuItemsByBranch(branchId);
       return { ...response, data: (response.data as SimpleMenuItem[]) || [] };
+    }),
+    enabled: open && !!branchId,
+  });
+
+  const { data: subMenuItems = [], isLoading: subMenuItemsLoading } = useQuery({
+    queryKey: ['sub-menu-items-simple', branchId],
+    queryFn: createApiQuery<SimpleSubMenuItem[]>(async () => {
+      if (!branchId) return { data: [], error: undefined, status: 200 };
+      const response = await subMenuItemApi.getSimpleSubMenuItemsByBranch(branchId);
+      return { ...response, data: (response.data as SimpleSubMenuItem[]) || [] };
     }),
     enabled: open && !!branchId,
   });
@@ -76,6 +94,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       packagePicture: "",
       expiryDate: "",
       menuItems: [],
+      subMenuItems: [],
     },
   });
 
@@ -94,6 +113,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
           menuItemId: item.menuItemId,
           variants: item.variants || []
         })) || [],
+        subMenuItems: dealData.subMenuItems || [],
       });
       
       // Set image if available
@@ -132,6 +152,22 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       } else {
         setSelectedItems([]);
       }
+      
+      // Set selected sub menu items
+      if (dealData.subMenuItems && dealData.subMenuItems.length > 0) {
+        const selectedSubItems = dealData.subMenuItems.map(item => {
+          const subMenuItem = subMenuItems.find(smi => smi.id === item.subMenuItemId);
+          return {
+            subMenuItemId: item.subMenuItemId,
+            name: subMenuItem?.name || `SubItem ${item.subMenuItemId}`,
+            price: subMenuItem?.price || 0,
+            quantity: item.quantity
+          };
+        });
+        setSelectedSubMenuItems(selectedSubItems);
+      } else {
+        setSelectedSubMenuItems([]);
+      }
     } else if (!isEditMode) {
       // Reset form for add mode
       form.reset({
@@ -142,8 +178,10 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         packagePicture: "",
         expiryDate: "",
         menuItems: [],
+        subMenuItems: [],
       });
       setSelectedItems([]);
+      setSelectedSubMenuItems([]);
       setSelectedFile(null);
       setOriginalImage("");
     }
@@ -174,6 +212,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       form.reset();
       setSelectedFile(null);
       setSelectedItems([]);
+      setSelectedSubMenuItems([]);
       setOriginalImage("");
       onOpenChange(false);
     },
@@ -220,6 +259,55 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             }))
         }));
       form.setValue('menuItems', formMenuItems);
+      
+      return newItems;
+    });
+  };
+
+  const handleSubMenuItemToggle = (item: SimpleSubMenuItem) => {
+    setSelectedSubMenuItems(prev => {
+      const exists = prev.find(i => i.subMenuItemId === item.id);
+      let newItems;
+      if (exists) {
+        newItems = prev.filter(i => i.subMenuItemId !== item.id);
+      } else {
+        // Add sub menu item with default quantity of 1
+        const newSubMenuItem: DealSubMenuItem = {
+          subMenuItemId: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1
+        };
+        newItems = [...prev, newSubMenuItem];
+      }
+      
+      // Update form's subMenuItems field
+      const formSubMenuItems = newItems
+        .filter(item => item.quantity > 0)
+        .map(item => ({
+          subMenuItemId: item.subMenuItemId,
+          quantity: item.quantity
+        }));
+      form.setValue('subMenuItems', formSubMenuItems);
+      
+      return newItems;
+    });
+  };
+
+  const handleSubMenuItemQuantityChange = (subMenuItemId: number, quantity: number) => {
+    setSelectedSubMenuItems(prev => {
+      const newItems = prev.map(item =>
+        item.subMenuItemId === subMenuItemId ? { ...item, quantity } : item
+      );
+      
+      // Update form's subMenuItems field
+      const formSubMenuItems = newItems
+        .filter(item => item.quantity > 0)
+        .map(item => ({
+          subMenuItemId: item.subMenuItemId,
+          quantity: item.quantity
+        }));
+      form.setValue('subMenuItems', formSubMenuItems);
       
       return newItems;
     });
@@ -290,6 +378,12 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
               variantId: variant.variantId,
               quantity: variant.quantity
             }))
+        })),
+      subMenuItems: selectedSubMenuItems
+        .filter(item => item.quantity > 0)
+        .map(item => ({
+          subMenuItemId: item.subMenuItemId,
+          quantity: item.quantity
         }))
     };
 
@@ -429,6 +523,67 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
               </div>
             </div>
 
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                Select Sub Menu Items for Deal
+              </Label>
+              <div className="max-h-48 overflow-y-auto border rounded-lg p-4 space-y-3">
+                {subMenuItemsLoading ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">Loading sub menu items...</p>
+                  </div>
+                ) : subMenuItems.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">No sub menu items available</p>
+                  </div>
+                ) : (
+                  subMenuItems.map((item) => {
+                    const selectedItem = selectedSubMenuItems.find(i => i.subMenuItemId === item.id);
+                    const isSelected = !!selectedItem;
+                    
+                    return (
+                      <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => handleSubMenuItemToggle(item)}
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-lg">{item.name}</p>
+                            <p className="text-sm text-gray-500">₹{item.price} - ID: {item.id}</p>
+                          </div>
+                        </div>
+                        
+                        {isSelected && selectedItem && (
+                          <div className="ml-6 space-y-2">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                              <div className="flex-1">
+                                <p className="font-medium">{item.name}</p>
+                                <p className="text-sm text-gray-600">₹{item.price}</p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Label className="text-sm">Qty:</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={selectedItem.quantity}
+                                  onChange={(e) => handleSubMenuItemQuantityChange(
+                                    item.id, 
+                                    parseInt(e.target.value) || 0
+                                  )}
+                                  className="w-16 text-center"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -505,7 +660,12 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             <div className="flex justify-center pt-4">
               <Button
                 type="submit"
-                disabled={createDealMutation.isPending || selectedItems.length === 0 || !selectedItems.some(item => item.variants.some(v => v.quantity > 0))}
+                disabled={createDealMutation.isPending || (
+                  selectedItems.length === 0 && selectedSubMenuItems.length === 0
+                ) || (
+                  !selectedItems.some(item => item.variants.some(v => v.quantity > 0)) &&
+                  !selectedSubMenuItems.some(item => item.quantity > 0)
+                )}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md"
               >
                 {createDealMutation.isPending ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Deal" : "Create Deal")}

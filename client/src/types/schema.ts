@@ -186,6 +186,13 @@ export interface SubMenu {
   isActive: boolean;
 }
 
+// Simple SubMenuItem types for deals (from API response)
+export interface SimpleSubMenuItem {
+  id: number;
+  name: string;
+  price: number;
+}
+
 // Simple Menu Item types for deals (from API response)
 export interface SimpleMenuItem {
   menuItemId: number;
@@ -221,6 +228,10 @@ export interface Deal {
       variantId: number;
       quantity: number;
     }>;
+  }>;
+  subMenuItems: Array<{
+    subMenuItemId: number;
+    quantity: number;
   }>;
 }
 
@@ -278,7 +289,13 @@ export const insertDealSchema = z.object({
       variantId: z.number(),
       quantity: z.number().min(1),
     })).min(1, "At least one variant is required"),
-  })).min(1, "At least one menu item is required"),
+  })).optional(),
+  subMenuItems: z.array(z.object({
+    subMenuItemId: z.number(),
+    quantity: z.number().min(1),
+  })).optional(),
+}).refine(data => (data.menuItems && data.menuItems.length > 0) || (data.subMenuItems && data.subMenuItems.length > 0), {
+  message: "At least one menu item or sub menu item is required",
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;
