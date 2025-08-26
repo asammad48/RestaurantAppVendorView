@@ -14,7 +14,6 @@ import QRCodeModal from "@/components/qr-code-modal";
 import AddTableModal from "@/components/add-table-modal";
 import EditTableModal from "@/components/edit-table-modal";
 import AddMenuModal from "@/components/add-menu-modal";
-import AddCategoryModal from "@/components/add-category-modal";
 import AddSubMenuModal from "@/components/add-submenu-modal";
 import ApplyDiscountModal from "@/components/apply-discount-modal";
 import AddDealsModal from "@/components/add-deals-modal";
@@ -26,8 +25,8 @@ import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
 import type { Branch } from "@/types/schema";
-// Use MenuItem and MenuCategory from schema
-import type { MenuItem, MenuCategory, SubMenu, Deal, Discount, BranchService } from "@/types/schema";
+// Use MenuItem from schema
+import type { MenuItem, SubMenu, Deal, Discount, BranchService } from "@/types/schema";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 
 // Deal interface is now imported from schema
@@ -187,12 +186,10 @@ export default function Orders() {
   
   // Pagination states for different tables
   const [menuCurrentPage, setMenuCurrentPage] = useState(1);
-  const [categoryCurrentPage, setCategoryCurrentPage] = useState(1);
   const [subMenuCurrentPage, setSubMenuCurrentPage] = useState(1);
   const [dealsCurrentPage, setDealsCurrentPage] = useState(1);
   const [discountsCurrentPage, setDiscountsCurrentPage] = useState(1);
   const [menuItemsPerPage] = useState(6);
-  const [categoryItemsPerPage] = useState(6);
   const [subMenuItemsPerPage] = useState(6);
   const [dealsItemsPerPage, setDealsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
   const [discountsItemsPerPage, setDiscountsItemsPerPage] = useState(DEFAULT_PAGINATION_CONFIG.defaultPageSize);
@@ -201,7 +198,6 @@ export default function Orders() {
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
-  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showAddSubMenuModal, setShowAddSubMenuModal] = useState(false);
   const [editSubMenu, setEditSubMenu] = useState<SubMenu | null>(null);
   const [showApplyDiscountModal, setShowApplyDiscountModal] = useState(false);
@@ -272,17 +268,14 @@ export default function Orders() {
     qrCode: location.qrCode // Store QR code from API
   }));
   const [menuSearchTerm, setMenuSearchTerm] = useState("");
-  const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [dealsSearchTerm, setDealsSearchTerm] = useState("");
   const [activeMenuTab, setActiveMenuTab] = useState("Menu");
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [selectedSubMenu, setSelectedSubMenu] = useState<SubMenu | null>(null);
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
-  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showEditSubMenuModal, setShowEditSubMenuModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'submenu' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
+  const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'submenu' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
   const [activeMainTab, setActiveMainTab] = useState("orders");
 
   const filteredOrders = mockOrders.filter(order => {
@@ -364,44 +357,6 @@ export default function Orders() {
   const menuHasNext = menuItemsResponse?.hasNext || false;
   const menuHasPrevious = menuItemsResponse?.hasPrevious || false;
 
-  // Query for categories with real API and pagination support using generic API repository
-  const { data: categoriesResponse, isLoading: isLoadingCategories, refetch: refetchCategories } = useQuery({
-    queryKey: [`menu-categories-branch-${branchId}`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
-    queryFn: async () => {
-      const response = await apiRepository.call<{
-        items: MenuCategory[];
-        pageNumber: number;
-        pageSize: number;
-        totalCount: number;
-        totalPages: number;
-        hasPrevious: boolean;
-        hasNext: boolean;
-      }>(
-        'getMenuCategoriesByBranch',
-        'GET',
-        undefined,
-        {
-          PageNumber: categoryCurrentPage.toString(),
-          PageSize: categoryItemsPerPage.toString(),
-          SortBy: 'name',
-          IsAscending: 'true',
-          ...(categorySearchTerm && { SearchTerm: categorySearchTerm })
-        },
-        true,
-        { branchId }
-      );
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
-
-  const categories = categoriesResponse?.items || [];
-  const categoryTotalPages = categoriesResponse?.totalPages || 1;
 
   // Query for submenus with real API and pagination support using generic API repository
   const { data: subMenusResponse, isLoading: isLoadingSubMenus, refetch: refetchSubMenus } = useQuery({
@@ -480,9 +435,6 @@ export default function Orders() {
   const filteredMenuItems = menuItems;
   const paginatedMenuItems = menuItems;
 
-  // Categories are already filtered and paginated by the API
-  const filteredCategories = categories;
-  const paginatedCategories = categories;
 
   // Query for deals with real API and pagination support using generic API repository
   const { data: dealsResponse, isLoading: dealsLoading, refetch: refetchDeals } = useQuery({
@@ -587,7 +539,6 @@ export default function Orders() {
           // Refresh menu items when switching to menu tab
           if (value === "menu") {
             refetchMenuItems();
-            refetchCategories();
           }
         }} 
         className="space-y-6"
@@ -721,12 +672,6 @@ export default function Orders() {
                   Menu
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="Category"
-                  className="bg-gray-100 text-gray-700 border-b-2 border-transparent data-[state=active]:bg-gray-100 data-[state=active]:border-green-500 data-[state=active]:text-gray-900 rounded-none"
-                >
-                  Category
-                </TabsTrigger>
-                <TabsTrigger 
                   value="SubMenu"
                   className="bg-gray-100 text-gray-700 border-b-2 border-transparent data-[state=active]:bg-gray-100 data-[state=active]:border-green-500 data-[state=active]:text-gray-900 rounded-none"
                 >
@@ -754,15 +699,6 @@ export default function Orders() {
                     Add Item
                   </Button>
                 </>
-              ) : activeMenuTab === "Category" ? (
-                <Button 
-                  className="bg-green-500 hover:bg-green-600 text-white"
-                  onClick={() => setShowAddCategoryModal(true)}
-                  data-testid="button-add-category"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Category
-                </Button>
               ) : activeMenuTab === "SubMenu" ? (
                 <Button 
                   className="bg-green-500 hover:bg-green-600 text-white"
@@ -818,8 +754,6 @@ export default function Orders() {
                     </TableRow>
                   ) : (
                     paginatedMenuItems.map((item) => {
-                      // Get category name from categories list
-                      const categoryName = categories.find(cat => cat.id === item.menuCategoryId)?.name || 'Unknown Category';
                       // Get price from first variant
                       const price = item.variants && item.variants.length > 0 ? item.variants[0].price : 0;
                       
@@ -833,7 +767,7 @@ export default function Orders() {
                         </TableCell>
                         <TableCell data-testid={`menu-item-category-${item.id}`}>
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                            {categoryName}
+                            Category
                           </Badge>
                         </TableCell>
                         <TableCell data-testid={`menu-item-discount-${item.id}`}>
@@ -887,84 +821,7 @@ export default function Orders() {
                   )}
                 </TableBody>
               </Table>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <div className="flex items-center space-x-2">
-                        <span>Category Name</span>
-                        <SearchTooltip
-                          placeholder="Search categories..."
-                          onSearch={setCategorySearchTerm}
-                          onClear={() => setCategorySearchTerm('')}
-                          currentValue={categorySearchTerm}
-                        />
-                      </div>
-                    </TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoadingCategories ? (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-center py-8">
-                        Loading categories...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredCategories.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-center py-8">
-                        No categories found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    paginatedCategories.map((category: MenuCategory) => (
-                      <TableRow key={category.id} data-testid={`category-row-${category.id}`}>
-                        <TableCell className="font-medium" data-testid={`category-name-${category.id}`}>
-                          {category.name}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="text-gray-600 hover:text-gray-800"
-                                data-testid={`button-category-options-${category.id}`}
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setSelectedCategory(category);
-                                setShowEditCategoryModal(true);
-                              }}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit Category
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={() => {
-                                  setDeleteItem({type: 'category', id: category.id.toString(), name: category.name});
-                                  setShowDeleteModal(true);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Category
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            )}
-
-          {activeMenuTab === "SubMenu" && (
+            ) : activeMenuTab === "SubMenu" ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1043,70 +900,110 @@ export default function Orders() {
                   )}
                 </TableBody>
               </Table>
-            )}
+            ) : null}
           </div>
 
-          {/* Menu/Category Pagination */}
-          <div className="flex items-center justify-between p-4 border-t bg-gray-50">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Show result:</span>
-              <Select defaultValue="6">
-                <SelectTrigger className="w-16">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6">6</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Menu/SubMenu Pagination */}
+          {activeMenuTab === "Menu" && (
+            <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Show result:</span>
+                <Select defaultValue="6">
+                  <SelectTrigger className="w-16">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={activeMenuTab === "Menu" ? !menuHasPrevious || isLoadingMenu : activeMenuTab === "Category" ? categoryCurrentPage === 1 : subMenuCurrentPage === 1}
-                onClick={() => {
-                  if (activeMenuTab === "Menu") {
-                    setMenuCurrentPage(Math.max(1, menuCurrentPage - 1));
-                  } else if (activeMenuTab === "Category") {
-                    setCategoryCurrentPage(Math.max(1, categoryCurrentPage - 1));
-                  } else if (activeMenuTab === "SubMenu") {
-                    setSubMenuCurrentPage(Math.max(1, subMenuCurrentPage - 1));
-                  }
-                }}
-              >
-                &lt;
-              </Button>
-              
-              {/* Current page indicator */}
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="bg-green-500 hover:bg-green-600"
-              >
-                {activeMenuTab === "Menu" ? menuCurrentPage : activeMenuTab === "Category" ? categoryCurrentPage : subMenuCurrentPage}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={activeMenuTab === "Menu" ? !menuHasNext || isLoadingMenu : categoryCurrentPage === categoryTotalPages}
-                onClick={() => {
-                  if (activeMenuTab === "Menu") {
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={!menuHasPrevious || isLoadingMenu}
+                  onClick={() => setMenuCurrentPage(Math.max(1, menuCurrentPage - 1))}
+                >
+                  &lt;
+                </Button>
+                
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  {menuCurrentPage}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={!menuHasNext || isLoadingMenu}
+                  onClick={() => {
                     const maxPage = menuTotalPages || 1;
                     setMenuCurrentPage(Math.min(maxPage, menuCurrentPage + 1));
-                  } else {
-                    const maxPage = categoryTotalPages || 1;
-                    setCategoryCurrentPage(Math.min(maxPage, categoryCurrentPage + 1));
-                  }
-                }}
-              >
-                &gt;
-              </Button>
+                  }}
+                >
+                  &gt;
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* SubMenu Pagination */}
+          {activeMenuTab === "SubMenu" && (
+            <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Show result:</span>
+                <Select 
+                  value={subMenuItemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    // For now, we'll keep the current implementation
+                    setSubMenuCurrentPage(1); // Reset to first page when changing page size
+                  }}
+                >
+                  <SelectTrigger className="w-16">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={subMenuCurrentPage === 1}
+                  onClick={() => setSubMenuCurrentPage(Math.max(1, subMenuCurrentPage - 1))}
+                >
+                  &lt;
+                </Button>
+                
+                <span className="text-sm text-gray-600">
+                  Page {subMenuCurrentPage} of {subMenuTotalPages}
+                </span>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={subMenuCurrentPage === subMenuTotalPages}
+                  onClick={() => {
+                    const maxPage = subMenuTotalPages || 1;
+                    setSubMenuCurrentPage(Math.min(maxPage, subMenuCurrentPage + 1));
+                  }}
+                >
+                  &gt;
+                </Button>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="tables" className="space-y-6">
@@ -1600,12 +1497,6 @@ export default function Orders() {
         branchId={branchId}
       />
 
-      {/* Add Category Modal */}
-      <AddCategoryModal
-        isOpen={showAddCategoryModal}
-        onClose={() => setShowAddCategoryModal(false)}
-        branchId={branchId}
-      />
 
       {/* Add SubMenu Modal */}
       <AddSubMenuModal
@@ -1699,18 +1590,6 @@ export default function Orders() {
         />
       )}
 
-      {/* Edit Category Modal - uses same component as Add Category */}
-      {selectedCategory && (
-        <AddCategoryModal
-          isOpen={showEditCategoryModal}
-          onClose={() => {
-            setShowEditCategoryModal(false);
-            setSelectedCategory(null);
-          }}
-          branchId={branchId}
-          editCategory={selectedCategory}
-        />
-      )}
 
       {/* Delete Confirmation Modal */}
       {deleteItem && (
@@ -1722,7 +1601,6 @@ export default function Orders() {
           }}
           title={
             deleteItem.type === 'menu' ? 'Delete Menu Item' :
-            deleteItem.type === 'category' ? 'Delete Category' :
             deleteItem.type === 'submenu' ? 'Delete SubMenu' :
             deleteItem.type === 'deal' ? 'Delete Deal' :
             deleteItem.type === 'discount' ? 'Delete Discount' :
@@ -1743,28 +1621,6 @@ export default function Orders() {
                 refetchTables();
               } catch (error: any) {
                 console.error('Failed to delete table:', error);
-                throw error; // Re-throw so SimpleDeleteModal can handle the error
-              }
-            } else if (deleteItem.type === 'category') {
-              // Delete category using real API endpoint
-              try {
-                const response = await apiRepository.call(
-                  'deleteMenuCategory',
-                  'DELETE',
-                  undefined,
-                  undefined,
-                  true,
-                  { id: deleteItem.id }
-                );
-                
-                if (response.error) {
-                  throw new Error(response.error);
-                }
-                
-                // Refresh the categories list after successful deletion
-                queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
-              } catch (error: any) {
-                console.error('Failed to delete category:', error);
                 throw error; // Re-throw so SimpleDeleteModal can handle the error
               }
             } else if (deleteItem.type === 'submenu') {
