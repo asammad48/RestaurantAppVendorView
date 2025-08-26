@@ -60,7 +60,7 @@ export async function mockLogin(email: string, password: string) {
       // Keep compatibility with existing code
       username: data.email,
       name: data.fullName,
-      id: data.roles[0]?.roleId || Date.now().toString()
+      id: data.userId || data.id || Date.now().toString() // Use actual user ID from API response
     };
     
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userData));
