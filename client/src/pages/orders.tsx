@@ -586,7 +586,7 @@ export default function Orders() {
   const { data: discountsResponse, isLoading: discountsLoading, refetch: refetchDiscounts } = useQuery<PaginationResponse<Discount>>({
     queryKey: [`discounts-branch-${branchId}`, discountsCurrentPage, discountsItemsPerPage, discountsSearchTerm],
     queryFn: async () => {
-      const response = await discountsApi.getDiscountsByBranch(3, {
+      const response = await discountsApi.getDiscountsByBranch(branchId, {
         PageNumber: discountsCurrentPage,
         PageSize: discountsItemsPerPage,
         SortBy: 'name',
