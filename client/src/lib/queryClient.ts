@@ -49,9 +49,25 @@ export async function mockLogin(email: string, password: string) {
 
     const data = response.data as any;
     
-    // Debug: Log the actual API response to see the structure
-    console.log('LOGIN API RESPONSE:', JSON.stringify(data, null, 2));
-    console.log('Available fields:', Object.keys(data));
+    // Extract user ID from multiple possible sources
+    let userId = null;
+    
+    // Try to get user ID from direct API response fields
+    if (data.userId) {
+      userId = data.userId;
+    } else if (data.id) {
+      userId = data.id;
+    } else if (data.user?.id) {
+      userId = data.user.id;
+    } else {
+      // If no direct ID, try to decode JWT token to get the nameid (user ID)
+      try {
+        const tokenPayload = JSON.parse(atob(data.token.split('.')[1]));
+        userId = tokenPayload.nameid || tokenPayload.sub || tokenPayload.userId;
+      } catch (e) {
+        console.warn('Could not decode JWT token for user ID');
+      }
+    }
     
     // Store all user data in localStorage
     const userData = {
@@ -64,11 +80,8 @@ export async function mockLogin(email: string, password: string) {
       // Keep compatibility with existing code
       username: data.email,
       name: data.fullName,
-      id: data.userId || data.id || data.user?.id || Date.now().toString() // Try multiple possible user ID fields
+      id: userId ? userId.toString() : Date.now().toString()
     };
-    
-    console.log('EXTRACTED USER ID:', userData.id);
-    console.log('FINAL USER DATA:', JSON.stringify(userData, null, 2));
     
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userData));
     localStorage.setItem('auth_token', data.token);
