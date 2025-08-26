@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Upload, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import type { Entity } from "@/types/schema";
 import { getFullImageUrl } from "@/lib/imageUtils";
 
@@ -85,7 +86,7 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
   }, [entity, open, form]);
 
   const updateMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: createApiMutation<any, FormData>(async (data: FormData) => {
       if (!entity?.id) throw new Error("Entity ID not found");
 
       const apiFormData = new FormData();
@@ -102,16 +103,10 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
         apiFormData.append('CertificatePicture', certificateFile);
       }
 
-      const response = await apiRepository.call('updateEntity', 'PUT', apiFormData, {}, true, {
+      return await apiRepository.call('updateEntity', 'PUT', apiFormData, {}, true, {
         id: entity.id
       });
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      return response.data;
-    },
+    }),
     onSuccess: () => {
       toast({
         title: "Success",
@@ -124,7 +119,7 @@ export default function EditEntityModal({ open, onOpenChange, entity }: EditEnti
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: formatApiError(error) || "Failed to update entity. Please try again.",
         variant: "destructive",
       });
     },

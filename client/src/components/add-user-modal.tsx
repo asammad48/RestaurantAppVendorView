@@ -165,9 +165,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const filteredBranches = entityValue ? allBranches.filter(branch => branch.entityId === parseInt(entityValue)) : [];
 
   const createUserMutation = useMutation({
-    mutationFn: async (data: UserFormData) => {
-      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-
+    mutationFn: createApiMutation<any, UserFormData>(async (data: UserFormData) => {
       if (isEditing && editingUser?.id) {
         // For editing - use PUT method with JSON payload
         const updatePayload = {
@@ -179,12 +177,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
         };
 
         const response = await userApi.updateUser(updatePayload);
-        
-        if (response.error) {
-          throw new Error(response.error);
-        }
-        // Return the updated data
-        return { ...updatePayload, name: data.name };
+        return response; // Let createApiMutation handle errors
       } else {
         // For creating - use POST method with FormData
         const formData = new FormData();
@@ -198,19 +191,14 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
         // Handle profile picture
         if (data.image && data.image.startsWith('data:')) {
           // Convert base64 to blob
-          const response = await fetch(data.image);
-          const blob = await response.blob();
+          const fetchResponse = await fetch(data.image);
+          const blob = await fetchResponse.blob();
           formData.append('ProfilePicture', blob, 'profile.png');
         }
 
-        const response = await userApi.createUser(formData);
-        
-        if (response.error) {
-          throw new Error(response.error);
-        }
-        return response.data;
+        return await userApi.createUser(formData); // Let createApiMutation handle errors
       }
-    },
+    }),
     onSuccess: (responseData: any) => {
       toast({
         title: "Success", 
@@ -223,10 +211,10 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
       setShowPassword(false);
       onClose();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : `Failed to ${isEditing ? 'update' : 'create'} user.`,
+        description: formatApiError(error) || `Failed to ${isEditing ? 'update' : 'create'} user. Please try again.`,
         variant: "destructive",
       });
     },

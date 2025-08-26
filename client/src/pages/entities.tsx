@@ -11,6 +11,7 @@ import EditEntityModal from "@/components/edit-entity-modal";
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiQuery } from "@/lib/errorHandling";
 import { transformEntityForUI } from "@/types/schema";
 import type { Entity } from "@/types/schema";
 
@@ -24,17 +25,14 @@ export default function Entities() {
 
   const { data: entities = [], isLoading, error } = useQuery<Entity[]>({
     queryKey: ["entities"],
-    queryFn: async () => {
+    queryFn: createApiQuery<Entity[]>(async () => {
       const response = await apiRepository.call<Entity[]>('getEntities', 'GET');
-      if (response.error) {
-        throw new Error(response.error);
-      }
       // Transform entities for UI compatibility
       const transformedEntities = (response.data || []).map(transformEntityForUI);
       console.log('Raw API response:', response.data);
       console.log('Transformed entities:', transformedEntities);
-      return transformedEntities;
-    },
+      return { ...response, data: transformedEntities };
+    }),
   });
 
   const filteredEntities = entities.filter((entity) =>

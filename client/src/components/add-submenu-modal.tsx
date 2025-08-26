@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { SubMenu, InsertSubMenu } from "@/types/schema";
 
 const addSubMenuSchema = z.object({
@@ -45,19 +46,13 @@ export default function AddSubMenuModal({ isOpen, onClose, branchId, editSubMenu
   });
 
   const createSubMenuMutation = useMutation({
-    mutationFn: async (data: InsertSubMenu) => {
-      const response = await apiRepository.call<SubMenu>(
+    mutationFn: createApiMutation<SubMenu, InsertSubMenu>(async (data: InsertSubMenu) => {
+      return await apiRepository.call<SubMenu>(
         'createSubMenu',
         'POST',
         data
       );
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`submenus-branch-${branchId}`] });
       toast({ title: "SubMenu added successfully" });
@@ -67,15 +62,15 @@ export default function AddSubMenuModal({ isOpen, onClose, branchId, editSubMenu
     onError: (error: any) => {
       toast({
         title: "Error adding submenu",
-        description: error.message || "Something went wrong",
+        description: formatApiError(error) || "Something went wrong",
         variant: "destructive",
       });
     },
   });
 
   const updateSubMenuMutation = useMutation({
-    mutationFn: async (data: { name: string; price: number }) => {
-      const response = await apiRepository.call<SubMenu>(
+    mutationFn: createApiMutation<SubMenu, { name: string; price: number }>(async (data: { name: string; price: number }) => {
+      return await apiRepository.call<SubMenu>(
         'updateSubMenu',
         'PUT',
         data,
@@ -83,13 +78,7 @@ export default function AddSubMenuModal({ isOpen, onClose, branchId, editSubMenu
         true,
         { id: editSubMenu!.id }
       );
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`submenus-branch-${branchId}`] });
       toast({ title: "SubMenu updated successfully" });
@@ -99,7 +88,7 @@ export default function AddSubMenuModal({ isOpen, onClose, branchId, editSubMenu
     onError: (error: any) => {
       toast({
         title: "Error updating submenu",
-        description: error.message || "Something went wrong",
+        description: formatApiError(error) || "Something went wrong",
         variant: "destructive",
       });
     },

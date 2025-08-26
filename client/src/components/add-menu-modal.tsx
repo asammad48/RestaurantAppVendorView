@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
 import type { InsertMenuItem, MenuCategory, MenuItem } from "@/types/schema";
 
 const addMenuSchema = z.object({
@@ -94,8 +95,8 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   // Fetch menu item data for editing
   const { data: menuItemData, isLoading: isLoadingMenuItem } = useQuery({
     queryKey: [`menu-item-${editMenuItem?.id}`],
-    queryFn: async () => {
-      const response = await apiRepository.call<MenuItem>(
+    queryFn: createApiQuery<MenuItem>(async () => {
+      return await apiRepository.call<MenuItem>(
         'getMenuItemById',
         'GET',
         undefined,
@@ -103,13 +104,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
         true,
         { id: editMenuItem!.id }
       );
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
+    }),
     enabled: !!editMenuItem?.id && isEditMode, // Only fetch when editing and we have an ID
   });
 

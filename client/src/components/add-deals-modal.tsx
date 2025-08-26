@@ -13,6 +13,7 @@ import { insertDealSchema, type InsertDeal, type SimpleMenuItem, type DealMenuIt
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { menuItemApi, dealsApi } from "@/lib/apiRepository";
+import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddDealsModalProps {
@@ -38,14 +39,11 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
   const { data: menuItems = [], isLoading: menuItemsLoading } = useQuery({
     queryKey: ['menu-items-simple', branchId],
-    queryFn: async (): Promise<SimpleMenuItem[]> => {
-      if (!branchId) return [];
+    queryFn: createApiQuery<SimpleMenuItem[]>(async () => {
+      if (!branchId) return { data: [], error: undefined, status: 200 };
       const response = await menuItemApi.getSimpleMenuItemsByBranch(branchId);
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      return (response.data as SimpleMenuItem[]) || [];
-    },
+      return { ...response, data: (response.data as SimpleMenuItem[]) || [] };
+    }),
     enabled: open && !!branchId,
   });
 

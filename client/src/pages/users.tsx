@@ -9,6 +9,7 @@ import DeleteUserModal from "@/components/delete-user-modal";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 import { UserListItem } from "@/types/user";
 import { userApi } from "@/lib/apiRepository";
+import { createApiQuery, formatApiError } from "@/lib/errorHandling";
 
 export default function Users() {
   const queryClient = useQueryClient();
@@ -26,7 +27,7 @@ export default function Users() {
 
   const { data: usersResponse, isLoading } = useQuery<PaginationResponse<UserListItem>>({
     queryKey: ["users", currentPage, pageSize, nameSearchTerm],
-    queryFn: async () => {
+    queryFn: createApiQuery<PaginationResponse<UserListItem>>(async () => {
       const paginationRequest: PaginationRequest = {
         pageNumber: currentPage,
         pageSize: pageSize,
@@ -36,14 +37,8 @@ export default function Users() {
       };
 
       const queryString = buildPaginationQuery(paginationRequest);
-      const response = await userApi.getUsers(queryString);
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      return response.data as PaginationResponse<UserListItem>;
-    },
+      return await userApi.getUsers(queryString);
+    }),
   });
 
   const users = usersResponse?.items || [];
@@ -67,7 +62,13 @@ export default function Users() {
       const response = await userApi.deleteUser(userToDelete.id.toString());
 
       if (response.error) {
-        throw new Error(response.error);
+        // Show error toast instead of throwing
+        toast({
+          title: "Error",
+          description: formatApiError(response.error) || "Failed to delete user. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Show success toast
@@ -85,7 +86,7 @@ export default function Users() {
       console.error('Error deleting user:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user. Please try again.",
+        description: formatApiError(error) || "Failed to delete user. Please try again.",
         variant: "destructive",
       });
     } finally {

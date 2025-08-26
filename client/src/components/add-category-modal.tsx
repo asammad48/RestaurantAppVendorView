@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import type { MenuCategory, InsertMenuCategory } from "@/types/schema";
 
 const addCategorySchema = z.object({
@@ -39,19 +40,13 @@ export default function AddCategoryModal({ isOpen, onClose, branchId, editCatego
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: async (data: InsertMenuCategory) => {
-      const response = await apiRepository.call<MenuCategory>(
+    mutationFn: createApiMutation<MenuCategory, InsertMenuCategory>(async (data: InsertMenuCategory) => {
+      return await apiRepository.call<MenuCategory>(
         'createMenuCategory',
         'POST',
         data
       );
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
       toast({ title: "Category added successfully" });
@@ -61,15 +56,15 @@ export default function AddCategoryModal({ isOpen, onClose, branchId, editCatego
     onError: (error: any) => {
       toast({
         title: "Error adding category",
-        description: error.message || "Something went wrong",
+        description: formatApiError(error) || "Something went wrong",
         variant: "destructive",
       });
     },
   });
 
   const updateCategoryMutation = useMutation({
-    mutationFn: async (data: { name: string }) => {
-      const response = await apiRepository.call<MenuCategory>(
+    mutationFn: createApiMutation<MenuCategory, { name: string }>(async (data: { name: string }) => {
+      return await apiRepository.call<MenuCategory>(
         'updateMenuCategory',
         'PUT',
         data,
@@ -77,13 +72,7 @@ export default function AddCategoryModal({ isOpen, onClose, branchId, editCatego
         true,
         { id: editCategory!.id }
       );
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`menu-categories-branch-${branchId}`] });
       toast({ title: "Category updated successfully" });
@@ -93,7 +82,7 @@ export default function AddCategoryModal({ isOpen, onClose, branchId, editCatego
     onError: (error: any) => {
       toast({
         title: "Error updating category",
-        description: error.message || "Something went wrong",
+        description: formatApiError(error) || "Something went wrong",
         variant: "destructive",
       });
     },

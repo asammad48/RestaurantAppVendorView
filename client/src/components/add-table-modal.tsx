@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { locationApi } from "@/lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
 
 const addTableSchema = z.object({
@@ -38,7 +39,7 @@ export default function AddTableModal({ open, onOpenChange, branchId }: AddTable
   });
 
   const createTableMutation = useMutation({
-    mutationFn: async (data: AddTableFormData) => {
+    mutationFn: createApiMutation<any, AddTableFormData>(async (data: AddTableFormData) => {
       if (!branchId) {
         throw new Error('Branch ID is required');
       }
@@ -49,14 +50,8 @@ export default function AddTableModal({ open, onOpenChange, branchId }: AddTable
         capacity: parseInt(data.capacity)
       };
       
-      const response = await locationApi.createLocation(locationData);
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      return response.data;
-    },
+      return await locationApi.createLocation(locationData);
+    }),
     onSuccess: (responseData: any) => {
       toast({
         title: "Success", 
@@ -70,7 +65,7 @@ export default function AddTableModal({ open, onOpenChange, branchId }: AddTable
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create table. Please try again.",
+        description: formatApiError(error) || "Failed to create table. Please try again.",
         variant: "destructive",
       });
     },
