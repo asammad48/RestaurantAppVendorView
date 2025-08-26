@@ -21,12 +21,12 @@ const viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0', '--port', '5000']
   shell: true
 });
 
-viteProcess.on('error', (error) => {
+viteProcess.on('error', (error: any) => {
   console.error('Failed to start Vite server:', error);
   process.exit(1);
 });
 
-viteProcess.on('close', (code) => {
+viteProcess.on('close', (code: any) => {
   console.log(`Vite server exited with code ${code}`);
   process.exit(code || 0);
 });
