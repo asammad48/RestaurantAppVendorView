@@ -155,17 +155,24 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       
       // Set selected sub menu items
       if (dealData.subMenuItems && dealData.subMenuItems.length > 0) {
+        console.log('Populating subMenuItems from dealData:', dealData.subMenuItems);
+        console.log('Available subMenuItems:', subMenuItems);
+        
         const selectedSubItems = dealData.subMenuItems.map(item => {
           const subMenuItem = subMenuItems.find(smi => smi.id === item.subMenuItemId);
+          console.log(`Processing subMenuItem ${item.subMenuItemId} with quantity ${item.quantity}`);
           return {
             subMenuItemId: item.subMenuItemId,
             name: subMenuItem?.name || `SubItem ${item.subMenuItemId}`,
             price: subMenuItem?.price || 0,
-            quantity: item.quantity
+            quantity: item.quantity || 1 // Ensure we always have a quantity
           };
         });
+        
+        console.log('Final selectedSubItems:', selectedSubItems);
         setSelectedSubMenuItems(selectedSubItems);
       } else {
+        console.log('No subMenuItems in dealData, resetting to empty array');
         setSelectedSubMenuItems([]);
       }
     } else if (!isEditMode) {
@@ -295,10 +302,14 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   };
 
   const handleSubMenuItemQuantityChange = (subMenuItemId: number, quantity: number) => {
+    console.log(`Quantity change for subMenuItem ${subMenuItemId} to ${quantity}`);
     setSelectedSubMenuItems(prev => {
+      console.log('Previous selectedSubMenuItems:', prev);
       const newItems = prev.map(item =>
         item.subMenuItemId === subMenuItemId ? { ...item, quantity } : item
       );
+      
+      console.log('New selectedSubMenuItems after quantity change:', newItems);
       
       // Update form's subMenuItems field
       const formSubMenuItems = newItems
@@ -307,6 +318,8 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
           subMenuItemId: item.subMenuItemId,
           quantity: item.quantity
         }));
+      
+      console.log('Setting form subMenuItems to:', formSubMenuItems);
       form.setValue('subMenuItems', formSubMenuItems);
       
       return newItems;
