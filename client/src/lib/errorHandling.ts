@@ -60,13 +60,69 @@ export function handleApiResponse<T>(response: ApiResponse<T>): T {
 
 /**
  * Generic mutation function that handles API calls with proper error handling
+ * This version doesn't throw exceptions - it lets React Query handle the error flow
  */
 export function createApiMutation<TData, TVariables = any>(
   mutationFn: (variables: TVariables) => Promise<ApiResponse<TData>>
 ) {
   return async (variables: TVariables): Promise<TData> => {
-    const response = await mutationFn(variables);
-    return handleApiResponse(response);
+    try {
+      const response = await mutationFn(variables);
+      
+      if (response.error) {
+        // Log the full response for debugging
+        console.log('API Error Response:', { 
+          error: response.error, 
+          status: response.status,
+          data: response.data 
+        });
+        
+        // Enhance generic error messages with more specific information
+        let errorMessage = response.error;
+        
+        // Handle common generic error messages from the API
+        if (errorMessage.includes('An error occurred while saving') || 
+            errorMessage.includes('See the inner exception for details')) {
+          
+          // Map status codes to user-friendly messages
+          switch (response.status) {
+            case 400:
+              errorMessage = 'Invalid data provided. Please check your input and try again.';
+              break;
+            case 401:
+              errorMessage = 'Authentication required. Please log in and try again.';
+              break;
+            case 403:
+              errorMessage = 'You do not have permission to perform this action.';
+              break;
+            case 404:
+              errorMessage = 'The requested resource was not found.';
+              break;
+            case 422:
+              errorMessage = 'Validation failed. Please check your input data.';
+              break;
+            case 500:
+              errorMessage = 'Server error occurred. Please try again later.';
+              break;
+            default:
+              errorMessage = 'An unexpected error occurred. Please try again.';
+          }
+        }
+        
+        console.log('Processed error message:', errorMessage);
+        
+        // Create and throw error for React Query to catch
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        (error as any).originalError = response.error;
+        throw error;
+      }
+      
+      return response.data as TData;
+    } catch (error) {
+      // Re-throw the error so React Query's onError can handle it
+      throw error;
+    }
   };
 }
 
