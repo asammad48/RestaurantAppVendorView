@@ -198,6 +198,7 @@ export interface SimpleMenuItem {
   menuItemId: number;
   menuItemName: string;
   variants: Array<{
+    id: number;
     name: string;
     price: number;
   }>;

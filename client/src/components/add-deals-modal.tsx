@@ -133,11 +133,11 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             selectedItemsMap.set(item.menuItemId, {
               menuItemId: item.menuItemId,
               menuItemName: menuItem?.menuItemName || `Item ${item.menuItemId}`,
-              variants: menuItem?.variants.map((v, idx) => ({
-                variantId: idx + 1, // Use index + 1 as variantId
+              variants: menuItem?.variants.map(v => ({
+                variantId: v.id, // Use the actual variant ID from API
                 name: v.name,
                 price: v.price,
-                quantity: item.variants.find(variant => variant.variantId === (idx + 1))?.quantity || 0
+                quantity: item.variants.find(variant => variant.variantId === v.id)?.quantity || 0
               })) || item.variants.map(variant => ({
                 variantId: variant.variantId,
                 name: `Variant ${variant.variantId}`,
@@ -236,8 +236,8 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         const itemWithVariants: DealItem = {
           menuItemId: item.menuItemId,
           menuItemName: item.menuItemName,
-          variants: item.variants.map((variant, idx) => ({
-            variantId: idx + 1, // Use index + 1 as variantId
+          variants: item.variants.map(variant => ({
+            variantId: variant.id, // Use the actual variant ID from API
             name: variant.name,
             price: variant.price,
             quantity: 1
