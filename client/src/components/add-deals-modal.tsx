@@ -28,6 +28,7 @@ interface DealItem {
   menuItemId: number;
   menuItemName: string;
   variants: Array<{
+    variantId: number;
     name: string;
     price: number;
     quantity: number;
@@ -91,7 +92,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         expiryDate: dealData.expiryDate ? dealData.expiryDate.split('T')[0] : "", // Format date for input
         menuItems: dealData.menuItems?.map(item => ({
           menuItemId: item.menuItemId,
-          quantity: item.quantity
+          variants: item.variants || []
         })) || [],
       });
       
@@ -111,16 +112,18 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
             const menuItem = menuItems.find(mi => mi.menuItemId === item.menuItemId);
             selectedItemsMap.set(item.menuItemId, {
               menuItemId: item.menuItemId,
-              menuItemName: item.menuItemName,
-              variants: menuItem?.variants.map(v => ({
+              menuItemName: menuItem?.menuItemName || `Item ${item.menuItemId}`,
+              variants: menuItem?.variants.map((v, idx) => ({
+                variantId: idx + 1, // Use index + 1 as variantId
                 name: v.name,
                 price: v.price,
-                quantity: 1 // Default quantity
-              })) || [{
-                name: "Standard",
+                quantity: item.variants.find(variant => variant.variantId === (idx + 1))?.quantity || 0
+              })) || item.variants.map(variant => ({
+                variantId: variant.variantId,
+                name: `Variant ${variant.variantId}`,
                 price: 0,
-                quantity: item.quantity || 1
-              }]
+                quantity: variant.quantity
+              }))
             });
           }
         });
@@ -194,7 +197,8 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         const itemWithVariants: DealItem = {
           menuItemId: item.menuItemId,
           menuItemName: item.menuItemName,
-          variants: item.variants.map(variant => ({
+          variants: item.variants.map((variant, idx) => ({
+            variantId: idx + 1, // Use index + 1 as variantId
             name: variant.name,
             price: variant.price,
             quantity: 1
@@ -203,52 +207,50 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         newItems = [...prev, itemWithVariants];
       }
       
-      // Update form's menuItems field - flatten variants for API
-      const formMenuItems: any[] = [];
-      newItems.forEach(item => {
-        item.variants.forEach(variant => {
-          if (variant.quantity > 0) {
-            formMenuItems.push({
-              menuItemId: item.menuItemId,
-              variantName: variant.name,
+      // Update form's menuItems field with new structure
+      const formMenuItems = newItems
+        .filter(item => item.variants.some(variant => variant.quantity > 0))
+        .map(item => ({
+          menuItemId: item.menuItemId,
+          variants: item.variants
+            .filter(variant => variant.quantity > 0)
+            .map(variant => ({
+              variantId: variant.variantId,
               quantity: variant.quantity
-            });
-          }
-        });
-      });
+            }))
+        }));
       form.setValue('menuItems', formMenuItems);
       
       return newItems;
     });
   };
 
-  const handleVariantQuantityChange = (menuItemId: number, variantName: string, quantity: number) => {
+  const handleVariantQuantityChange = (menuItemId: number, variantId: number, quantity: number) => {
     setSelectedItems(prev => {
       const newItems = prev.map(item => {
         if (item.menuItemId === menuItemId) {
           return {
             ...item,
             variants: item.variants.map(variant =>
-              variant.name === variantName ? { ...variant, quantity } : variant
+              variant.variantId === variantId ? { ...variant, quantity } : variant
             )
           };
         }
         return item;
       });
       
-      // Update form's menuItems field - flatten variants for API
-      const formMenuItems: any[] = [];
-      newItems.forEach(item => {
-        item.variants.forEach(variant => {
-          if (variant.quantity > 0) {
-            formMenuItems.push({
-              menuItemId: item.menuItemId,
-              variantName: variant.name,
+      // Update form's menuItems field with new structure
+      const formMenuItems = newItems
+        .filter(item => item.variants.some(variant => variant.quantity > 0))
+        .map(item => ({
+          menuItemId: item.menuItemId,
+          variants: item.variants
+            .filter(variant => variant.quantity > 0)
+            .map(variant => ({
+              variantId: variant.variantId,
               quantity: variant.quantity
-            });
-          }
-        });
-      });
+            }))
+        }));
       form.setValue('menuItems', formMenuItems);
       
       return newItems;
@@ -278,15 +280,17 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       packagePicture: packagePicture,
       expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : new Date().toISOString(),
       isActive: true,
-      menuItems: selectedItems.flatMap(item => 
-        item.variants
-          .filter(variant => variant.quantity > 0)
-          .map(variant => ({
-            menuItemId: item.menuItemId,
-            variantName: variant.name,
-            quantity: variant.quantity
-          }))
-      )
+      menuItems: selectedItems
+        .filter(item => item.variants.some(variant => variant.quantity > 0))
+        .map(item => ({
+          menuItemId: item.menuItemId,
+          variants: item.variants
+            .filter(variant => variant.quantity > 0)
+            .map(variant => ({
+              variantId: variant.variantId,
+              quantity: variant.quantity
+            }))
+        }))
     };
 
     createDealMutation.mutate(dealData);
@@ -408,7 +412,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                                     value={variant.quantity}
                                     onChange={(e) => handleVariantQuantityChange(
                                       item.menuItemId, 
-                                      variant.name, 
+                                      variant.variantId, 
                                       parseInt(e.target.value) || 0
                                     )}
                                     className="w-16 text-center"

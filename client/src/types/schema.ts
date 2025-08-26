@@ -199,7 +199,10 @@ export interface SimpleMenuItem {
 // Deal types (matching API structure)
 export interface DealMenuItem {
   menuItemId: number;
-  quantity: number;
+  variants: Array<{
+    variantId: number;
+    quantity: number;
+  }>;
 }
 
 export interface Deal {
@@ -214,8 +217,10 @@ export interface Deal {
   disountName?: string;  // Note: API has typo in field name
   menuItems: Array<{
     menuItemId: number;
-    menuItemName: string;
-    quantity: number;
+    variants: Array<{
+      variantId: number;
+      quantity: number;
+    }>;
   }>;
 }
 
@@ -269,9 +274,11 @@ export const insertDealSchema = z.object({
   expiryDate: z.string().optional(),
   menuItems: z.array(z.object({
     menuItemId: z.number(),
-    variantName: z.string().optional(),
-    quantity: z.number().min(1),
-  })).min(1, "At least one menu item variant is required"),
+    variants: z.array(z.object({
+      variantId: z.number(),
+      quantity: z.number().min(1),
+    })).min(1, "At least one variant is required"),
+  })).min(1, "At least one menu item is required"),
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;
