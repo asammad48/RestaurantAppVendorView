@@ -100,7 +100,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
   // Effect to populate form when editing and deal data is loaded
   useEffect(() => {
-    if (isEditMode && dealData && !isDealLoading) {
+    if (isEditMode && dealData && !isDealLoading && !subMenuItemsLoading) {
       // Populate form with API data
       form.reset({
         branchId: dealData.branchId,
@@ -185,7 +185,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       setSelectedFile(null);
       setOriginalImage("");
     }
-  }, [isEditMode, dealData, isDealLoading, form, branchId]);
+  }, [isEditMode, dealData, isDealLoading, form, branchId, menuItems, subMenuItems]);
 
   const createDealMutation = useMutation({
     mutationFn: async (data: InsertDeal) => {
