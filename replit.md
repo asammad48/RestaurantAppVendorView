@@ -53,7 +53,7 @@ Technical preferences:
 - **Enhanced Search**: Name-only search filter in user table with real-time API integration.
 - **Card Design**: Attractive entity and branch cards with gradient overlays, hover effects, and animated buttons.
 - **Generic Pagination**: Reusable pagination system with configurable page sizes and proper API integration.
-- **Advanced MenuItem Management**: Enhanced Add/Edit MenuItem modal with API-based modifier section using SubMenuItems with multi-select functionality, supporting both manual add-ons and API-fetched modifiers.
+- **Advanced MenuItem Management**: Enhanced Add/Edit MenuItem modal with API-based modifier section using SubMenuItems with multi-select functionality. Modifiers now use the required API format with `subMenuItemId` structure for all CRUD operations.
 
 ## External Dependencies
 

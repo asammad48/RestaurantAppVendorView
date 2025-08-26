@@ -161,7 +161,16 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       }
       
       // Handle existing modifiers - set selected modifiers for API-based ones
-      // Note: We'll populate selectedModifiers based on existing modifiers if they match SubMenuItems
+      if (menuItemData.modifiers && menuItemData.modifiers.length > 0) {
+        const existingModifierIds = menuItemData.modifiers
+          .map(m => m.subMenuItemId || m.id)
+          .filter(Boolean);
+        setSelectedModifiers(existingModifierIds);
+        setShowModifiers(true);
+      } else {
+        setSelectedModifiers([]);
+        setShowModifiers(true);
+      }
       
       // Set customizations (convert to local format)
       if (menuItemData.customizations && menuItemData.customizations.length > 0) {
@@ -383,14 +392,9 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
           price: variant.price
         })),
       modifiers: showModifiers && selectedModifiers.length > 0
-        ? selectedModifiers.map(modifierId => {
-            const modifier = subMenuItems?.find(item => item.id === modifierId);
-            return modifier ? {
-              id: modifier.id,
-              name: modifier.name,
-              price: modifier.price
-            } : null;
-          }).filter(Boolean)
+        ? selectedModifiers.map(modifierId => ({
+            subMenuItemId: modifierId
+          }))
         : [],
       customizations: showCustomizations
         ? customizations
@@ -423,14 +427,9 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
             price: variant.price
           })),
         modifiers: showModifiers && selectedModifiers.length > 0
-          ? selectedModifiers.map(modifierId => {
-              const modifier = subMenuItems?.find(item => item.id === modifierId);
-              return modifier ? {
-                id: modifier.id,
-                name: modifier.name,
-                price: modifier.price
-              } : null;
-            }).filter(Boolean)
+          ? selectedModifiers.map(modifierId => ({
+              subMenuItemId: modifierId
+            }))
           : [],
         customizations: showCustomizations
           ? customizations
