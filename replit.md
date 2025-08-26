@@ -53,6 +53,7 @@ Technical preferences:
 - **Enhanced Search**: Name-only search filter in user table with real-time API integration.
 - **Card Design**: Attractive entity and branch cards with gradient overlays, hover effects, and animated buttons.
 - **Generic Pagination**: Reusable pagination system with configurable page sizes and proper API integration.
+- **Advanced MenuItem Management**: Enhanced Add/Edit MenuItem modal with API-based modifier section using SubMenuItems with multi-select functionality, supporting both manual add-ons and API-fetched modifiers.
 
 ## External Dependencies
 
@@ -85,3 +86,7 @@ Technical preferences:
 - **Signup API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/User/restaurant-owner`
 - **Entity API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/Entity`
 - **MenuCategory API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/MenuCategory`
+- **SubMenuItems API**: `https://5dtrtpzg-7261.inc1.devtunnels.ms/api/SubMenuItems`
+  - GET `/api/SubMenuItems/branch/{branchId}/simple` - Fetch simple SubMenuItems for modifiers
+  - PUT `/api/SubMenuItems/{id}` - Update SubMenuItem 
+  - DELETE `/api/SubMenuItems/{id}` - Delete SubMenuItem

@@ -390,6 +390,9 @@ export const API_ENDPOINTS = {
   SUBMENUS: '/api/SubMenuItems',
   SUBMENU_BY_ID: '/api/SubMenuItems/{id}',
   SUBMENUS_BY_BRANCH: '/api/SubMenuItems/branch/{branchId}',
+  SUBMENUS_SIMPLE_BY_BRANCH: '/api/SubMenuItems/branch/{branchId}/simple',
+  UPDATE_SUBMENU: '/api/SubMenuItems/{id}',
+  DELETE_SUBMENU: '/api/SubMenuItems/{id}',
 
   // MenuItem endpoints
   MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
@@ -497,9 +500,10 @@ export const defaultApiConfig: ApiConfig = {
     getSubMenus: API_ENDPOINTS.SUBMENUS,
     createSubMenu: API_ENDPOINTS.SUBMENUS,
     getSubMenuById: API_ENDPOINTS.SUBMENU_BY_ID,
-    updateSubMenu: API_ENDPOINTS.SUBMENU_BY_ID,
-    deleteSubMenu: API_ENDPOINTS.SUBMENU_BY_ID,
+    updateSubMenu: API_ENDPOINTS.UPDATE_SUBMENU,
+    deleteSubMenu: API_ENDPOINTS.DELETE_SUBMENU,
     getSubMenusByBranch: API_ENDPOINTS.SUBMENUS_BY_BRANCH,
+    getSubMenusSimpleByBranch: API_ENDPOINTS.SUBMENUS_SIMPLE_BY_BRANCH,
 
     // MenuItem endpoints
     getMenuItemsByBranch: API_ENDPOINTS.MENU_ITEMS_BY_BRANCH,
@@ -771,6 +775,34 @@ export const menuItemApi = {
   // Get menu item by ID
   getMenuItemById: async (menuItemId: number) => {
     return await apiRepository.call('getMenuItemById', 'GET', undefined, {}, true, { id: menuItemId });
+  },
+};
+
+// SubMenuItems API Helper Functions
+export const subMenuItemApi = {
+  // Get simple SubMenuItems by branch ID (for modifiers)
+  getSimpleSubMenuItemsByBranch: async (branchId: number) => {
+    return await apiRepository.call('getSubMenusSimpleByBranch', 'GET', undefined, {}, true, { branchId });
+  },
+
+  // Get detailed SubMenuItems by branch ID
+  getSubMenuItemsByBranch: async (branchId: number) => {
+    return await apiRepository.call('getSubMenusByBranch', 'GET', undefined, {}, true, { branchId });
+  },
+
+  // Get SubMenuItem by ID
+  getSubMenuItemById: async (subMenuItemId: number) => {
+    return await apiRepository.call('getSubMenuById', 'GET', undefined, {}, true, { id: subMenuItemId });
+  },
+
+  // Update SubMenuItem
+  updateSubMenuItem: async (subMenuItemId: number, subMenuItemData: { name: string; price: number }) => {
+    return await apiRepository.call('updateSubMenu', 'PUT', subMenuItemData, {}, true, { id: subMenuItemId });
+  },
+
+  // Delete SubMenuItem
+  deleteSubMenuItem: async (subMenuItemId: number) => {
+    return await apiRepository.call('deleteSubMenu', 'DELETE', undefined, {}, true, { id: subMenuItemId });
   },
 };
 
