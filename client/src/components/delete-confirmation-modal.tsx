@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
 import type { Entity } from "@/types/schema";
 import {
@@ -26,13 +27,9 @@ export default function DeleteConfirmationModal({ entity, open, onOpenChange }: 
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRepository.call('deleteEntity', 'DELETE', undefined, undefined, true, { id: entity.id });
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      return response.data;
-    },
+    mutationFn: createApiMutation<any>(async () => {
+      return apiRepository.call('deleteEntity', 'DELETE', undefined, undefined, true, { id: entity.id });
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
@@ -44,7 +41,7 @@ export default function DeleteConfirmationModal({ entity, open, onOpenChange }: 
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete entity",
+        description: formatApiError(error) || "Failed to delete entity",
         variant: "destructive",
       });
     },
@@ -83,7 +80,7 @@ export default function DeleteConfirmationModal({ entity, open, onOpenChange }: 
                 {entity.name}
               </h4>
               <Badge variant="outline" data-testid={`badge-delete-entity-type-${entity.id}`}>
-                {entity.entityType.toUpperCase()}
+                {(entity.entityType || (entity.type === 1 ? 'hotel' : 'restaurant')).toUpperCase()}
               </Badge>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400" data-testid={`text-delete-entity-address-${entity.id}`}>

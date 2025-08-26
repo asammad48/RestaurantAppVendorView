@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Upload, X } from "lucide-react";
 import { insertEntitySchema } from "@/types/schema";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -58,31 +59,22 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      try {
-        const apiFormData = new FormData();
-        apiFormData.append('Name', data.Name);
-        apiFormData.append('Phone', data.Phone);
-        apiFormData.append('Address', data.Address);
-        apiFormData.append('Type', String(data.Type));
-        
-        if (profilePictureFile) {
-          apiFormData.append('ProfilePicture', profilePictureFile);
-        }
-        if (certificateFile) {
-          apiFormData.append('CertificateFile', certificateFile);
-        }
-
-        const response = await apiRepository.call('createEntity', 'POST', apiFormData, undefined, true);
-        if (response.error) {
-          throw new Error(response.error);
-        }
-        return response.data;
-      } catch (error) {
-        console.error('Create entity error:', error);
-        throw error;
+    mutationFn: createApiMutation<any, FormData>(async (data: FormData) => {
+      const apiFormData = new FormData();
+      apiFormData.append('Name', data.Name);
+      apiFormData.append('Phone', data.Phone);
+      apiFormData.append('Address', data.Address);
+      apiFormData.append('Type', String(data.Type));
+      
+      if (profilePictureFile) {
+        apiFormData.append('ProfilePicture', profilePictureFile);
       }
-    },
+      if (certificateFile) {
+        apiFormData.append('CertificateFile', certificateFile);
+      }
+
+      return apiRepository.call('createEntity', 'POST', apiFormData, undefined, true);
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
@@ -99,7 +91,7 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create entity",
+        description: formatApiError(error) || "Failed to create entity",
         variant: "destructive",
       });
     },

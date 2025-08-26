@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { genericApi, userApi } from "@/lib/apiRepository";
+import { createApiMutation, createApiQuery, formatApiError } from "@/lib/errorHandling";
 
 
 // Create schema conditionally based on editing mode
@@ -70,13 +71,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   // Fetch roles
   const { data: roles, isLoading: rolesLoading, error: rolesError } = useQuery<Role[]>({
     queryKey: ["roles"],
-    queryFn: async () => {
-      const response = await genericApi.getRoles();
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      return response.data as Role[];
-    },
+    queryFn: createApiQuery<Role[]>(() => genericApi.getRoles() as Promise<{ data: Role[], error?: string, status: number }>),
     enabled: isOpen,
     retry: 2,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -85,15 +80,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   // Fetch entities and branches in one call
   const { data: entitiesAndBranches, isLoading: entitiesLoading, error: entitiesError } = useQuery<EntitiesAndBranchesResponse>({
     queryKey: ["entities-and-branches"],
-    queryFn: async () => {
-      // Get token from localStorage for this API call
-      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await genericApi.getEntitiesAndBranches();
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      return response.data as EntitiesAndBranchesResponse;
-    },
+    queryFn: createApiQuery<EntitiesAndBranchesResponse>(() => genericApi.getEntitiesAndBranches() as Promise<{ data: EntitiesAndBranchesResponse, error?: string, status: number }>),
     enabled: isOpen,
     retry: 2,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -102,15 +89,10 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   // Fetch user details when editing
   const { data: userDetails, isLoading: userDetailsLoading, error: userDetailsError } = useQuery<UserDetailsResponse>({
     queryKey: ["user-details", editingUser?.id],
-    queryFn: async () => {
+    queryFn: createApiQuery<UserDetailsResponse>(() => {
       if (!editingUser?.id) throw new Error('No user ID provided');
-      const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
-      const response = await userApi.getUserById(editingUser.id.toString());
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      return response.data as UserDetailsResponse;
-    },
+      return userApi.getUserById(editingUser.id.toString()) as Promise<{ data: UserDetailsResponse, error?: string, status: number }>;
+    }),
     enabled: isOpen && isEditing && !!editingUser?.id,
     retry: 2,
     staleTime: 2 * 60 * 1000, // Cache for 2 minutes

@@ -7,6 +7,7 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertEntitySchema } from "../types/schema";
 import { apiRepository } from "../lib/apiRepository";
+import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import {
   Dialog,
   DialogContent,
@@ -73,7 +74,7 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
   }, [entity, form]);
 
   const updateMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: createApiMutation<any, FormData>(async (data: FormData) => {
       const apiFormData = new FormData();
       apiFormData.append('Name', data.Name);
       apiFormData.append('Phone', data.Phone);
@@ -87,12 +88,8 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
         apiFormData.append('CertificateFile', certificateFile);
       }
 
-      const response = await apiRepository.call('updateEntity', 'PUT', apiFormData, undefined, true, { id: entity.id });
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      return response.data;
-    },
+      return apiRepository.call('updateEntity', 'PUT', apiFormData, undefined, true, { id: entity.id });
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
@@ -109,7 +106,7 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update entity",
+        description: formatApiError(error) || "Failed to update entity",
         variant: "destructive",
       });
     },
