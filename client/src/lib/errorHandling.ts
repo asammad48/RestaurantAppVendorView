@@ -6,8 +6,40 @@ import { ApiResponse } from './apiRepository';
  */
 export function handleApiResponse<T>(response: ApiResponse<T>): T {
   if (response.error) {
+    // Enhance generic error messages with more specific information
+    let errorMessage = response.error;
+    
+    // Handle common generic error messages from the API
+    if (errorMessage.includes('An error occurred while saving') || 
+        errorMessage.includes('See the inner exception for details')) {
+      
+      // Map status codes to user-friendly messages
+      switch (response.status) {
+        case 400:
+          errorMessage = 'Invalid data provided. Please check your input and try again.';
+          break;
+        case 401:
+          errorMessage = 'Authentication required. Please log in and try again.';
+          break;
+        case 403:
+          errorMessage = 'You do not have permission to perform this action.';
+          break;
+        case 404:
+          errorMessage = 'The requested resource was not found.';
+          break;
+        case 422:
+          errorMessage = 'Validation failed. Please check your input data.';
+          break;
+        case 500:
+          errorMessage = 'Server error occurred. Please try again later.';
+          break;
+        default:
+          errorMessage = 'An unexpected error occurred. Please try again.';
+      }
+    }
+    
     // Return a standardized error that React Query can handle
-    const error = new Error(response.error);
+    const error = new Error(errorMessage);
     (error as any).status = response.status;
     throw error;
   }
@@ -34,10 +66,24 @@ export function formatApiError(error: any): string {
   if (!error) return 'An unexpected error occurred';
   
   // If it's already a formatted error message from the API
-  if (typeof error === 'string') return error;
+  if (typeof error === 'string') {
+    // Handle generic API error messages
+    if (error.includes('An error occurred while saving') || 
+        error.includes('See the inner exception for details')) {
+      return 'Failed to save changes. Please check your input and try again.';
+    }
+    return error;
+  }
   
   // If it has a message property
-  if (error.message) return error.message;
+  if (error.message) {
+    // Handle generic API error messages in the message property
+    if (error.message.includes('An error occurred while saving') || 
+        error.message.includes('See the inner exception for details')) {
+      return 'Failed to save changes. Please check your input and try again.';
+    }
+    return error.message;
+  }
   
   // If it's a validation error object
   if (error.errors && typeof error.errors === 'object') {
