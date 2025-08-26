@@ -163,7 +163,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       // Handle existing modifiers - set selected modifiers for API-based ones
       if (menuItemData.modifiers && menuItemData.modifiers.length > 0) {
         const existingModifierIds = menuItemData.modifiers
-          .map(m => m.subMenuItemId || m.id)
+          .map((m: any) => m.subMenuItemId || m.id)
           .filter(Boolean);
         setSelectedModifiers(existingModifierIds);
         setShowModifiers(true);
@@ -579,7 +579,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Available Modifiers (SubMenuItems)</h3>
+                <div>
+                  <h3 className="text-lg font-medium">Available Modifiers (SubMenuItems)</h3>
+                  <p className="text-sm text-gray-600">Select modifiers to add to this menu item</p>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -600,8 +603,9 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto border rounded-lg p-4">
                   {subMenuItems?.length === 0 ? (
-                    <div className="col-span-full text-center text-gray-500 py-4">
-                      No modifiers available for this branch
+                    <div className="col-span-full text-center text-gray-500 py-8">
+                      <p className="text-lg font-medium mb-2">No SubMenuItems Available</p>
+                      <p className="text-sm">No modifiers are available for this branch. Create some SubMenuItems first to use as modifiers.</p>
                     </div>
                   ) : (
                     subMenuItems?.map((item) => (
