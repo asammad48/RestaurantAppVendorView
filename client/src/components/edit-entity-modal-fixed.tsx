@@ -357,6 +357,7 @@ export default function EditEntityModal({ entity, open, onOpenChange }: EditEnti
                   </div>
                 </div>
               </div>
+            </div>
 
             <div className="flex justify-end space-x-2">
               <Button

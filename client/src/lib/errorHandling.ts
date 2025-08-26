@@ -6,6 +6,13 @@ import { ApiResponse } from './apiRepository';
  */
 export function handleApiResponse<T>(response: ApiResponse<T>): T {
   if (response.error) {
+    // Log the full response for debugging
+    console.log('API Error Response:', { 
+      error: response.error, 
+      status: response.status,
+      data: response.data 
+    });
+    
     // Enhance generic error messages with more specific information
     let errorMessage = response.error;
     
@@ -38,9 +45,13 @@ export function handleApiResponse<T>(response: ApiResponse<T>): T {
       }
     }
     
+    // Add more context for debugging
+    console.log('Processed error message:', errorMessage);
+    
     // Return a standardized error that React Query can handle
     const error = new Error(errorMessage);
     (error as any).status = response.status;
+    (error as any).originalError = response.error;
     throw error;
   }
   

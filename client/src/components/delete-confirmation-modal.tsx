@@ -50,7 +50,7 @@ export default function DeleteConfirmationModal({ entity, open, onOpenChange }: 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      await deleteMutation.mutateAsync();
+      await deleteMutation.mutateAsync(undefined);
     } finally {
       setIsLoading(false);
     }
