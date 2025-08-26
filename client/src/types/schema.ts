@@ -225,13 +225,16 @@ export interface Deal {
   disountName?: string;  // Note: API has typo in field name
   menuItems: Array<{
     menuItemId: number;
+    menuItemName?: string; // Added for display
     variants: Array<{
       variantId: number;
+      variantName?: string; // Added for display 
       quantity: number;
     }>;
   }>;
   subMenuItems: Array<{
     subMenuItemId: number;
+    subMenuItemName?: string; // Added for display
     quantity: number;
   }>;
 }

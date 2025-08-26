@@ -1290,7 +1290,18 @@ export default function Orders() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm text-gray-600" data-testid={`deal-items-${deal.id}`}>
-                            {deal.menuItems?.map(item => `${item.quantity}x ${item.menuItemName}`).join(', ')}
+                            {[
+                              // Menu Items with variants
+                              ...(deal.menuItems?.flatMap(item => 
+                                item.variants?.map(variant => 
+                                  `${variant.quantity}x ${variant.variantName || 'Standard'} - ${item.menuItemName || `Item ${item.menuItemId}`}`
+                                ) || []
+                              ) || []),
+                              // Sub Menu Items
+                              ...(deal.subMenuItems?.map(subItem => 
+                                `${subItem.quantity}x ${subItem.subMenuItemName || `SubItem ${subItem.subMenuItemId}`}`
+                              ) || [])
+                            ].join(', ') || 'No items'}
                           </div>
                         </TableCell>
                         <TableCell data-testid={`deal-discount-${deal.id}`}>
