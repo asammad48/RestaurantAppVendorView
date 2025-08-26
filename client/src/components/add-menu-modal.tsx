@@ -26,11 +26,6 @@ const addMenuSchema = z.object({
 
 type AddMenuFormData = z.infer<typeof addMenuSchema>;
 
-interface AddOn {
-  name: string;
-  price: number;
-}
-
 interface SubMenuItem {
   id: number;
   name: string;
@@ -61,13 +56,11 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   const queryClient = useQueryClient();
   const [image, setImage] = useState<string>("");
   const [originalImage, setOriginalImage] = useState<string>(""); // Track original image for comparison
-  const [addOns, setAddOns] = useState<AddOn[]>([{ name: "", price: 0 }]);
   const [customizations, setCustomizations] = useState<Customization[]>([{ name: "", options: [""] }]);
   const [variants, setVariants] = useState<Variant[]>([{ option: "", price: 0 }]);
   const [selectedModifiers, setSelectedModifiers] = useState<number[]>([]);
   
   // Section visibility states
-  const [showAddOns, setShowAddOns] = useState<boolean>(true);
   const [showCustomizations, setShowCustomizations] = useState<boolean>(true);
   const [showModifiers, setShowModifiers] = useState<boolean>(true);
 
@@ -167,16 +160,8 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
         })));
       }
       
-      // Set modifiers/addOns (convert to local format)
-      if (menuItemData.modifiers && menuItemData.modifiers.length > 0) {
-        setAddOns(menuItemData.modifiers.map(m => ({
-          name: m.name,
-          price: m.price
-        })));
-        setShowAddOns(true);
-      } else {
-        setShowAddOns(false); // Hide section if no modifiers
-      }
+      // Handle existing modifiers - set selected modifiers for API-based ones
+      // Note: We'll populate selectedModifiers based on existing modifiers if they match SubMenuItems
       
       // Set customizations (convert to local format)
       if (menuItemData.customizations && menuItemData.customizations.length > 0) {
@@ -208,13 +193,11 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       toast({ title: "Menu item added successfully" });
       onClose();
       form.reset();
-      setAddOns([{ name: "", price: 0 }]);
       setCustomizations([{ name: "", options: [""] }]);
       setVariants([{ option: "", price: 0 }]);
       setSelectedModifiers([]);
       setImage("");
       setOriginalImage("");
-      setShowAddOns(true);
       setShowCustomizations(true);
       setShowModifiers(true);
     },
@@ -248,13 +231,11 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       toast({ title: "Menu item updated successfully" });
       onClose();
       form.reset();
-      setAddOns([{ name: "", price: 0 }]);
       setCustomizations([{ name: "", options: [""] }]);
       setVariants([{ option: "", price: 0 }]);
       setSelectedModifiers([]);
       setImage("");
       setOriginalImage("");
-      setShowAddOns(true);
       setShowCustomizations(true);
       setShowModifiers(true);
     },
@@ -299,16 +280,6 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
     }
   };
 
-  const addAddOn = () => {
-    setAddOns([...addOns, { name: "", price: 0 }]);
-  };
-
-  const updateAddOn = (index: number, field: keyof AddOn, value: string | number) => {
-    const newAddOns = [...addOns];
-    newAddOns[index] = { ...newAddOns[index], [field]: value };
-    setAddOns(newAddOns);
-  };
-
   const addCustomization = () => {
     setCustomizations([...customizations, { name: "", options: [""] }]);
   };
@@ -342,11 +313,6 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   };
 
   // Remove functions for each section
-  const removeAddOn = (index: number) => {
-    if (addOns.length > 1) {
-      setAddOns(addOns.filter((_, i) => i !== index));
-    }
-  };
 
   const removeCustomization = (index: number) => {
     if (customizations.length > 1) {
@@ -369,32 +335,18 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   };
 
   // Section removal functions
-  const removeEntireAddOnSection = () => {
-    setShowAddOns(false);
-    setAddOns([{ name: "", price: 0 }]); // Reset to default
-  };
-
   const removeEntireCustomizationSection = () => {
     setShowCustomizations(false);
     setCustomizations([{ name: "", options: [""] }]); // Reset to default
   };
 
   // Functions to restore sections
-  const addAddOnSection = () => {
-    setShowAddOns(true);
-  };
-
   const addCustomizationSection = () => {
     setShowCustomizations(true);
   };
 
-  // Modifier functions
-  const toggleModifier = (modifierId: number) => {
-    setSelectedModifiers(prev => 
-      prev.includes(modifierId) 
-        ? prev.filter(id => id !== modifierId)
-        : [...prev, modifierId]
-    );
+  const addModifierSection = () => {
+    setShowModifiers(true);
   };
 
   const removeModifierSection = () => {
@@ -402,8 +354,13 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
     setSelectedModifiers([]);
   };
 
-  const addModifierSection = () => {
-    setShowModifiers(true);
+  // Modifier toggle function
+  const toggleModifier = (modifierId: number) => {
+    setSelectedModifiers(prev => 
+      prev.includes(modifierId) 
+        ? prev.filter(id => id !== modifierId)
+        : [...prev, modifierId]
+    );
   };
 
   const onSubmit = (data: AddMenuFormData) => {
@@ -425,28 +382,16 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
           name: variant.option,
           price: variant.price
         })),
-      modifiers: [
-        // Manual add-ons
-        ...(showAddOns 
-          ? addOns
-            .filter(addon => addon.name.trim())
-            .map(addon => ({
-              name: addon.name,
-              price: addon.price
-            }))
-          : []),
-        // API-based selected modifiers
-        ...(showModifiers && selectedModifiers.length > 0
-          ? selectedModifiers.map(modifierId => {
-              const modifier = subMenuItems?.find(item => item.id === modifierId);
-              return modifier ? {
-                id: modifier.id,
-                name: modifier.name,
-                price: modifier.price
-              } : null;
-            }).filter(Boolean)
-          : [])
-      ],
+      modifiers: showModifiers && selectedModifiers.length > 0
+        ? selectedModifiers.map(modifierId => {
+            const modifier = subMenuItems?.find(item => item.id === modifierId);
+            return modifier ? {
+              id: modifier.id,
+              name: modifier.name,
+              price: modifier.price
+            } : null;
+          }).filter(Boolean)
+        : [],
       customizations: showCustomizations
         ? customizations
           .filter(cust => cust.name.trim() && cust.options.some(opt => opt.trim()))
@@ -477,28 +422,16 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
             name: variant.option,
             price: variant.price
           })),
-        modifiers: [
-          // Manual add-ons
-          ...(showAddOns 
-            ? addOns
-              .filter(addon => addon.name.trim())
-              .map(addon => ({
-                name: addon.name,
-                price: addon.price
-              }))
-            : []),
-          // API-based selected modifiers
-          ...(showModifiers && selectedModifiers.length > 0
-            ? selectedModifiers.map(modifierId => {
-                const modifier = subMenuItems?.find(item => item.id === modifierId);
-                return modifier ? {
-                  id: modifier.id,
-                  name: modifier.name,
-                  price: modifier.price
-                } : null;
-              }).filter(Boolean)
-            : [])
-        ],
+        modifiers: showModifiers && selectedModifiers.length > 0
+          ? selectedModifiers.map(modifierId => {
+              const modifier = subMenuItems?.find(item => item.id === modifierId);
+              return modifier ? {
+                id: modifier.id,
+                name: modifier.name,
+                price: modifier.price
+              } : null;
+            }).filter(Boolean)
+          : [],
         customizations: showCustomizations
           ? customizations
             .filter(cust => cust.name.trim() && cust.options.some(opt => opt.trim()))
@@ -626,92 +559,6 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
               </div>
             </div>
           </div>
-
-          {/* Add-ons Section */}
-          {!showAddOns ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border-2 border-dashed border-gray-300 rounded-lg">
-                <span className="text-gray-500">Modifiers section removed</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addAddOnSection}
-                  className="text-green-600 border-green-600 hover:bg-green-50"
-                  data-testid="button-restore-addon-section"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Modifiers Section
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Modifiers (Add-ons)</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={removeEntireAddOnSection}
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                  data-testid="button-remove-addon-section"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Remove Section
-                </Button>
-              </div>
-            {addOns.map((addOn, index) => (
-              <div key={index} className="grid grid-cols-2 gap-4 items-end">
-                <div>
-                  <Label>Name</Label>
-                  <Input
-                    placeholder="Add-on name"
-                    value={addOn.name}
-                    onChange={(e) => updateAddOn(index, "name", e.target.value)}
-                    data-testid={`input-addon-name-${index}`}
-                  />
-                </div>
-                <div>
-                  <Label>Price</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={addOn.price === 0 ? "" : addOn.price}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        updateAddOn(index, "price", value === "" ? 0 : parseFloat(value) || 0);
-                      }}
-                      data-testid={`input-addon-price-${index}`}
-                    />
-                    {addOns.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeAddOn(index)}
-                        className="text-red-600 border-red-600 hover:bg-red-50 flex-shrink-0"
-                        data-testid={`button-remove-addon-${index}`}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addAddOn}
-              className="text-green-600 border-green-600 hover:bg-green-50"
-              data-testid="button-add-addon"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Another
-            </Button>
-            </div>
-          )}
 
           {/* API-based Modifier Section */}
           {!showModifiers ? (
