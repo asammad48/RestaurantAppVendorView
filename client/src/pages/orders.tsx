@@ -1018,9 +1018,30 @@ export default function Orders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setEditSubMenu(subMenu);
-                                setShowAddSubMenuModal(true);
+                              <DropdownMenuItem onClick={async () => {
+                                // Fetch the full submenu data for editing using the real API
+                                try {
+                                  const response = await apiRepository.call<SubMenu>(
+                                    'getSubMenuById',
+                                    'GET',
+                                    undefined,
+                                    undefined,
+                                    true,
+                                    { id: subMenu.id }
+                                  );
+                                  
+                                  if (response.error) {
+                                    throw new Error(response.error);
+                                  }
+                                  
+                                  setEditSubMenu(response.data || null);
+                                  setShowAddSubMenuModal(true);
+                                } catch (error: any) {
+                                  console.error('Failed to fetch submenu for edit:', error);
+                                  // Fallback to using the existing data
+                                  setEditSubMenu(subMenu);
+                                  setShowAddSubMenuModal(true);
+                                }
                               }}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit SubMenu
@@ -1616,7 +1637,7 @@ export default function Orders() {
         isOpen={showEditCategoryModal}
         onClose={() => setShowEditCategoryModal(false)}
         branchId={branchId}
-        editData={selectedCategory}
+        editCategory={selectedCategory || undefined}
       />
 
       {/* Add SubMenu Modal */}
@@ -1772,6 +1793,28 @@ export default function Orders() {
               try {
                 const response = await apiRepository.call(
                   'deleteSubMenu',
+                  'DELETE',
+                  undefined,
+                  undefined,
+                  true,
+                  { id: deleteItem.id }
+                );
+                
+                if (response.error) {
+                  throw new Error(response.error);
+                }
+                
+                // Refresh the submenus list after successful deletion
+                queryClient.invalidateQueries({ queryKey: [`submenus-branch-${branchId}`] });
+              } catch (error: any) {
+                console.error('Failed to delete submenu:', error);
+                throw error; // Re-throw so SimpleDeleteModal can handle the error
+              }
+            } else if (deleteItem.type === 'deal') {
+              // Delete deal using real API endpoint
+              try {
+                const response = await apiRepository.call(
+                  'deleteDeal',
                   'DELETE',
                   undefined,
                   undefined,

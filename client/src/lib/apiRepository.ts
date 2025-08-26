@@ -387,9 +387,9 @@ export const API_ENDPOINTS = {
   MENU_CATEGORIES_BY_BRANCH: '/api/MenuCategory/branch/{branchId}',
 
   // SubMenu endpoints
-  SUBMENUS: '/api/SubMenu',
-  SUBMENU_BY_ID: '/api/SubMenu/{id}',
-  SUBMENUS_BY_BRANCH: '/api/SubMenu/branch/{branchId}',
+  SUBMENUS: '/api/SubMenuItems',
+  SUBMENU_BY_ID: '/api/SubMenuItems/{id}',
+  SUBMENUS_BY_BRANCH: '/api/SubMenuItems/branch/{branchId}',
 
   // MenuItem endpoints
   MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
