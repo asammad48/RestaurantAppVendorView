@@ -404,6 +404,46 @@ export default function Orders() {
   const subMenus = subMenusResponse?.items || [];
   const subMenuTotalPages = subMenusResponse?.totalPages || 1;
 
+  // Fetch ALL submenu items for the branch to create a lookup map for deal display
+  const { data: allSubMenuItems = [] } = useQuery({
+    queryKey: [`all-submenus-branch-${branchId}`],
+    queryFn: async () => {
+      const response = await apiRepository.call<{
+        items: SubMenu[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasPrevious: boolean;
+        hasNext: boolean;
+      }>(
+        'getSubMenusByBranch',
+        'GET',
+        undefined,
+        {
+          PageNumber: '1',
+          PageSize: '1000', // Get all items for lookup
+          SortBy: 'name',
+          IsAscending: 'true'
+        },
+        true,
+        { branchId }
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data?.items || [];
+    },
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes since this is for lookup only
+  });
+
+  // Create a lookup map for submenu item names
+  const subMenuItemsLookup = new Map(
+    allSubMenuItems.map(item => [item.id, item.name])
+  );
+
   // Query for categories with real API and pagination support using generic API repository
   const { data: categoriesResponse, isLoading: isLoadingCategories, refetch: refetchCategories } = useQuery({
     queryKey: [`menu-categories-branch-${branchId}`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
@@ -1298,9 +1338,10 @@ export default function Orders() {
                                 ) || []
                               ) || []),
                               // Sub Menu Items
-                              ...(deal.subMenuItems?.map(subItem => 
-                                `${subItem.quantity}x ${subItem.subMenuItemName || `SubItem ${subItem.subMenuItemId}`}`
-                              ) || [])
+                              ...(deal.subMenuItems?.map(subItem => {
+                                const subMenuName = subMenuItemsLookup.get(subItem.subMenuItemId) || `SubItem ${subItem.subMenuItemId}`;
+                                return `${subItem.quantity || 1}x ${subMenuName}`;
+                              }) || [])
                             ].join(', ') || 'No items'}
                           </div>
                         </TableCell>
