@@ -190,7 +190,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
         
         // Handle profile picture
         if (data.image && data.image.startsWith('data:')) {
-          // Convert base64 to blob
+          // Convert base64 to blob using fetch (this is for data URL conversion, not API call)
           const fetchResponse = await fetch(data.image);
           const blob = await fetchResponse.blob();
           formData.append('ProfilePicture', blob, 'profile.png');

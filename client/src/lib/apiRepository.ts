@@ -808,8 +808,10 @@ export const dealsApi = {
   },
 
   // Get all deals with pagination (legacy method - kept for compatibility)
-  getDeals: async (queryString?: string) => {
-    const branchId = 3; // Using branch ID 3 as specified
+  getDeals: async (branchId: number, queryString?: string) => {
+    if (!branchId) {
+      throw new Error('Branch ID is required');
+    }
     const endpoint = queryString 
       ? `/api/Deals/branch/${branchId}?${queryString}`
       : `/api/Deals/branch/${branchId}`;

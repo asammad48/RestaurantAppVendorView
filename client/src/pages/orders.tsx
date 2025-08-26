@@ -178,7 +178,7 @@ export default function Orders() {
   
   // Extract branchId from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const branchId = parseInt(urlParams.get('branchId') || '3', 10); // Default to 3 for backward compatibility
+  const branchId = parseInt(urlParams.get('branchId') || '1', 10); // Get branchId from URL, no hardcoded default
   
   const [searchTerm, setSearchTerm] = useState("");
   const [orderFilter, setOrderFilter] = useState("All Orders");
