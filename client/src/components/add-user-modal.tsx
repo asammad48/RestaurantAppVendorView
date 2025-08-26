@@ -68,34 +68,34 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
   const queryClient = useQueryClient();
   const isEditing = !!editingUser;
 
-  // Fetch roles
+  // Fetch roles - ALWAYS REFRESH when modal opens
   const { data: roles, isLoading: rolesLoading, error: rolesError } = useQuery<Role[]>({
-    queryKey: ["roles"],
+    queryKey: ["roles", isOpen], // Include 'isOpen' to refresh when modal opens
     queryFn: createApiQuery<Role[]>(() => genericApi.getRoles() as Promise<{ data: Role[], error?: string, status: number }>),
     enabled: isOpen,
+    staleTime: 0, // Always fetch fresh data when modal opens
     retry: 2,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Fetch entities and branches in one call
+  // Fetch entities and branches in one call - ALWAYS REFRESH when modal opens
   const { data: entitiesAndBranches, isLoading: entitiesLoading, error: entitiesError } = useQuery<EntitiesAndBranchesResponse>({
-    queryKey: ["entities-and-branches"],
+    queryKey: ["entities-and-branches", isOpen], // Include 'isOpen' to refresh when modal opens
     queryFn: createApiQuery<EntitiesAndBranchesResponse>(() => genericApi.getEntitiesAndBranches() as Promise<{ data: EntitiesAndBranchesResponse, error?: string, status: number }>),
     enabled: isOpen,
+    staleTime: 0, // Always fetch fresh data when modal opens
     retry: 2,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Fetch user details when editing
+  // Fetch user details when editing - ALWAYS REFRESH when modal opens
   const { data: userDetails, isLoading: userDetailsLoading, error: userDetailsError } = useQuery<UserDetailsResponse>({
-    queryKey: ["user-details", editingUser?.id],
+    queryKey: ["user-details", editingUser?.id, isOpen], // Include 'isOpen' to refresh when modal opens
     queryFn: createApiQuery<UserDetailsResponse>(() => {
       if (!editingUser?.id) throw new Error('No user ID provided');
       return userApi.getUserById(editingUser.id.toString()) as Promise<{ data: UserDetailsResponse, error?: string, status: number }>;
     }),
     enabled: isOpen && isEditing && !!editingUser?.id,
+    staleTime: 0, // Always fetch fresh data when modal opens for editing
     retry: 2,
-    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 
   // Extract entities and branches from the response
@@ -113,7 +113,7 @@ export default function AddUserModal({ isOpen, onClose, editingUser }: AddUserMo
     resolver: zodResolver(createUserFormSchema(isEditing)),
   });
 
-  // Reset form when modal opens/closes or when user details are loaded
+  // Reset form when modal opens/closes or when user details are loaded - MODAL BEHAVIOR IMPLEMENTATION
   React.useEffect(() => {
     if (isOpen) {
       setIsFormLoading(true);

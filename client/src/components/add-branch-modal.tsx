@@ -37,14 +37,15 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch branch data for editing
+  // Fetch branch data for editing - ALWAYS REFRESH when modal opens
   const { data: branchData } = useQuery({
-    queryKey: ["branch", branchToEdit?.id],
+    queryKey: ["branch", branchToEdit?.id, open], // Include 'open' to refresh when modal opens
     queryFn: async () => {
       if (!branchToEdit) return null;
       return await branchApi.getBranchById(branchToEdit.id);
     },
-    enabled: isEdit && !!branchToEdit?.id,
+    enabled: isEdit && !!branchToEdit?.id && open,
+    staleTime: 0, // Always fetch fresh data when modal opens for editing
   });
 
   const form = useForm<InsertBranch>({
@@ -62,9 +63,9 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
     },
   });
 
-  // Update form values when branch data is loaded for editing
+  // Update form values when branch data is loaded for editing or reset for add mode
   React.useEffect(() => {
-    console.log('Effect triggered:', { isEdit, branchData, hasFormData: !!branchData });
+    console.log('Effect triggered:', { isEdit, branchData, hasFormData: !!branchData, open });
     if (isEdit && branchData) {
       console.log('Resetting form with branch data:', branchData);
       form.reset({
@@ -86,8 +87,26 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
       if ((branchData as any).restaurantBanner) {
         setBannerPreview(getImageUrl((branchData as any).restaurantBanner));
       }
+    } else if (!isEdit && open) {
+      // Add mode - ALWAYS reset form when modal opens
+      console.log('Resetting form for add mode');
+      form.reset({
+        Name: "",
+        Address: "",
+        ContactNumber: "",
+        EntityId: entityId,
+        SubscriptionId: 1,
+        InstagramLink: "",
+        WhatsappLink: "",
+        FacebookLink: "",
+        GoogleMapsLink: "",
+      });
+      setLogoPreview("");
+      setBannerPreview("");
+      setLogoFile(null);
+      setBannerFile(null);
     }
-  }, [isEdit, branchData, form, entityId]);
+  }, [isEdit, branchData, form, entityId, open]);
 
   const createBranchMutation = useMutation({
     mutationFn: async (data: InsertBranch) => {

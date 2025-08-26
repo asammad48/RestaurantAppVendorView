@@ -51,28 +51,30 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   const { toast } = useToast();
 
   const { data: menuItems = [], isLoading: menuItemsLoading } = useQuery({
-    queryKey: ['menu-items-simple', branchId],
+    queryKey: ['menu-items-simple', branchId, open], // Include 'open' to refresh when modal opens
     queryFn: createApiQuery<SimpleMenuItem[]>(async () => {
       if (!branchId) return { data: [], error: undefined, status: 200 };
       const response = await menuItemApi.getSimpleMenuItemsByBranch(branchId);
       return { ...response, data: (response.data as SimpleMenuItem[]) || [] };
     }),
     enabled: open && !!branchId,
+    staleTime: 0, // Always fetch fresh data when modal opens
   });
 
   const { data: subMenuItems = [], isLoading: subMenuItemsLoading } = useQuery({
-    queryKey: ['sub-menu-items-simple', branchId],
+    queryKey: ['sub-menu-items-simple', branchId, open], // Include 'open' to refresh when modal opens
     queryFn: createApiQuery<SimpleSubMenuItem[]>(async () => {
       if (!branchId) return { data: [], error: undefined, status: 200 };
       const response = await subMenuItemApi.getSimpleSubMenuItemsByBranch(branchId);
       return { ...response, data: (response.data as SimpleSubMenuItem[]) || [] };
     }),
     enabled: open && !!branchId,
+    staleTime: 0, // Always fetch fresh data when modal opens
   });
 
-  // Fetch deal data when editing
+  // Fetch deal data when editing - ALWAYS REFRESH when modal opens
   const { data: dealData, isLoading: isDealLoading } = useQuery({
-    queryKey: ['deal', editDealId],
+    queryKey: ['deal', editDealId, open], // Include 'open' to refresh when modal opens
     queryFn: async (): Promise<Deal> => {
       if (!editDealId) throw new Error('Deal ID is required');
       const response = await dealsApi.getDealById(editDealId);
@@ -80,6 +82,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       return response;
     },
     enabled: open && !!editDealId,
+    staleTime: 0, // Always fetch fresh data when modal opens for editing
   });
 
   const isEditMode = !!editDealId;

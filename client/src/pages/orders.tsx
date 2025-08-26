@@ -212,13 +212,17 @@ export default function Orders() {
   const [showEditDiscountModal, setShowEditDiscountModal] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState<any>(null);
   const [showAddServicesModal, setShowAddServicesModal] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState("orders");
 
   // Query for branch services with real API
+  // LAZY LOADING: Only fetch when services tab is active
   const { data: branchServices = [], isLoading: isLoadingBranchServices, refetch: refetchBranchServices } = useQuery<BranchService[]>({
     queryKey: ['branch-services', branchId],
     queryFn: async (): Promise<BranchService[]> => {
       return await servicesApi.getBranchServices(branchId);
     },
+    enabled: activeMainTab === "services", // LAZY LOADING: Only fetch when services tab is active
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditTableModal, setShowEditTableModal] = useState(false);
@@ -245,6 +249,7 @@ export default function Orders() {
   });
 
   // Real API query for tables from the current branch
+  // LAZY LOADING: Only fetch when tables tab is active
   const { data: tablesData, isLoading: isLoadingTables, refetch: refetchTables } = useQuery<LocationApiResponse[]>({
     queryKey: ["tables", "branch", branchId],
     queryFn: async () => {
@@ -256,6 +261,7 @@ export default function Orders() {
       
       return response.data as LocationApiResponse[];
     },
+    enabled: activeMainTab === "tables", // LAZY LOADING: Only fetch when tables tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: 2,
   });
@@ -283,7 +289,6 @@ export default function Orders() {
   const [showEditSubMenuModal, setShowEditSubMenuModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'submenu' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
-  const [activeMainTab, setActiveMainTab] = useState("orders");
 
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
@@ -323,6 +328,7 @@ export default function Orders() {
 
   // Query for menu items
   // Query for menu items with real API and pagination support using generic API repository
+  // LAZY LOADING: Only fetch when menu tab is active
   const { data: menuItemsResponse, isLoading: isLoadingMenu, refetch: refetchMenuItems } = useQuery({
     queryKey: [`menu-items-branch-${branchId}`, menuCurrentPage, menuSearchTerm, menuItemsPerPage],
     queryFn: async () => {
@@ -355,6 +361,7 @@ export default function Orders() {
       
       return response.data;
     },
+    enabled: activeMainTab === "menu", // LAZY LOADING: Only fetch when menu tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -366,6 +373,7 @@ export default function Orders() {
 
 
   // Query for submenus with real API and pagination support using generic API repository
+  // LAZY LOADING: Only fetch when menu tab is active
   const { data: subMenusResponse, isLoading: isLoadingSubMenus, refetch: refetchSubMenus } = useQuery({
     queryKey: [`submenus-branch-${branchId}`, subMenuCurrentPage, subMenuSearchTerm, subMenuItemsPerPage],
     queryFn: async () => {
@@ -398,6 +406,7 @@ export default function Orders() {
       
       return response.data;
     },
+    enabled: activeMainTab === "menu", // LAZY LOADING: Only fetch when menu tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -445,6 +454,7 @@ export default function Orders() {
   );
 
   // Query for categories with real API and pagination support using generic API repository
+  // LAZY LOADING: Only fetch when menu tab is active
   const { data: categoriesResponse, isLoading: isLoadingCategories, refetch: refetchCategories } = useQuery({
     queryKey: [`menu-categories-branch-${branchId}`, categoryCurrentPage, categorySearchTerm, categoryItemsPerPage],
     queryFn: async () => {
@@ -477,6 +487,7 @@ export default function Orders() {
       
       return response.data;
     },
+    enabled: activeMainTab === "menu", // LAZY LOADING: Only fetch when menu tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -527,6 +538,7 @@ export default function Orders() {
 
 
   // Query for deals with real API and pagination support using generic API repository
+  // LAZY LOADING: Only fetch when deals tab is active
   const { data: dealsResponse, isLoading: dealsLoading, refetch: refetchDeals } = useQuery({
     queryKey: [`deals-branch-${branchId}`, dealsCurrentPage, dealsSearchTerm, dealsItemsPerPage],
     queryFn: async () => {
@@ -559,6 +571,7 @@ export default function Orders() {
       
       return response.data;
     },
+    enabled: activeMainTab === "deals", // LAZY LOADING: Only fetch when deals tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -569,6 +582,7 @@ export default function Orders() {
   const dealsHasPrevious = dealsResponse?.hasPrevious || false;
 
   // Fetch discounts with pagination using Generic API repository  
+  // LAZY LOADING: Only fetch when discounts tab is active
   const { data: discountsResponse, isLoading: discountsLoading, refetch: refetchDiscounts } = useQuery<PaginationResponse<Discount>>({
     queryKey: [`discounts-branch-${branchId}`, discountsCurrentPage, discountsItemsPerPage, discountsSearchTerm],
     queryFn: async () => {
@@ -586,6 +600,7 @@ export default function Orders() {
       
       return response.data as PaginationResponse<Discount>;
     },
+    enabled: activeMainTab === "discounts", // LAZY LOADING: Only fetch when discounts tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -626,11 +641,8 @@ export default function Orders() {
         value={activeMainTab} 
         onValueChange={(value) => {
           setActiveMainTab(value);
-          // Refresh menu items when switching to menu tab
-          if (value === "menu") {
-            refetchMenuItems();
-            refetchCategories();
-          }
+          // LAZY LOADING: Data will be fetched automatically when tabs become active
+          // No need to manually refetch here - React Query will handle it with enabled conditions
         }} 
         className="space-y-6"
       >
