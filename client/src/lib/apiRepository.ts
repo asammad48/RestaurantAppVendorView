@@ -538,10 +538,8 @@ export const defaultApiConfig: ApiConfig = {
 // Create singleton instance
 export const apiRepository = new ApiRepository(defaultApiConfig);
 
-// Set the authentication token for the API calls
-// This token is from the user's provided curl command
-const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIyIiwidW5pcXVlX25hbWUiOiJPd25lciIsInJvbGUiOiJBY2NvdW50IE93bmVyIiwibmJmIjoxNzU1NzA2MTk1LCJleHAiOjE3NTYzMTA5OTUsImlhdCI6MTc1NTcwNjE5NSwiaXNzIjoiUmVzdGF1cmFudEFwcCIsImF1ZCI6IlJlc3RhdXJhbnRBcHAifQ.3mmuAziRYJuSUdkCKlhGu63x_X_lVCkOmShrRozEIMY';
-apiRepository.setTokens(authToken);
+// Authentication token will be set dynamically from login response
+// No hardcoded tokens - the apiRepository will load tokens from localStorage automatically
 
 // Branch API Helper Functions
 export const branchApi = {
