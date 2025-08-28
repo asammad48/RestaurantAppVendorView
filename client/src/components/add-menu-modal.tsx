@@ -95,16 +95,34 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   });
 
   // Fetch SubMenuItems for modifiers
-  const { data: subMenuItems, isLoading: subMenuItemsLoading } = useQuery({
+  const { data: subMenuItems, isLoading: subMenuItemsLoading, error: subMenuItemsError } = useQuery({
     queryKey: [`submenu-items-simple-branch-${branchId}`],
     queryFn: async () => {
-      const response = await subMenuItemApi.getSimpleSubMenuItemsByBranch(branchId || 0);
+      console.log(`🔍 Fetching SubMenuItems for branchId: ${branchId}`);
+      
+      if (!branchId || branchId === 0) {
+        console.error("❌ Invalid branchId:", branchId);
+        throw new Error("Invalid branch ID");
+      }
+      
+      const response = await subMenuItemApi.getSimpleSubMenuItemsByBranch(branchId);
+      console.log("📡 SubMenuItems API Response:", response);
+      
       if (response.error) {
+        console.error("❌ SubMenuItems API Error:", response.error);
         throw new Error(response.error);
       }
-      return response.data as SubMenuItem[] || [];
+      
+      const items = response.data as SubMenuItem[] || [];
+      console.log(`✅ SubMenuItems fetched: ${items.length} items`, items);
+      
+      return items;
     },
     enabled: !!branchId, // Only fetch when branchId is available
+    retry: 1,
+    onError: (error) => {
+      console.error("🚨 SubMenuItems Query Error:", error);
+    }
   });
 
   // Fetch menu item data for editing
@@ -598,14 +616,26 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
               
               {subMenuItemsLoading ? (
                 <div className="text-center py-4 text-gray-500">
-                  Loading available modifiers...
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500 mx-auto mb-2"></div>
+                  Loading available modifiers for branch {branchId}...
+                </div>
+              ) : subMenuItemsError ? (
+                <div className="col-span-full text-center text-red-500 py-8">
+                  <p className="text-lg font-medium mb-2">⚠️ Error Loading SubMenuItems</p>
+                  <p className="text-sm mb-4">Failed to load modifiers for branch {branchId}.</p>
+                  <p className="text-xs bg-red-50 p-2 rounded border text-left">
+                    Error: {subMenuItemsError instanceof Error ? subMenuItemsError.message : 'Unknown error'}
+                  </p>
+                  <p className="text-sm mt-2 text-gray-600">Check the browser console for more details.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto border rounded-lg p-4">
                   {subMenuItems?.length === 0 ? (
                     <div className="col-span-full text-center text-gray-500 py-8">
                       <p className="text-lg font-medium mb-2">No SubMenuItems Available</p>
-                      <p className="text-sm">No modifiers are available for this branch. Create some SubMenuItems first to use as modifiers.</p>
+                      <p className="text-sm mb-2">No modifiers are available for branch {branchId}.</p>
+                      <p className="text-sm text-blue-600">Create some SubMenuItems first to use as modifiers.</p>
+                      <p className="text-xs mt-2 text-gray-500">Branch ID: {branchId}</p>
                     </div>
                   ) : (
                     subMenuItems?.map((item) => (
