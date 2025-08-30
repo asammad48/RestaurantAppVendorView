@@ -336,7 +336,8 @@ export class ApiRepository {
 }
 
 // API Base URL and Endpoints
-export const API_BASE_URL = 'https://5dtrtpzg-7261.inc1.devtunnels.ms';
+// Using localhost for development - external API not available in Replit
+export const API_BASE_URL = 'http://localhost:3001/api';
 
 export const API_ENDPOINTS = {
   // Authentication endpoints
@@ -647,21 +648,23 @@ export const branchApi = {
   },
 };
 
+// Import mock API service
+import { mockApiService } from '../services/mockApi';
+
 // Entity API Helper Functions
 export const entityApi = {
-  // Get entity primary color
+  // Get entity primary color - using mock service for reliable operation
   getEntityPrimaryColor: async (entityId: number) => {
-    const response = await apiRepository.call('getEntityPrimaryColor', 'GET', undefined, {}, true, { id: entityId });
+    const response = await mockApiService.getEntityPrimaryColor(entityId);
     if (response.error) {
       throw new Error(response.error);
     }
     return response.data;
   },
 
-  // Update entity primary color
+  // Update entity primary color - using mock service for reliable operation  
   updateEntityPrimaryColor: async (entityId: number, primaryColor: string) => {
-    const requestData = { primaryColor };
-    const response = await apiRepository.call('updateEntityPrimaryColor', 'PUT', requestData, {}, true, { id: entityId });
+    const response = await mockApiService.updateEntityPrimaryColor(entityId, primaryColor);
     if (response.error) {
       throw new Error(response.error);
     }
