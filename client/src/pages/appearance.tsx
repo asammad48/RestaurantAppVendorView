@@ -35,7 +35,7 @@ export default function Appearance() {
         const response = await entityApi.getEntityPrimaryColor(entityId);
         console.log("Fetched primary color:", response);
         
-        const primaryColor = response.primaryColor || "#16A34A";
+        const primaryColor = response?.primaryColor || "#16A34A";
         setHexColor(primaryColor);
         
         // Convert hex to RGB for the color picker
