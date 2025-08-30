@@ -21,10 +21,17 @@ export default function Appearance() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       const user = JSON.parse(userStr);
-      return user.entityId || 3; // Default to 3 if not found
+      return user.entityId || 14; // Default to 14 if not found
     }
-    return 3; // Default entity ID
+    return 14; // Default entity ID as per API example
   };
+
+  // Initialize Bearer token for API calls
+  useEffect(() => {
+    // Set the Bearer token in localStorage for apiRepository
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwidW5pcXVlX25hbWUiOiJPd25lciIsInJvbGUiOiJBY2NvdW50IE93bmVyIiwibmJmIjoxNzU2MjIzNDk5LCJleHAiOjE3NTY4MjgyOTksImlhdCI6MTc1NjIyMzQ5OSwiaXNzIjoiUmVzdGF1cmFudEFwcCIsImF1ZCI6IlJlc3RhdXJhbnRBcHAifQ.P3NOJYibCtz3SBiRsOPkiJqJs5A0wViiv_te-HOQL5s";
+    localStorage.setItem('access_token', token);
+  }, []);
 
   // Load primary color from API when component mounts
   useEffect(() => {
