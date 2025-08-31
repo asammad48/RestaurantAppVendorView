@@ -847,11 +847,11 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
                   <Input
                     type="number"
                     placeholder="1"
-                    min="1"
-                    value={variant.personServing}
+                    min="0"
+                    value={variant.personServing === 0 ? "" : variant.personServing}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value) || 1;
-                      updateVariant(index, "personServing", value);
+                      const value = e.target.value;
+                      updateVariant(index, "personServing", value === "" ? 0 : parseInt(value) || 0);
                     }}
                     data-testid={`input-variant-person-serving-${index}`}
                   />
