@@ -62,6 +62,20 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
             <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
             <span>{branch.contactNumber || 'Phone: N/A'}</span>
           </div>
+          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
+            {branch.timeZone && (
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Timezone:</span>
+                <span>{branch.timeZone}</span>
+              </div>
+            )}
+            {branch.currency && (
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Currency:</span>
+                <span>{branch.currency}</span>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="space-y-2">

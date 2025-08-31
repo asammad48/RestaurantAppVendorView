@@ -86,6 +86,8 @@ export type Branch = {
   whatsappLink: string;
   facebookLink: string;
   googleMapsLink: string;
+  timeZone: string;
+  currency: string;
   // UI helper properties
   restaurantType?: string;
   status?: string;
@@ -102,6 +104,8 @@ export const insertBranchSchema = z.object({
   WhatsappLink: z.string().optional(),
   FacebookLink: z.string().optional(),
   GoogleMapsLink: z.string().optional(),
+  TimeZone: z.string().min(1, "Time zone is required"),
+  Currency: z.string().min(1, "Currency is required"),
 });
 
 export type InsertBranch = z.infer<typeof insertBranchSchema>;

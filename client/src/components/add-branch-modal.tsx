@@ -60,6 +60,8 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
       WhatsappLink: "",
       FacebookLink: "",
       GoogleMapsLink: "",
+      TimeZone: "",
+      Currency: "",
     },
   });
 
@@ -78,6 +80,8 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
         WhatsappLink: (branchData as any).whatsappLink || "",
         FacebookLink: (branchData as any).facebookLink || "",
         GoogleMapsLink: (branchData as any).googleMapsLink || "",
+        TimeZone: (branchData as any).timeZone || "",
+        Currency: (branchData as any).currency || "",
       });
       
       // Set image previews if they exist
@@ -100,6 +104,8 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
         WhatsappLink: "",
         FacebookLink: "",
         GoogleMapsLink: "",
+        TimeZone: "",
+        Currency: "",
       });
       setLogoPreview("");
       setBannerPreview("");
@@ -261,6 +267,46 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="TimeZone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Time Zone</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g., UTC+05:30, EST, PST"
+                        className="w-full"
+                        data-testid="input-timezone"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="Currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Currency</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g., USD, EUR, INR"
+                        className="w-full"
+                        data-testid="input-currency"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Logo Upload */}
             <div>
