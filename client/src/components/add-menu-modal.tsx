@@ -38,8 +38,10 @@ interface Customization {
 }
 
 interface Variant {
-  option: string;
+  name: string;
   price: number;
+  personServing: number;
+  outOfStock: boolean;
 }
 
 interface AddMenuModalProps {
@@ -57,7 +59,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   const [image, setImage] = useState<string>("");
   const [originalImage, setOriginalImage] = useState<string>(""); // Track original image for comparison
   const [customizations, setCustomizations] = useState<Customization[]>([{ name: "", options: [""] }]);
-  const [variants, setVariants] = useState<Variant[]>([{ option: "", price: 0 }]);
+  const [variants, setVariants] = useState<Variant[]>([{ name: "", price: 0, personServing: 1, outOfStock: false }]);
   const [selectedModifiers, setSelectedModifiers] = useState<number[]>([]);
   
   // Section visibility states
@@ -119,10 +121,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       return items;
     },
     enabled: !!branchId, // Only fetch when branchId is available
-    retry: 1,
-    onError: (error) => {
-      console.error("🚨 SubMenuItems Query Error:", error);
-    }
+    retry: 1
   });
 
   // Fetch menu item data for editing
@@ -173,8 +172,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       // Set variants (convert to local format)
       if (menuItemData.variants && menuItemData.variants.length > 0) {
         setVariants(menuItemData.variants.map(v => ({
-          option: v.name,
-          price: v.price
+          name: v.name,
+          price: v.price,
+          personServing: v.personServing || 1,
+          outOfStock: v.outOfStock || false
         })));
       }
       
@@ -221,7 +222,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       onClose();
       form.reset();
       setCustomizations([{ name: "", options: [""] }]);
-      setVariants([{ option: "", price: 0 }]);
+      setVariants([{ name: "", price: 0, personServing: 1, outOfStock: false }]);
       setSelectedModifiers([]);
       setImage("");
       setOriginalImage("");
@@ -259,7 +260,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       onClose();
       form.reset();
       setCustomizations([{ name: "", options: [""] }]);
-      setVariants([{ option: "", price: 0 }]);
+      setVariants([{ name: "", price: 0, personServing: 1, outOfStock: false }]);
       setSelectedModifiers([]);
       setImage("");
       setOriginalImage("");
@@ -330,10 +331,10 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   };
 
   const addVariant = () => {
-    setVariants([...variants, { option: "", price: 0 }]);
+    setVariants([...variants, { name: "", price: 0, personServing: 1, outOfStock: false }]);
   };
 
-  const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
+  const updateVariant = (index: number, field: keyof Variant, value: string | number | boolean) => {
     const newVariants = [...variants];
     newVariants[index] = { ...newVariants[index], [field]: value };
     setVariants(newVariants);
@@ -404,10 +405,12 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
       preparationTime: data.preparationTime,
       MenuItemPicture: imageData, // Use capital M as per API spec
       variants: variants
-        .filter(variant => variant.option.trim())
+        .filter(variant => variant.name.trim())
         .map(variant => ({
-          name: variant.option,
-          price: variant.price
+          name: variant.name,
+          price: variant.price,
+          personServing: variant.personServing,
+          outOfStock: variant.outOfStock
         })),
       modifiers: showModifiers && selectedModifiers.length > 0
         ? selectedModifiers.map(modifierId => ({
@@ -439,10 +442,12 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
         preparationTime: data.preparationTime,
         menuItemPicture: imageData, // lowercase for create
         variants: variants
-          .filter(variant => variant.option.trim())
+          .filter(variant => variant.name.trim())
           .map(variant => ({
-            name: variant.option,
-            price: variant.price
+            name: variant.name,
+            price: variant.price,
+            personServing: variant.personServing,
+            outOfStock: variant.outOfStock
           })),
         modifiers: showModifiers && selectedModifiers.length > 0
           ? selectedModifiers.map(modifierId => ({
@@ -630,7 +635,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto border rounded-lg p-4">
-                  {subMenuItems?.length === 0 ? (
+                  {!subMenuItems || subMenuItems.length === 0 ? (
                     <div className="col-span-full text-center text-gray-500 py-8">
                       <p className="text-lg font-medium mb-2">No SubMenuItems Available</p>
                       <p className="text-sm mb-2">No modifiers are available for branch {branchId}.</p>
@@ -638,7 +643,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
                       <p className="text-xs mt-2 text-gray-500">Branch ID: {branchId}</p>
                     </div>
                   ) : (
-                    subMenuItems?.map((item) => (
+                    subMenuItems?.map((item: SubMenuItem) => (
                       <div key={item.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
                         <Checkbox
                           id={`modifier-${item.id}`}
@@ -668,7 +673,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedModifiers.map((modifierId) => {
-                      const modifier = subMenuItems?.find(item => item.id === modifierId);
+                      const modifier = subMenuItems?.find((item: SubMenuItem) => item.id === modifierId);
                       return modifier ? (
                         <span 
                           key={modifierId}
@@ -802,42 +807,67 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Variants</h3>
             {variants.map((variant, index) => (
-              <div key={index} className="grid grid-cols-2 gap-4 items-end">
+              <div key={index} className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border rounded-lg relative">
+                {variants.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeVariant(index)}
+                    className="absolute top-2 right-2 text-red-600 border-red-600 hover:bg-red-50 h-8 w-8"
+                    data-testid={`button-remove-variant-${index}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
                 <div>
-                  <Label>Options</Label>
+                  <Label>Name</Label>
                   <Input
                     placeholder="e.g., Small, Medium, Large"
-                    value={variant.option}
-                    onChange={(e) => updateVariant(index, "option", e.target.value)}
-                    data-testid={`input-variant-option-${index}`}
+                    value={variant.name}
+                    onChange={(e) => updateVariant(index, "name", e.target.value)}
+                    data-testid={`input-variant-name-${index}`}
                   />
                 </div>
                 <div>
                   <Label>Price</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={variant.price === 0 ? "" : variant.price}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        updateVariant(index, "price", value === "" ? 0 : parseFloat(value) || 0);
-                      }}
-                      data-testid={`input-variant-price-${index}`}
-                    />
-                    {variants.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeVariant(index)}
-                        className="text-red-600 border-red-600 hover:bg-red-50 flex-shrink-0"
-                        data-testid={`button-remove-variant-${index}`}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  <Input
+                    type="number"
+                    placeholder="Price"
+                    value={variant.price === 0 ? "" : variant.price}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateVariant(index, "price", value === "" ? 0 : parseFloat(value) || 0);
+                    }}
+                    data-testid={`input-variant-price-${index}`}
+                  />
+                </div>
+                <div>
+                  <Label>Person Serving</Label>
+                  <Input
+                    type="number"
+                    placeholder="1"
+                    min="1"
+                    value={variant.personServing}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      updateVariant(index, "personServing", value);
+                    }}
+                    data-testid={`input-variant-person-serving-${index}`}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`variant-out-of-stock-${index}`}
+                    checked={variant.outOfStock}
+                    onChange={(e) => updateVariant(index, "outOfStock", e.target.checked)}
+                    className="rounded"
+                    data-testid={`checkbox-variant-out-of-stock-${index}`}
+                  />
+                  <Label htmlFor={`variant-out-of-stock-${index}`} className="text-sm">
+                    Out of Stock
+                  </Label>
                 </div>
               </div>
             ))}

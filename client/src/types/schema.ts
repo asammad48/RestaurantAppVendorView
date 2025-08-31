@@ -110,6 +110,8 @@ export type InsertBranch = z.infer<typeof insertBranchSchema>;
 export interface MenuItemVariant {
   name: string;
   price: number;
+  personServing: number;
+  outOfStock: boolean;
 }
 
 export interface MenuItemModifier {
