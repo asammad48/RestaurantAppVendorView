@@ -15,6 +15,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { menuItemApi, dealsApi, subMenuItemApi } from "@/lib/apiRepository";
 import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
+import { useBranchCurrency } from "@/hooks/useBranchCurrency";
+import { convertToUTC } from "@/lib/currencyUtils";
 
 interface AddDealsModalProps {
   open: boolean;
@@ -49,6 +51,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
   const [originalImage, setOriginalImage] = useState<string>("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { formatPrice, getCurrencySymbol } = useBranchCurrency(branchId);
 
   const { data: menuItems = [], isLoading: menuItemsLoading } = useQuery({
     queryKey: ['menu-items-simple', branchId, open], // Include 'open' to refresh when modal opens
@@ -370,7 +373,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       description: data.description,
       price: data.price, // API expects price as is (not in cents based on curl example)
       packagePicture: packagePicture,
-      expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : new Date().toISOString(),
+      expiryDate: data.expiryDate ? convertToUTC(data.expiryDate) : convertToUTC(new Date().toISOString()),
       isActive: true,
       menuItems: selectedItems
         .filter(item => item.variants.some(variant => variant.quantity > 0))
@@ -554,7 +557,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                           />
                           <div className="flex-1">
                             <p className="font-medium text-lg">{item.name}</p>
-                            <p className="text-sm text-gray-500">₹{item.price} - ID: {item.id}</p>
+                            <p className="text-sm text-gray-500">{formatPrice(item.price)} - ID: {item.id}</p>
                           </div>
                         </div>
                         
@@ -563,7 +566,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                             <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
                               <div className="flex-1">
                                 <p className="font-medium">{item.name}</p>
-                                <p className="text-sm text-gray-600">₹{item.price}</p>
+                                <p className="text-sm text-gray-600">{formatPrice(item.price)}</p>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Label className="text-sm">Qty:</Label>
@@ -594,7 +597,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Deal Price ($)</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Deal Price ({getCurrencySymbol()})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

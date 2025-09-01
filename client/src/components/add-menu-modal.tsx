@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRepository, subMenuItemApi } from "@/lib/apiRepository";
 import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
+import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 import type { InsertMenuItem, MenuCategory, MenuItem } from "@/types/schema";
 
 const addMenuSchema = z.object({
@@ -56,6 +57,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
   const isEditMode = !!editMenuItem;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { formatPrice, getCurrencySymbol } = useBranchCurrency(branchId);
   const [image, setImage] = useState<string>("");
   const [originalImage, setOriginalImage] = useState<string>(""); // Track original image for comparison
   const [customizations, setCustomizations] = useState<Customization[]>([{ name: "", options: [""] }]);
@@ -658,7 +660,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
                           >
                             {item.name}
                           </label>
-                          <p className="text-sm text-gray-500">₹{item.price}</p>
+                          <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
                         </div>
                       </div>
                     ))
@@ -679,7 +681,7 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
                           key={modifierId}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                         >
-                          {modifier.name} (₹{modifier.price})
+                          {modifier.name} ({formatPrice(modifier.price)})
                           <button
                             type="button"
                             onClick={() => toggleModifier(modifierId)}

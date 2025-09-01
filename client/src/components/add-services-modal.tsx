@@ -4,11 +4,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { type InsertService, type Service } from "@/types/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { servicesApi } from "@/lib/apiRepository";
+import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 
 interface AddServicesModalProps {
   open: boolean;
@@ -18,10 +20,16 @@ interface AddServicesModalProps {
 }
 
 
+interface ServiceWithPrice {
+  serviceId: number;
+  price: number;
+}
+
 export default function AddServicesModal({ open, onOpenChange, branchId, onServicesUpdated }: AddServicesModalProps) {
-  const [selectedServices, setSelectedServices] = useState<number[]>([]);
+  const [selectedServices, setSelectedServices] = useState<ServiceWithPrice[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { formatPriceFromCents, getCurrencySymbol } = useBranchCurrency(branchId);
 
 
 
@@ -35,9 +43,9 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
   });
 
   const updateBranchServicesMutation = useMutation({
-    mutationFn: async (serviceIds: number[]) => {
+    mutationFn: async (services: ServiceWithPrice[]) => {
       if (!branchId) throw new Error('Branch ID is required');
-      return await servicesApi.updateBranchServices(branchId, serviceIds);
+      return await servicesApi.updateBranchServices(branchId, services);
     },
     onSuccess: () => {
       if (branchId) queryClient.invalidateQueries({ queryKey: ['branch-services', branchId] });
@@ -60,12 +68,32 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
     },
   });
 
-  const handleServiceToggle = (serviceId: number) => {
+  const handleServiceToggle = (service: Service) => {
+    setSelectedServices(prev => {
+      const existingIndex = prev.findIndex(s => s.serviceId === service.id);
+      if (existingIndex >= 0) {
+        return prev.filter(s => s.serviceId !== service.id);
+      } else {
+        return [...prev, { serviceId: service.id, price: service.price / 100 }];
+      }
+    });
+  };
+
+  const handlePriceChange = (serviceId: number, price: number) => {
     setSelectedServices(prev => 
-      prev.includes(serviceId) 
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
+      prev.map(s => 
+        s.serviceId === serviceId ? { ...s, price } : s
+      )
     );
+  };
+
+  const isServiceSelected = (serviceId: number) => {
+    return selectedServices.some(s => s.serviceId === serviceId);
+  };
+
+  const getServicePrice = (serviceId: number) => {
+    const service = selectedServices.find(s => s.serviceId === serviceId);
+    return service?.price || 0;
   };
 
 
@@ -106,30 +134,52 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
                   No services available
                 </div>
               ) : (
-                availableServices.map((service) => (
-                  <div key={service.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                    <Checkbox
-                      checked={selectedServices.includes(service.id)}
-                      onCheckedChange={() => handleServiceToggle(service.id)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900">{service.name}</p>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            service.price === 0 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {service.price === 0 ? 'Free' : `$${(service.price / 100).toFixed(2)}`}
-                          </span>
+                availableServices.map((service) => {
+                  const isSelected = isServiceSelected(service.id);
+                  const currentPrice = getServicePrice(service.id);
+                  
+                  return (
+                    <div key={service.id} className="flex flex-col space-y-3 p-3 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => handleServiceToggle(service)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-gray-900">{service.name}</p>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                service.price === 0 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {service.price === 0 ? 'Free' : `Default: ${formatPriceFromCents(service.price)}`}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                      
+                      {isSelected && (
+                        <div className="ml-6 flex items-center space-x-2">
+                          <Label className="text-sm font-medium text-gray-700">Custom Price ({getCurrencySymbol()}):</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={currentPrice}
+                            onChange={(e) => handlePriceChange(service.id, parseFloat(e.target.value) || 0)}
+                            className="w-24 text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

@@ -1100,12 +1100,12 @@ export const servicesApi = {
     return response.data || [];
   },
 
-  // Update branch services (PUT with array of service IDs)
-  updateBranchServices: async (branchId: number, serviceIds: number[]) => {
+  // Update branch services (PUT with array of service objects with price)
+  updateBranchServices: async (branchId: number, services: Array<{ serviceId: number; price: number }>) => {
     const response = await apiRepository.call(
       'updateBranchServices',
       'PUT',
-      serviceIds,
+      services,
       {},
       true,
       { branchId }

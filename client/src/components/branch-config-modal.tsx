@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import type { Branch } from "@/types/schema";
 import { branchApi } from "@/lib/apiRepository";
+import { convertToUTC } from "@/lib/currencyUtils";
 
 // Configuration schema - using lowercase to match API response
 const branchConfigSchema = z.object({
@@ -148,10 +149,12 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
     try {
       console.log("Submitting configuration data:", data);
       
-      // Convert time format from HH:mm to HH:mm:ss for API
+      // Convert time format from HH:mm to HH:mm:ss for API and ensure UTC conversion
       const formatTimeForApi = (timeString: string) => {
         if (!timeString) return "00:00:00";
-        return `${timeString}:00`;
+        // Convert local time to UTC for API submission
+        const utcTime = convertToUTC(timeString, branch?.timeZone || 'UTC');
+        return new Date(utcTime).toTimeString().split(' ')[0]; // Extract HH:mm:ss
       };
 
       const apiData = {
