@@ -142,16 +142,11 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                 parseInt(seconds || '0')
               ));
               
-              // Convert UTC to branch local time
-              const branchTimeZone = branch?.timeZone || 'UTC';
-              const localTimeString = utcDate.toLocaleTimeString('en-US', { 
-                timeZone: branchTimeZone,
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit'
-              });
+              // Convert UTC to local time (user's timezone)
+              const localHours = utcDate.getHours().toString().padStart(2, '0');
+              const localMinutes = utcDate.getMinutes().toString().padStart(2, '0');
               
-              return localTimeString; // Already in HH:mm format
+              return `${localHours}:${localMinutes}`;
             }
             return utcTimeString.substring(0, 5); // Fallback
           } catch (error) {
@@ -203,22 +198,26 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       const formatTimeForApi = (timeString: string) => {
         if (!timeString) return "00:00:00";
         try {
-          // Create a date object for today with the local time
-          const today = new Date();
           const [hours, minutes] = timeString.split(':');
-          today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
           
-          // Convert to UTC considering the branch timezone
-          const branchTimeZone = branch?.timeZone || 'UTC';
+          // Create a date object for today with the local time in the user's timezone
+          const today = new Date();
+          const localDate = new Date(
+            today.getFullYear(),
+            today.getMonth(), 
+            today.getDate(),
+            parseInt(hours),
+            parseInt(minutes),
+            0,
+            0
+          );
           
-          // Calculate timezone offset difference
-          const localOffset = today.getTimezoneOffset(); // Browser timezone offset in minutes
-          const targetTime = new Date(today.toLocaleString('en-US', { timeZone: branchTimeZone }));
-          const branchOffset = (today.getTime() - targetTime.getTime()) / (1000 * 60); // Branch timezone offset
+          // Convert to UTC by getting the UTC components
+          const utcHours = localDate.getUTCHours().toString().padStart(2, '0');
+          const utcMinutes = localDate.getUTCMinutes().toString().padStart(2, '0');
+          const utcSeconds = localDate.getUTCSeconds().toString().padStart(2, '0');
           
-          // Apply the difference to get UTC time
-          const utcTime = new Date(today.getTime() + (branchOffset * 60 * 1000));
-          return utcTime.toTimeString().split(' ')[0]; // Extract HH:mm:ss
+          return `${utcHours}:${utcMinutes}:${utcSeconds}`;
         } catch (error) {
           console.error('Error converting local time to UTC:', error);
           return timeString + ":00"; // Fallback
