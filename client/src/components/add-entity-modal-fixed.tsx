@@ -8,6 +8,7 @@ import { insertEntitySchema } from "@/types/schema";
 import { apiRepository } from "@/lib/apiRepository";
 import { createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
+import { validateImage, getConstraintDescription } from "@/lib/imageValidation";
 import {
   Dialog,
   DialogContent,
@@ -97,28 +98,51 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
     },
   });
 
-  const handleFileUpload = (file: File, type: 'profile' | 'certificate') => {
-    if (!file.type.startsWith('image/')) {
+  const handleFileUpload = async (file: File, type: 'profile' | 'certificate') => {
+    try {
+      // Validate the image before processing (both profile and certificate use 'entity' constraints)
+      const validation = await validateImage(file, 'entity');
+      
+      if (!validation.isValid) {
+        toast({
+          title: "Invalid Image",
+          description: validation.error,
+          variant: "destructive",
+        });
+        // Clear the input
+        if (type === 'profile' && profileFileRef.current) {
+          profileFileRef.current.value = '';
+        } else if (type === 'certificate' && certificateFileRef.current) {
+          certificateFileRef.current.value = '';
+        }
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        if (type === 'profile') {
+          setProfilePicturePreview(base64String);
+          setProfilePictureFile(file);
+        } else {
+          setCertificatePicturePreview(base64String);
+          setCertificateFile(file);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please select an image file only",
+        description: "Failed to validate image. Please try again.",
         variant: "destructive",
       });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64String = e.target?.result as string;
-      if (type === 'profile') {
-        setProfilePicturePreview(base64String);
-        setProfilePictureFile(file);
-      } else {
-        setCertificatePicturePreview(base64String);
-        setCertificateFile(file);
+      // Clear the input
+      if (type === 'profile' && profileFileRef.current) {
+        profileFileRef.current.value = '';
+      } else if (type === 'certificate' && certificateFileRef.current) {
+        certificateFileRef.current.value = '';
       }
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleRemoveFile = (type: 'profile' | 'certificate') => {
@@ -271,7 +295,7 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
                     >
                       <Upload className="w-6 h-6 mx-auto text-gray-400 mb-2" />
                       <p className="text-sm text-gray-600">Upload profile picture</p>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</p>
+                      <p className="text-xs text-gray-400 mt-1">Required: {getConstraintDescription('entity')}</p>
                     </div>
                   )}
                   <input
@@ -315,7 +339,7 @@ export default function AddEntityModal({ open, onOpenChange }: AddEntityModalPro
                     >
                       <Upload className="w-6 h-6 mx-auto text-gray-400 mb-2" />
                       <p className="text-sm text-gray-600">Upload certificate</p>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, PDF up to 10MB</p>
+                      <p className="text-xs text-gray-400 mt-1">Required: {getConstraintDescription('entity')}</p>
                     </div>
                   )}
                   <input
