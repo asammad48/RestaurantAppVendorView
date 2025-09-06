@@ -16,6 +16,7 @@ import { insertBranchSchema, type InsertBranch, type Branch } from "@/types/sche
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { branchApi, genericApi, getImageUrl } from "@/lib/apiRepository";
+import { validateImage, getConstraintDescription } from "@/lib/imageValidation";
 
 interface AddBranchModalProps {
   open: boolean;
@@ -211,23 +212,69 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
     createBranchMutation.mutate(formDataWithEntityId);
   };
 
-  const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setLogoPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
+      try {
+        // Validate the logo image
+        const validation = await validateImage(file, 'branchLogo');
+        
+        if (!validation.isValid) {
+          toast({
+            title: "Invalid Logo Image",
+            description: validation.error,
+            variant: "destructive",
+          });
+          // Clear the input
+          event.target.value = '';
+          return;
+        }
+
+        setLogoFile(file);
+        const reader = new FileReader();
+        reader.onload = (e) => setLogoPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to validate logo image. Please try again.",
+          variant: "destructive",
+        });
+        event.target.value = '';
+      }
     }
   };
 
-  const handleBannerSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setBannerFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setBannerPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
+      try {
+        // Validate the banner image
+        const validation = await validateImage(file, 'branchBanner');
+        
+        if (!validation.isValid) {
+          toast({
+            title: "Invalid Banner Image",
+            description: validation.error,
+            variant: "destructive",
+          });
+          // Clear the input
+          event.target.value = '';
+          return;
+        }
+
+        setBannerFile(file);
+        const reader = new FileReader();
+        reader.onload = (e) => setBannerPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to validate banner image. Please try again.",
+          variant: "destructive",
+        });
+        event.target.value = '';
+      }
     }
   };
 
@@ -427,6 +474,9 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
             {/* Logo Upload */}
             <div>
               <Label className="text-sm font-medium text-gray-900 dark:text-white">Restaurant Logo</Label>
+              <p className="text-xs text-gray-500 mt-1">
+                Required: {getConstraintDescription('branchLogo')}
+              </p>
               <div className="mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
                 <input
                   ref={logoInputRef}
@@ -475,6 +525,9 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
             {/* Banner Upload */}
             <div>
               <Label className="text-sm font-medium text-gray-900 dark:text-white">Restaurant Banner</Label>
+              <p className="text-xs text-gray-500 mt-1">
+                Required: {getConstraintDescription('branchBanner')}
+              </p>
               <div className="mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
                 <input
                   ref={bannerInputRef}
