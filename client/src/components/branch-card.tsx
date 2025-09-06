@@ -83,13 +83,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
           <Button
             variant="default"
             size="sm"
-            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-[#15803d]/30 relative overflow-hidden group"
+            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium"
             onClick={() => onManage(branch)}
             data-testid={`button-manage-${branch.id}`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="flex items-center justify-center gap-2 relative z-10">
-              <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300 flex-shrink-0" />
+            <div className="flex items-center justify-center gap-2">
+              <Settings className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm font-medium">Manage</span>
             </div>
           </Button>
@@ -100,13 +99,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border-2 border-[#15803d]/30 text-[#15803d] hover:bg-[#15803d]/5 hover:border-[#15803d] hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-[#15803d]/20 relative overflow-hidden group"
+                className="flex-1 border border-[#15803d] text-[#15803d] hover:bg-[#15803d]/10"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
-                <div className="absolute inset-0 bg-[#15803d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="flex items-center justify-center gap-1 relative z-10">
-                  <Cog className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 flex-shrink-0" />
+                <div className="flex items-center justify-center gap-1">
+                  <Cog className="w-3 h-3 flex-shrink-0" />
                   <span className="text-xs font-medium hidden sm:inline">Config</span>
                 </div>
               </Button>
@@ -116,13 +114,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border-2 border-[#15803d]/30 text-[#15803d] hover:bg-[#15803d]/5 hover:border-[#15803d] hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-[#15803d]/20 relative overflow-hidden group"
+                className="flex-1 border border-[#15803d] text-[#15803d] hover:bg-[#15803d]/10"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
-                <div className="absolute inset-0 bg-[#15803d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="flex items-center justify-center gap-1 relative z-10">
-                  <Edit className="w-3 h-3 group-hover:rotate-12 transition-transform duration-300 flex-shrink-0" />
+                <div className="flex items-center justify-center gap-1">
+                  <Edit className="w-3 h-3 flex-shrink-0" />
                   <span className="text-xs font-medium hidden sm:inline">Edit</span>
                 </div>
               </Button>
@@ -132,13 +129,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border-2 border-red-400 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 hover:border-red-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-red-300/50 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-900/30 group relative overflow-hidden"
+                className="flex-1 border border-red-500 text-red-600 hover:bg-red-50"
                 onClick={() => onDelete(branch)}
                 data-testid={`button-delete-${branch.id}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="flex items-center justify-center gap-1 relative z-10">
-                  <Trash2 className="w-3 h-3 group-hover:animate-bounce group-hover:scale-110 transition-all duration-300" />
+                <div className="flex items-center justify-center gap-1">
+                  <Trash2 className="w-3 h-3" />
                   <span className="text-xs font-medium hidden sm:inline">Delete</span>
                 </div>
               </Button>
