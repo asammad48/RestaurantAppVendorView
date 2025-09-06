@@ -13,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import type { Branch } from "@/types/schema";
 import { branchApi } from "@/lib/apiRepository";
-import { convertToUTC } from "@/lib/currencyUtils";
+import { convertToUTC, getCurrencySymbol } from "@/lib/currencyUtils";
+import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 
 // Configuration schema - using lowercase to match API response
 const branchConfigSchema = z.object({
@@ -24,6 +25,10 @@ const branchConfigSchema = z.object({
   // Operating Hours
   openTime: z.string().optional(),
   closeTime: z.string().optional(),
+  
+  // Financial Configuration
+  serviceCharges: z.number().min(0).optional(),
+  taxPercentage: z.number().min(0).max(100).optional(),
   
   // Delivery Configuration
   deliveryTime: z.number().min(0).optional(),
@@ -56,6 +61,8 @@ interface BranchConfigResponse {
   holdTimeMinutes: number;
   openTime: string;
   closeTime: string;
+  serviceCharges: number;
+  taxPercentage: number;
 }
 
 interface BranchConfigModalProps {
@@ -68,6 +75,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { getCurrencySymbol: getBranchCurrencySymbol } = useBranchCurrency(branch?.id);
   
   const form = useForm<BranchConfigData>({
     resolver: zodResolver(branchConfigSchema),
@@ -79,6 +87,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       // Operating Hours defaults
       openTime: "09:00",
       closeTime: "22:00",
+      
+      // Financial defaults
+      serviceCharges: 0,
+      taxPercentage: 0,
       
       // Delivery defaults
       deliveryTime: 30,
@@ -107,10 +119,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
         const configData = await branchApi.getBranchConfiguration(branch.id) as BranchConfigResponse;
         console.log("Fetched configuration:", configData);
         
-        // Convert time format from HH:mm:ss to HH:mm for HTML time inputs
-        const formatTime = (timeString: string) => {
-          if (!timeString || timeString === "00:00:00") return "09:00";
-          return timeString.substring(0, 5); // Extract HH:mm from HH:mm:ss
+        // Convert UTC time back to local time for display
+        const formatTimeFromUTC = (utcTimeString: string) => {
+          if (!utcTimeString || utcTimeString === "00:00:00") return "09:00";
+          try {
+            // If it's just HH:mm:ss format, create a date object
+            if (utcTimeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
+              const [hours, minutes] = utcTimeString.split(':');
+              const utcDate = new Date();
+              utcDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
+              
+              // Convert UTC to local time based on branch timezone
+              const localTime = new Date(utcDate.toLocaleString('en-US', { timeZone: branch?.timeZone || 'UTC' }));
+              return localTime.toTimeString().substring(0, 5); // Extract HH:mm
+            }
+            return utcTimeString.substring(0, 5); // Fallback
+          } catch (error) {
+            console.error('Error converting UTC time to local:', error);
+            return utcTimeString.substring(0, 5);
+          }
         };
 
         // Reset form with fetched data
@@ -118,8 +145,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           isTakeaway: configData.isTakeaway || false,
           isReservation: configData.isReservation || false,
           isDelivery: configData.isDelivery || false,
-          openTime: formatTime(configData.openTime),
-          closeTime: formatTime(configData.closeTime),
+          openTime: formatTimeFromUTC(configData.openTime),
+          closeTime: formatTimeFromUTC(configData.closeTime),
+          serviceCharges: configData.serviceCharges || 0,
+          taxPercentage: configData.taxPercentage || 0,
           deliveryTime: configData.deliveryTime || 30,
           deliveryMinimumOrder: configData.deliveryMinimumOrder || 25.00,
           deliveryFee: configData.deliveryFee || 3.99,
@@ -149,12 +178,30 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
     try {
       console.log("Submitting configuration data:", data);
       
-      // Convert time format from HH:mm to HH:mm:ss for API and ensure UTC conversion
+      // Convert local time to UTC for API submission
       const formatTimeForApi = (timeString: string) => {
         if (!timeString) return "00:00:00";
-        // Convert local time to UTC for API submission
-        const utcTime = convertToUTC(timeString, branch?.timeZone || 'UTC');
-        return new Date(utcTime).toTimeString().split(' ')[0]; // Extract HH:mm:ss
+        try {
+          // Create a date object for today with the local time
+          const today = new Date();
+          const [hours, minutes] = timeString.split(':');
+          today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          
+          // Convert to UTC considering the branch timezone
+          const branchTimeZone = branch?.timeZone || 'UTC';
+          
+          // Calculate timezone offset difference
+          const localOffset = today.getTimezoneOffset(); // Browser timezone offset in minutes
+          const targetTime = new Date(today.toLocaleString('en-US', { timeZone: branchTimeZone }));
+          const branchOffset = (today.getTime() - targetTime.getTime()) / (1000 * 60); // Branch timezone offset
+          
+          // Apply the difference to get UTC time
+          const utcTime = new Date(today.getTime() + (branchOffset * 60 * 1000));
+          return utcTime.toTimeString().split(' ')[0]; // Extract HH:mm:ss
+        } catch (error) {
+          console.error('Error converting local time to UTC:', error);
+          return timeString + ":00"; // Fallback
+        }
       };
 
       const apiData = {
@@ -262,7 +309,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
             {/* Operating Hours */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Operating Hours</CardTitle>
+                <CardTitle className="text-lg">Operating Hours & Financial Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -271,7 +318,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                     name="openTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Opening Time</FormLabel>
+                        <FormLabel>Opening Time (Local Time)</FormLabel>
                         <FormControl>
                           <Input
                             type="time"
@@ -289,12 +336,58 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                     name="closeTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Closing Time</FormLabel>
+                        <FormLabel>Closing Time (Local Time)</FormLabel>
                         <FormControl>
                           <Input
                             type="time"
                             {...field}
                             className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="serviceCharges"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Service Charges ({getBranchCurrencySymbol()})</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            placeholder="0.00"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="taxPercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tax Percentage (%)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            max="100"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            placeholder="0.00"
                           />
                         </FormControl>
                         <FormMessage />
@@ -337,7 +430,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                       name="deliveryFee"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Delivery Fee ($)</FormLabel>
+                          <FormLabel>Delivery Fee ({getBranchCurrencySymbol()})</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -357,7 +450,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                       name="deliveryMinimumOrder"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Minimum Order ($)</FormLabel>
+                          <FormLabel>Minimum Order ({getBranchCurrencySymbol()})</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
