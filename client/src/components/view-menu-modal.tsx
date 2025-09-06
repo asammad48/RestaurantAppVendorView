@@ -151,7 +151,7 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-gray-900">{formatPrice(variant.price)}</p>
+                          <p className="font-semibold text-gray-900">{formatPrice(variant.price || 0)}</p>
                         </div>
                       </div>
                     ))}
@@ -173,7 +173,7 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
                     {menuItemData.modifiers.map((modifier, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                         <span className="font-medium text-gray-900">{modifier.name}</span>
-                        <span className="text-purple-700 font-semibold">{formatPrice(modifier.price)}</span>
+                        <span className="text-purple-700 font-semibold">{formatPrice(modifier.price || 0)}</span>
                       </div>
                     ))}
                   </div>

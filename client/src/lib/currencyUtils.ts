@@ -23,6 +23,11 @@ const CURRENCY_CONFIGS: Record<string, CurrencyConfig> = {
  * @returns Formatted price string
  */
 export const formatCurrency = (amount: number, currencyCode: string = 'USD'): string => {
+  // Handle null/undefined amounts
+  if (amount == null || isNaN(amount)) {
+    amount = 0;
+  }
+  
   const config = CURRENCY_CONFIGS[currencyCode.toUpperCase()] || CURRENCY_CONFIGS.USD;
   const formattedAmount = amount.toFixed(config.decimal);
   
