@@ -62,9 +62,33 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
     enabled: !!branchId && isOpen,
   });
 
+  // Fetch SubMenu items for modifier details
+  const { data: subMenuItems = [] } = useQuery({
+    queryKey: ['sub-menu-items-simple', branchId, isOpen],
+    queryFn: async () => {
+      if (!branchId) return [];
+      const response = await apiRepository.call(
+        'getSubMenusSimpleByBranch',
+        'GET',
+        undefined,
+        {},
+        true,
+        { branchId }
+      );
+      return response?.data || [];
+    },
+    enabled: !!branchId && isOpen,
+  });
+
   if (!isOpen) return null;
 
   const categoryName = categories?.find(cat => cat.id === menuItemData?.menuCategoryId)?.name || 'Unknown Category';
+  
+  // Create a lookup map for SubMenu items
+  const subMenuItemsLookup = new Map();
+  subMenuItems?.forEach((item: any) => {
+    subMenuItemsLookup.set(item.id, item);
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -161,26 +185,26 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Package className="w-5 h-5 text-purple-600" />
-                    Modifiers ({menuItemData.modifiers.length})
+                    Modifiers
                   </h3>
                   <div className="grid gap-2">
-                    {menuItemData.modifiers.map((modifier: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                        <span className="font-medium text-gray-900">{modifier?.name || modifier?.subMenuItemName || 'Unknown Modifier'}</span>
-                        <span className="text-purple-700 font-semibold">{formatPrice(modifier?.price || 0)}</span>
-                      </div>
-                    ))}
+                    {menuItemData.modifiers.map((modifier: any, index: number) => {
+                      const subMenuItem = subMenuItemsLookup.get(modifier.subMenuItemId);
+                      return (
+                        <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                          <span className="font-medium text-gray-900">
+                            {subMenuItem?.name || `SubMenu Item ${modifier.subMenuItemId}`}
+                          </span>
+                          <span className="text-purple-700 font-semibold">
+                            {formatPrice(subMenuItem?.price || 0)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </>
             )}
-            
-            {/* Debug Info - to check modifiers structure */}
-            <div className="p-2 bg-gray-100 rounded text-xs">
-              <p>Debug - Modifiers: {JSON.stringify(menuItemData?.modifiers)}</p>
-              <p>Debug - Modifiers Type: {typeof menuItemData?.modifiers}</p>
-              <p>Debug - Is Array: {Array.isArray(menuItemData?.modifiers)}</p>
-            </div>
 
             {/* Customizations */}
             {menuItemData.customizations && menuItemData.customizations.length > 0 && (
