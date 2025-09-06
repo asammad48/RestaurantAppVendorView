@@ -354,6 +354,8 @@ export const API_ENDPOINTS = {
   // Generic endpoints
   ROLES: '/api/Generic/roles',
   ENTITIES_AND_BRANCHES: '/api/Generic/entities-and-branches',
+  CURRENCIES: '/api/Generic/currencies',
+  TIMEZONES: '/api/Generic/timezones',
   
   // Entity endpoints
   ENTITIES: '/api/Entity',
@@ -446,6 +448,8 @@ export const defaultApiConfig: ApiConfig = {
     // Generic endpoints
     getRoles: API_ENDPOINTS.ROLES,
     getEntitiesAndBranches: API_ENDPOINTS.ENTITIES_AND_BRANCHES,
+    getCurrencies: API_ENDPOINTS.CURRENCIES,
+    getTimezones: API_ENDPOINTS.TIMEZONES,
     getServicesByType: API_ENDPOINTS.SERVICES_BY_TYPE,
     getBranchServices: API_ENDPOINTS.BRANCH_SERVICES,
     updateBranchServices: API_ENDPOINTS.BRANCH_SERVICES,
@@ -716,6 +720,16 @@ export const genericApi = {
   // Get entities and branches
   getEntitiesAndBranches: async () => {
     return await apiRepository.call('getEntitiesAndBranches', 'GET');
+  },
+
+  // Get currencies
+  getCurrencies: async () => {
+    return await apiRepository.call('getCurrencies', 'GET', undefined, {}, false);
+  },
+
+  // Get timezones
+  getTimezones: async () => {
+    return await apiRepository.call('getTimezones', 'GET', undefined, {}, false);
   },
 };
 

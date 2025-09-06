@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertBranchSchema, type InsertBranch, type Branch } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { branchApi, getImageUrl } from "@/lib/apiRepository";
+import { branchApi, genericApi, getImageUrl } from "@/lib/apiRepository";
 
 interface AddBranchModalProps {
   open: boolean;
@@ -46,6 +47,31 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
     },
     enabled: isEdit && !!branchToEdit?.id && open,
     staleTime: 0, // Always fetch fresh data when modal opens for editing
+  });
+
+  // Fetch currencies and timezones
+  const { data: currencies, isLoading: currenciesLoading } = useQuery({
+    queryKey: ["currencies"],
+    queryFn: async () => {
+      const response = await genericApi.getCurrencies();
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response.data;
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+  });
+
+  const { data: timezones, isLoading: timezonesLoading } = useQuery({
+    queryKey: ["timezones"], 
+    queryFn: async () => {
+      const response = await genericApi.getTimezones();
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      return response.data;
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
   });
 
   const form = useForm<InsertBranch>({
@@ -275,14 +301,20 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Time Zone</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="e.g., UTC+05:30, EST, PST"
-                        className="w-full"
-                        data-testid="input-timezone"
-                      />
-                    </FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full" data-testid="select-timezone">
+                          <SelectValue placeholder={timezonesLoading ? "Loading timezones..." : "Select timezone"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.isArray(timezones) && timezones.map((timezone: any) => (
+                          <SelectItem key={timezone.timeZoneValue} value={timezone.timeZoneValue} data-testid={`option-timezone-${timezone.timeZoneValue}`}>
+                            {timezone.timeZoneName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -294,14 +326,20 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Currency</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="e.g., USD, EUR, INR"
-                        className="w-full"
-                        data-testid="input-currency"
-                      />
-                    </FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full" data-testid="select-currency">
+                          <SelectValue placeholder={currenciesLoading ? "Loading currencies..." : "Select currency"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.isArray(currencies) && currencies.map((currency: any) => (
+                          <SelectItem key={currency.currencyValue} value={currency.currencyValue} data-testid={`option-currency-${currency.currencyValue}`}>
+                            {currency.currencyName} ({currency.currencyValue})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
