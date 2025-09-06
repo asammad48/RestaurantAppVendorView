@@ -87,7 +87,7 @@ export default function CollapsibleSidebar({
             "flex items-center transition-all duration-300",
             collapsed && "justify-center"
           )}>
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm" data-testid="logo-text">R</span>
             </div>
             {!collapsed && (
@@ -103,7 +103,7 @@ export default function CollapsibleSidebar({
             size="sm"
             onClick={handleToggle}
             className={cn(
-              "h-8 w-8 p-0 hover:bg-primary/10 transition-colors",
+              "h-8 w-8 p-0 hover:bg-green-50 transition-colors",
               collapsed && "mx-auto mt-2"
             )}
             data-testid="sidebar-toggle"
@@ -130,8 +130,8 @@ export default function CollapsibleSidebar({
                   className={cn(
                     "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out group relative",
                     isActive 
-                      ? "bg-primary text-white shadow-md" 
-                      : "text-gray-600 hover:text-primary hover:bg-primary/5",
+                      ? "bg-green-600 text-white shadow-md" 
+                      : "text-gray-600 hover:text-green-600 hover:bg-green-50",
                     collapsed && "justify-center"
                   )}
                   data-testid={`nav-${item.name.toLowerCase()}`}
@@ -139,7 +139,7 @@ export default function CollapsibleSidebar({
                   <Icon className={cn(
                     "flex-shrink-0 transition-colors",
                     collapsed ? "h-5 w-5" : "h-4 w-4 mr-3",
-                    isActive ? "text-white" : "text-gray-500 group-hover:text-primary"
+                    isActive ? "text-white" : "text-gray-500 group-hover:text-green-600"
                   )} />
                   
                   {!collapsed && (
