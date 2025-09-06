@@ -23,7 +23,7 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
   // Fetch menu item details
   const { data: menuItemData, isLoading } = useQuery({
     queryKey: [`menu-item-${menuItemId}`],
-    queryFn: createApiQuery<MenuItem>(async () => {
+    queryFn: async () => {
       const result = await apiRepository.call<MenuItem>(
         'getMenuItemById',
         'GET',
@@ -32,10 +32,9 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
         true,
         { id: menuItemId! }
       );
-      console.log('Menu Item API Response:', result);
-      console.log('Modifiers in response:', result?.data?.modifiers || result?.modifiers);
-      return result;
-    }),
+      // Return the actual data from the API response
+      return result?.data || result;
+    },
     enabled: !!menuItemId && isOpen,
   });
 
@@ -156,17 +155,13 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
             )}
 
             {/* Modifiers */}
-            {(() => {
-              console.log('Checking modifiers:', menuItemData?.modifiers);
-              console.log('Has modifiers:', !!(menuItemData?.modifiers && menuItemData.modifiers.length > 0));
-              return menuItemData?.modifiers && menuItemData.modifiers.length > 0;
-            })() && (
+            {menuItemData?.modifiers && menuItemData.modifiers.length > 0 && (
               <>
                 <Separator />
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Package className="w-5 h-5 text-purple-600" />
-                    Modifiers ({menuItemData.modifiers.length})
+                    Modifiers
                   </h3>
                   <div className="grid gap-2">
                     {menuItemData.modifiers.map((modifier, index) => (
@@ -179,12 +174,6 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
                 </div>
               </>
             )}
-            
-            {/* Debug Info - Remove after fixing */}
-            <div className="p-2 bg-gray-100 rounded text-xs">
-              <p>Debug - Modifiers Data: {JSON.stringify(menuItemData?.modifiers || 'No modifiers')}</p>
-              <p>Debug - Full Data Keys: {Object.keys(menuItemData || {}).join(', ')}</p>
-            </div>
 
             {/* Customizations */}
             {menuItemData.customizations && menuItemData.customizations.length > 0 && (
