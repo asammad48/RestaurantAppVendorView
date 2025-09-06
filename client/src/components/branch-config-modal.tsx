@@ -123,15 +123,31 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
         const formatTimeFromUTC = (utcTimeString: string) => {
           if (!utcTimeString || utcTimeString === "00:00:00") return "09:00";
           try {
-            // If it's just HH:mm:ss format, create a date object
+            // If it's just HH:mm:ss format, create a proper UTC date object
             if (utcTimeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
-              const [hours, minutes] = utcTimeString.split(':');
-              const utcDate = new Date();
-              utcDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
+              const [hours, minutes, seconds] = utcTimeString.split(':');
               
-              // Convert UTC to local time based on branch timezone
-              const localTime = new Date(utcDate.toLocaleString('en-US', { timeZone: branch?.timeZone || 'UTC' }));
-              return localTime.toTimeString().substring(0, 5); // Extract HH:mm
+              // Create a date object with today's date and the UTC time
+              const today = new Date();
+              const utcDate = new Date(Date.UTC(
+                today.getUTCFullYear(),
+                today.getUTCMonth(),
+                today.getUTCDate(),
+                parseInt(hours),
+                parseInt(minutes),
+                parseInt(seconds || '0')
+              ));
+              
+              // Convert UTC to branch local time
+              const branchTimeZone = branch?.timeZone || 'UTC';
+              const localTimeString = utcDate.toLocaleTimeString('en-US', { 
+                timeZone: branchTimeZone,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              return localTimeString; // Already in HH:mm format
             }
             return utcTimeString.substring(0, 5); // Fallback
           } catch (error) {
