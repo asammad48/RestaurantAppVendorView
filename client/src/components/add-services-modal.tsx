@@ -82,9 +82,9 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
         });
         return prev.filter(s => s.serviceId !== service.id);
       } else {
-        // Add service and set initial display price
+        // Add service and set initial display price as empty string so user has full control
         const initialPrice = service.price / 100;
-        setDisplayPrices(prev => ({ ...prev, [service.id]: initialPrice.toString() }));
+        setDisplayPrices(prev => ({ ...prev, [service.id]: "" }));
         return [...prev, { serviceId: service.id, price: initialPrice }];
       }
     });
@@ -109,7 +109,7 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
   };
 
   const getDisplayPrice = (serviceId: number) => {
-    return displayPrices[serviceId] || "0";
+    return displayPrices[serviceId] !== undefined ? displayPrices[serviceId] : "";
   };
 
 
