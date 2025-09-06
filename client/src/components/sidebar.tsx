@@ -68,7 +68,16 @@ export default function Sidebar() {
           <div className="space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location === item.href || (location === "/" && item.href === "/dashboard");
+              
+              // Define branch-related pages that should keep Entities selected
+              const branchRelatedPages = ["/branches", "/restaurant-management", "/hotel-management"];
+              
+              // Check if current page is branch-related and item is Entities
+              const isBranchPageAndEntities = branchRelatedPages.includes(location) && item.href === "/entities";
+              
+              const isActive = location === item.href || 
+                             (location === "/" && item.href === "/dashboard") ||
+                             isBranchPageAndEntities;
               
               return (
                 <Link
