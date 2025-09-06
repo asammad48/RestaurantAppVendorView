@@ -226,7 +226,7 @@
 }
 
 .form-button {
-  @apply w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium;
+  @apply w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium;
 }
 
 .form-button:disabled {
