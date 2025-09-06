@@ -23,6 +23,7 @@ import AddDiscountModal from "@/components/add-discount-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import ViewMenuModal from "@/components/view-menu-modal";
+import ViewDealsModal from "@/components/view-deals-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
@@ -288,6 +289,8 @@ export default function Orders() {
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
   const [showViewMenuModal, setShowViewMenuModal] = useState(false);
   const [selectedMenuItemId, setSelectedMenuItemId] = useState<number | null>(null);
+  const [showViewDealsModal, setShowViewDealsModal] = useState(false);
+  const [selectedDealId, setSelectedDealId] = useState<number | null>(null);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showEditSubMenuModal, setShowEditSubMenuModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -1393,6 +1396,13 @@ export default function Orders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedDealId(deal.id);
+                                setShowViewDealsModal(true);
+                              }}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Deal
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEditDeal(deal)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Deal
@@ -1815,6 +1825,17 @@ export default function Orders() {
           setSelectedMenuItemId(null);
         }}
         menuItemId={selectedMenuItemId || undefined}
+        branchId={branchId}
+      />
+
+      {/* View Deals Modal */}
+      <ViewDealsModal
+        isOpen={showViewDealsModal}
+        onClose={() => {
+          setShowViewDealsModal(false);
+          setSelectedDealId(null);
+        }}
+        dealId={selectedDealId || undefined}
         branchId={branchId}
       />
 
