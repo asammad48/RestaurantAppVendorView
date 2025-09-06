@@ -121,17 +121,16 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
           </Button>
           
           {/* Secondary Actions */}
-          <div className="w-full flex flex-col sm:flex-row gap-2 justify-center items-center">
+          <div className="w-full flex flex-wrap gap-2 justify-center">
             {onConfigure && (
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none sm:min-w-[90px] border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
+                className="px-4 py-2 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 text-xs"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
-                <Cog className="w-3 h-3 mr-1" />
-                <span className="text-xs">Config</span>
+                Config
               </Button>
             )}
             
@@ -139,12 +138,11 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none sm:min-w-[90px] border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
+                className="px-4 py-2 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 text-xs"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
-                <Edit className="w-3 h-3 mr-1" />
-                <span className="text-xs">Edit</span>
+                Edit
               </Button>
             )}
             
@@ -152,12 +150,11 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none sm:min-w-[90px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9"
+                className="px-4 py-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9 text-xs"
                 onClick={() => onDelete(branch)}
                 data-testid={`button-delete-${branch.id}`}
               >
-                <Trash2 className="w-3 h-3 mr-1" />
-                <span className="text-xs">Delete</span>
+                Delete
               </Button>
             )}
           </div>
