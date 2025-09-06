@@ -155,25 +155,32 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
             )}
 
             {/* Modifiers */}
-            {menuItemData?.modifiers && menuItemData.modifiers.length > 0 && (
+            {menuItemData?.modifiers && Array.isArray(menuItemData.modifiers) && menuItemData.modifiers.length > 0 && (
               <>
                 <Separator />
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Package className="w-5 h-5 text-purple-600" />
-                    Modifiers
+                    Modifiers ({menuItemData.modifiers.length})
                   </h3>
                   <div className="grid gap-2">
-                    {menuItemData.modifiers.map((modifier, index) => (
+                    {menuItemData.modifiers.map((modifier: any, index: number) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                        <span className="font-medium text-gray-900">{modifier.name}</span>
-                        <span className="text-purple-700 font-semibold">{formatPrice(modifier.price || 0)}</span>
+                        <span className="font-medium text-gray-900">{modifier?.name || modifier?.subMenuItemName || 'Unknown Modifier'}</span>
+                        <span className="text-purple-700 font-semibold">{formatPrice(modifier?.price || 0)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </>
             )}
+            
+            {/* Debug Info - to check modifiers structure */}
+            <div className="p-2 bg-gray-100 rounded text-xs">
+              <p>Debug - Modifiers: {JSON.stringify(menuItemData?.modifiers)}</p>
+              <p>Debug - Modifiers Type: {typeof menuItemData?.modifiers}</p>
+              <p>Debug - Is Array: {Array.isArray(menuItemData?.modifiers)}</p>
+            </div>
 
             {/* Customizations */}
             {menuItemData.customizations && menuItemData.customizations.length > 0 && (
