@@ -385,7 +385,15 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             type="number"
                             step="0.01"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                field.onChange(0);
+                              } else {
+                                const numValue = parseFloat(value);
+                                field.onChange(isNaN(numValue) ? 0 : numValue);
+                              }
+                            }}
                             placeholder="0.00"
                           />
                         </FormControl>
@@ -407,7 +415,15 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             max="100"
                             min="0"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                field.onChange(0);
+                              } else {
+                                const numValue = parseFloat(value);
+                                field.onChange(isNaN(numValue) ? 0 : numValue);
+                              }
+                            }}
                             placeholder="0.00"
                           />
                         </FormControl>
