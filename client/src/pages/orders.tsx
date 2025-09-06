@@ -620,10 +620,7 @@ export default function Orders() {
   const discountsHasNext = discountsResponse?.hasNext || false;
   const discountsHasPrevious = discountsResponse?.hasPrevious || false;
 
-  // Format price from cents to rupees
-  const formatPrice = (priceInCents: number) => {
-    return `Rs${(priceInCents / 100).toFixed(0)}`;
-  };
+  // This local formatPrice function is no longer used - replaced with formatBranchPrice from useBranchCurrency
 
   return (
     <div className="p-6 space-y-6" data-testid="orders-page">
@@ -906,7 +903,7 @@ export default function Orders() {
                           </span>
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
-                          {formatPrice(price)}
+                          {formatBranchPrice(price)}
                         </TableCell>
                         <TableCell data-testid={`menu-item-image-${item.id}`}>
                           <span className="text-gray-500">
@@ -1513,7 +1510,7 @@ export default function Orders() {
                             : 'bg-blue-100 text-blue-800'
                           }
                         >
-                          {service.price === 0 ? 'Free' : `$${(service.price / 100).toFixed(2)}`}
+                          {service.price === 0 ? 'Free' : formatBranchPrice(service.price)}
                         </Badge>
                       </div>
                       {service.picture && (

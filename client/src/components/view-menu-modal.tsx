@@ -30,7 +30,7 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
         undefined,
         {},
         true,
-        { id: menuItemId }
+        { id: menuItemId! }
       );
     }),
     enabled: !!menuItemId && isOpen,
