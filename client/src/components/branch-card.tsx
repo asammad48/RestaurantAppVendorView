@@ -121,12 +121,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
           </Button>
           
           {/* Secondary Actions */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="w-full flex flex-col sm:flex-row gap-2 justify-center items-center">
             {onConfigure && (
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
+                className="flex-1 sm:flex-none sm:min-w-[90px] border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
@@ -139,7 +139,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
+                className="flex-1 sm:flex-none sm:min-w-[90px] border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
@@ -152,7 +152,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9"
+                className="flex-1 sm:flex-none sm:min-w-[90px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9"
                 onClick={() => onDelete(branch)}
                 data-testid={`button-delete-${branch.id}`}
               >
