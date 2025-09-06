@@ -109,52 +109,55 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="w-full space-y-3">
           {/* Primary Action */}
           <Button
-            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10 sm:h-11"
+            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
             onClick={() => onManage(branch)}
             data-testid={`button-manage-${branch.id}`}
           >
             <Settings className="w-4 h-4 mr-2" />
-            <span className="text-sm sm:text-base">Manage Branch</span>
+            Manage Branch
           </Button>
           
           {/* Secondary Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2">
             {onConfigure && (
               <Button
                 variant="outline"
-                className="w-full sm:flex-1 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 sm:h-10 text-xs sm:text-sm"
+                size="sm"
+                className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
-                <Cog className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                Config
+                <Cog className="w-3 h-3 mr-1" />
+                <span className="text-xs">Config</span>
               </Button>
             )}
             
             {onEdit && (
               <Button
                 variant="outline"
-                className="w-full sm:flex-1 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 sm:h-10 text-xs sm:text-sm"
+                size="sm"
+                className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
-                <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                Edit
+                <Edit className="w-3 h-3 mr-1" />
+                <span className="text-xs">Edit</span>
               </Button>
             )}
             
             {onDelete && (
               <Button
                 variant="outline"
-                className="w-full sm:flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9 sm:h-10 text-xs sm:text-sm"
+                size="sm"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9"
                 onClick={() => onDelete(branch)}
                 data-testid={`button-delete-${branch.id}`}
               >
-                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                Delete
+                <Trash2 className="w-3 h-3 mr-1" />
+                <span className="text-xs">Delete</span>
               </Button>
             )}
           </div>
