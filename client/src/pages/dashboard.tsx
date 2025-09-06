@@ -4,29 +4,31 @@ import { TrendingUp, ShoppingCart, DollarSign, Clock, Users, Star, ChefHat } fro
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import type { DashboardStats, TopPerformingItems, OccupancyData, HourlyOrders, Feedback } from "@shared/schema";
+import type { DashboardStats, TopPerformingItems, OccupancyData, HourlyOrders, Feedback } from "@/types/schema";
 import "../styles/chart-animations.css";
 
-// Chart colors for consistent theming with gradients
+// Chart colors using the new centralized primary color #15803d
 const COLORS = {
-  primary: '#10b981', // emerald-500
+  primary: '#15803d', // Primary color
+  primaryHover: '#166534', // Primary hover
+  primaryLight: '#22c55e', // Primary light
   secondary: '#3b82f6', // blue-500
   success: '#22c55e', // green-500
   warning: '#f59e0b', // amber-500
   danger: '#ef4444', // red-500
   neutral: '#6b7280', // gray-500
-  positive: '#10b981',
+  positive: '#15803d',
   negative: '#ef4444',
-  feedbackColors: ['#10b981', '#f59e0b', '#ef4444'], // Positive, Neutral, Negative
+  feedbackColors: ['#15803d', '#f59e0b', '#ef4444'], // Positive, Neutral, Negative
   gradients: {
-    primary: 'linear-gradient(135deg, #10b981, #34d399)',
+    primary: 'linear-gradient(135deg, #15803d, #22c55e)',
     secondary: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
     warning: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     purple: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
     pink: 'linear-gradient(135deg, #ec4899, #f472b6)',
   },
   chartColors: [
-    '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899',
+    '#15803d', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899',
     '#06b6d4', '#84cc16', '#f97316', '#6366f1', '#14b8a6'
   ]
 };
@@ -71,15 +73,15 @@ export default function Dashboard() {
 
   // Process feedback data for pie chart
   const feedbackDistribution = (() => {
-    if (!feedbacks?.length) return [
+    if (!Array.isArray(feedbacks) || feedbacks.length === 0) return [
       { name: 'Positive', value: 45, percentage: 65 },
       { name: 'Neutral', value: 15, percentage: 22 },
       { name: 'Negative', value: 9, percentage: 13 },
     ];
     
-    const positive = feedbacks.filter((f: Feedback) => f.rating >= 4).length;
-    const neutral = feedbacks.filter((f: Feedback) => f.rating === 3).length;
-    const negative = feedbacks.filter((f: Feedback) => f.rating <= 2).length;
+    const positive = feedbacks.filter((f: any) => f.rating >= 4).length;
+    const neutral = feedbacks.filter((f: any) => f.rating === 3).length;
+    const negative = feedbacks.filter((f: any) => f.rating <= 2).length;
     const total = feedbacks.length;
 
     return [
@@ -90,13 +92,13 @@ export default function Dashboard() {
   })();
 
   // Get best selling category
-  const bestSellingCategory = topItems?.length > 0 ? topItems[0]?.category || "Main Course" : "Main Course";
+  const bestSellingCategory = Array.isArray(topItems) && topItems.length > 0 ? (topItems as any)[0]?.category || "Main Course" : "Main Course";
 
   // Format currency
   const formatCurrency = (amount: number) => `$${(amount / 100).toLocaleString()}`;
 
   // Current occupancy percentage
-  const currentOccupancy = occupancyData?.occupancyPercentage || 75;
+  const currentOccupancy = (occupancyData as any)?.occupancyPercentage || 75;
 
   return (
     <div className="space-y-8 p-6" data-testid="dashboard-page">
@@ -131,8 +133,8 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
-                {formatCurrency(dashboardStats?.totalRevenue || 85420)}
+              <div className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+                {formatCurrency((dashboardStats as any)?.totalRevenue || 85420)}
               </div>
               <div className="flex items-center mt-2">
                 <div className="flex items-center text-emerald-600">
@@ -155,8 +157,8 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
-                {dashboardStats?.totalOrders || 342}
+              <div className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+                {(dashboardStats as any)?.totalOrders || 342}
               </div>
               <div className="flex items-center mt-2">
                 <div className="flex items-center text-emerald-600">
@@ -179,8 +181,8 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
-                {formatCurrency(dashboardStats?.averageOrderValue || 2497)}
+              <div className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+                {formatCurrency((dashboardStats as any)?.averageOrderValue || 2497)}
               </div>
               <div className="flex items-center mt-2">
                 <div className="flex items-center text-emerald-600">
@@ -223,7 +225,7 @@ export default function Dashboard() {
           <CardContent className="p-2">
             <ResponsiveContainer width="100%" height={400}>
               <BarChart 
-                data={topItems?.slice(0, 5) || [
+                data={Array.isArray(topItems) ? (topItems as any).slice(0, 5) : [
                   { itemName: "Chicken Karahi", salesAmount: 12500, category: "Main Course" },
                   { itemName: "Beef Biryani", salesAmount: 10200, category: "Rice" },
                   { itemName: "Fish Tikka", salesAmount: 8500, category: "BBQ" },
@@ -272,7 +274,7 @@ export default function Dashboard() {
                   strokeWidth={1}
                   maxBarSize={40}
                 >
-                  {(topItems?.slice(0, 5) || [
+                  {(Array.isArray(topItems) ? (topItems as any).slice(0, 5) : [
                     { itemName: "Chicken Karahi", salesAmount: 12500, category: "Main Course" },
                     { itemName: "Beef Biryani", salesAmount: 10200, category: "Rice" },
                     { itemName: "Fish Tikka", salesAmount: 8500, category: "BBQ" },
@@ -443,7 +445,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center w-full">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-blue-600 text-lg">{occupancyData?.occupiedTables || 15}</span> of <span className="font-bold text-lg">{occupancyData?.totalTables || 20}</span> tables occupied
+                <span className="font-bold text-blue-600 text-lg">{(occupancyData as any)?.occupiedTables || 15}</span> of <span className="font-bold text-lg">{(occupancyData as any)?.totalTables || 20}</span> tables occupied
               </p>
             </div>
           </CardContent>
@@ -465,7 +467,7 @@ export default function Dashboard() {
           <CardContent className="p-2">
             <ResponsiveContainer width="100%" height={400}>
               <LineChart 
-                data={hourlyOrders || [
+                data={Array.isArray(hourlyOrders) ? hourlyOrders : [
                   { hour: 8, orderCount: 5 }, { hour: 9, orderCount: 12 }, { hour: 10, orderCount: 18 },
                   { hour: 11, orderCount: 25 }, { hour: 12, orderCount: 45 }, { hour: 13, orderCount: 52 },
                   { hour: 14, orderCount: 38 }, { hour: 15, orderCount: 28 }, { hour: 16, orderCount: 22 },
