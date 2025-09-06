@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +30,7 @@ const branchConfigSchema = z.object({
   // Financial Configuration
   serviceCharges: z.number().min(0).optional(),
   taxPercentage: z.number().min(0).max(100).optional(),
+  taxAppliedType: z.number().optional(),
   
   // Delivery Configuration
   deliveryTime: z.number().min(0).optional(),
@@ -63,6 +65,7 @@ interface BranchConfigResponse {
   closeTime: string;
   serviceCharges: number;
   taxPercentage: number;
+  taxAppliedType: number;
 }
 
 interface BranchConfigModalProps {
@@ -91,6 +94,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       // Financial defaults
       serviceCharges: 0,
       taxPercentage: 0,
+      taxAppliedType: 1,
       
       // Delivery defaults
       deliveryTime: 30,
@@ -165,6 +169,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           closeTime: formatTimeFromUTC(configData.closeTime),
           serviceCharges: configData.serviceCharges || 0,
           taxPercentage: configData.taxPercentage || 0,
+          taxAppliedType: configData.taxAppliedType || 1,
           deliveryTime: configData.deliveryTime || 30,
           deliveryMinimumOrder: configData.deliveryMinimumOrder || 25.00,
           deliveryFee: configData.deliveryFee || 3.99,
@@ -406,6 +411,33 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             placeholder="0.00"
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="taxAppliedType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tax Applied On</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          value={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select tax application type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">Total Amount</SelectItem>
+                            <SelectItem value="2">Discount Amount</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
