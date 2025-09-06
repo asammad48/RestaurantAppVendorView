@@ -22,12 +22,9 @@ export default function ViewDealsModal({ isOpen, onClose, dealId, branchId }: Vi
   // Fetch deal details
   const { data: dealData, isLoading, error } = useQuery({
     queryKey: [`deal-${dealId}`],
-    queryFn: createApiQuery<Deal>(async () => {
-      console.log('Fetching deal with ID:', dealId);
-      const result = await dealsApi.getDealById(dealId!);
-      console.log('Deal API result:', result);
-      return result;
-    }),
+    queryFn: async () => {
+      return await dealsApi.getDealById(dealId!);
+    },
     enabled: !!dealId && isOpen,
   });
 
@@ -177,12 +174,6 @@ export default function ViewDealsModal({ isOpen, onClose, dealId, branchId }: Vi
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">No deal found</p>
-            {error && (
-              <p className="text-red-500 text-sm mt-2">
-                Error: {error instanceof Error ? error.message : 'Failed to load deal'}
-              </p>
-            )}
-            <p className="text-gray-400 text-xs mt-1">Deal ID: {dealId}</p>
           </div>
         )}
       </DialogContent>
