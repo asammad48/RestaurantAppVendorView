@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Plus, Search, ArrowLeft, Palette } from "lucide-react";
+import { Plus, Search, ArrowLeft, Palette, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import BranchCard from "../components/branch-card";
 import AddBranchModal from "@/components/add-branch-modal";
@@ -64,6 +65,10 @@ export default function Branches() {
     (branch.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (branch.restaurantType || '').toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
+
+  // Count unconfigured branches
+  const unconfiguredBranches = Array.isArray(branches) ? branches.filter((branch: any) => !branch.isBranchConfigured) : [];
+  const hasUnconfiguredBranches = unconfiguredBranches.length > 0;
 
   const handleManage = (branch: Branch) => {
     // Always navigate to the management page - pricing modal will show there for trial users
@@ -163,6 +168,19 @@ export default function Branches() {
           </Button>
         </div>
       </div>
+
+      {/* Configuration Alert */}
+      {hasUnconfiguredBranches && (
+        <Alert className="border-amber-200 bg-amber-50">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            {unconfiguredBranches.length === 1 
+              ? `1 branch needs configuration to continue operating.`
+              : `${unconfiguredBranches.length} branches need configuration to continue operating.`
+            } Please configure them using the Config button on each branch card.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1 group">

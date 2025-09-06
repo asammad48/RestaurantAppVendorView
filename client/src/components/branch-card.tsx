@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, MapPin, Phone, Edit, Trash2, Building, Cog, Clock, DollarSign } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Settings, MapPin, Phone, Edit, Trash2, Building, Cog, Clock, DollarSign, AlertTriangle } from "lucide-react";
 import type { Branch } from "@/types/schema";
 import { getBranchImageUrl } from "@/lib/imageUtils";
 
@@ -56,6 +57,16 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
           </h3>
           <p className="text-sm text-gray-500 font-medium">Branch Location</p>
         </div>
+
+        {/* Configuration Alert */}
+        {!branch.isBranchConfigured && (
+          <Alert className="mb-4 border-amber-200 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 text-sm">
+              Branch configuration incomplete. Please configure to continue.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Details */}
         <div className="space-y-3 mb-6">

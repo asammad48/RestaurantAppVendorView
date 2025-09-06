@@ -88,6 +88,7 @@ export type Branch = {
   googleMapsLink: string;
   timeZone: string;
   currency: string;
+  isBranchConfigured?: boolean;
   // UI helper properties
   restaurantType?: string;
   status?: string;
