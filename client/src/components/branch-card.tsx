@@ -26,7 +26,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute top-4 right-4">
           <Badge 
-            className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
+            className="bg-[#15803d] hover:bg-[#166534] text-white shadow-lg"
             data-testid={`branch-status-${branch.id}`}
           >
             <div className="flex items-center gap-1">
@@ -59,7 +59,7 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
             <span className="line-clamp-2">{branch.address}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
+            <Phone className="w-4 h-4 text-[#15803d] flex-shrink-0" />
             <span>{branch.contactNumber || 'Phone: N/A'}</span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
@@ -83,15 +83,14 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
           <Button
             variant="default"
             size="sm"
-            className="w-full bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 hover:from-green-700 hover:via-emerald-700 hover:to-green-800 text-white font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-green-300/50 relative overflow-hidden group"
+            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-[#15803d]/30 relative overflow-hidden group"
             onClick={() => onManage(branch)}
             data-testid={`button-manage-${branch.id}`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/30 to-white/10 shimmer-effect opacity-0 group-hover:opacity-100"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="flex items-center justify-center gap-1 relative z-10">
-              <Settings className="w-3 h-3 animate-pulse group-hover:animate-spin flex-shrink-0" />
-              <span className="text-xs font-medium">Manage</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="flex items-center justify-center gap-2 relative z-10">
+              <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300 flex-shrink-0" />
+              <span className="text-sm font-medium">Manage</span>
             </div>
           </Button>
           
@@ -101,13 +100,13 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border-2 border-blue-400 text-blue-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-blue-300/50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/30 relative overflow-hidden group"
+                className="flex-1 border-2 border-[#15803d]/30 text-[#15803d] hover:bg-[#15803d]/5 hover:border-[#15803d] hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-[#15803d]/20 relative overflow-hidden group"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-300/20 to-indigo-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-[#15803d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="flex items-center justify-center gap-1 relative z-10">
-                  <Cog className="w-3 h-3 group-hover:rotate-180 group-hover:scale-110 transition-all duration-500 flex-shrink-0" />
+                  <Cog className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 flex-shrink-0" />
                   <span className="text-xs font-medium hidden sm:inline">Config</span>
                 </div>
               </Button>
@@ -117,13 +116,13 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border-2 border-amber-400 text-amber-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:border-amber-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-amber-300/50 dark:border-amber-500 dark:text-amber-400 dark:hover:bg-amber-900/30 relative overflow-hidden group"
+                className="flex-1 border-2 border-[#15803d]/30 text-[#15803d] hover:bg-[#15803d]/5 hover:border-[#15803d] hover:shadow-lg transform hover:scale-105 transition-all duration-300 hover:ring-2 hover:ring-[#15803d]/20 relative overflow-hidden group"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-300/20 to-yellow-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-[#15803d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="flex items-center justify-center gap-1 relative z-10">
-                  <Edit className="w-3 h-3 group-hover:rotate-180 group-hover:scale-110 transition-all duration-500 flex-shrink-0" />
+                  <Edit className="w-3 h-3 group-hover:rotate-12 transition-transform duration-300 flex-shrink-0" />
                   <span className="text-xs font-medium hidden sm:inline">Edit</span>
                 </div>
               </Button>
