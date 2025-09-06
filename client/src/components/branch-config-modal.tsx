@@ -27,9 +27,9 @@ const branchConfigSchema = z.object({
   openTime: z.string().optional(),
   closeTime: z.string().optional(),
   
-  // Financial Configuration
-  serviceCharges: z.number().min(0).optional(),
-  taxPercentage: z.number().min(0).max(100).optional(),
+  // Financial Configuration - Keep as strings to preserve leading zeros
+  serviceCharges: z.string().optional(),
+  taxPercentage: z.string().optional(),
   taxAppliedType: z.number().optional(),
   
   // Delivery Configuration
@@ -91,9 +91,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       openTime: "09:00",
       closeTime: "22:00",
       
-      // Financial defaults
-      serviceCharges: 0,
-      taxPercentage: 0,
+      // Financial defaults - Keep as strings to preserve leading zeros
+      serviceCharges: "0",
+      taxPercentage: "0",
       taxAppliedType: 1,
       
       // Delivery defaults
@@ -162,8 +162,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           isDelivery: configData.isDelivery || false,
           openTime: formatTimeFromUTC(configData.openTime),
           closeTime: formatTimeFromUTC(configData.closeTime),
-          serviceCharges: configData.serviceCharges || 0,
-          taxPercentage: configData.taxPercentage || 0,
+          serviceCharges: configData.serviceCharges?.toString() || "0",
+          taxPercentage: configData.taxPercentage?.toString() || "0",
           taxAppliedType: configData.taxAppliedType || 1,
           deliveryTime: configData.deliveryTime || 30,
           deliveryMinimumOrder: configData.deliveryMinimumOrder || 25.00,
@@ -228,6 +228,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
         ...data,
         openTime: formatTimeForApi(data.openTime || ""),
         closeTime: formatTimeForApi(data.closeTime || ""),
+        // Convert string values back to numbers for API (preserving the original value format)
+        serviceCharges: parseFloat(data.serviceCharges || "0"),
+        taxPercentage: parseFloat(data.taxPercentage || "0"),
       };
 
       await branchApi.updateBranchConfiguration(branch.id, apiData);
@@ -381,19 +384,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                         <FormLabel>Service Charges ({getBranchCurrencySymbol()})</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            step="0.01"
+                            type="text"
                             {...field}
                             onChange={(e) => {
+                              // Allow leading zeros by keeping as string
                               const value = e.target.value;
-                              if (value === '') {
-                                field.onChange(0);
-                              } else {
-                                const numValue = parseFloat(value);
-                                field.onChange(isNaN(numValue) ? 0 : numValue);
+                              // Only allow numbers and decimal points
+                              if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                field.onChange(value);
                               }
                             }}
-                            placeholder="0.00"
+                            placeholder="0500"
                           />
                         </FormControl>
                         <FormMessage />
@@ -409,21 +410,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                         <FormLabel>Tax Percentage (%)</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            step="0.01"
-                            max="100"
-                            min="0"
+                            type="text"
                             {...field}
                             onChange={(e) => {
+                              // Allow leading zeros by keeping as string
                               const value = e.target.value;
-                              if (value === '') {
-                                field.onChange(0);
-                              } else {
-                                const numValue = parseFloat(value);
-                                field.onChange(isNaN(numValue) ? 0 : numValue);
+                              // Only allow numbers and decimal points
+                              if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                field.onChange(value);
                               }
                             }}
-                            placeholder="0.00"
+                            placeholder="0500"
                           />
                         </FormControl>
                         <FormMessage />
