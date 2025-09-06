@@ -27,6 +27,7 @@ interface ServiceWithPrice {
 
 export default function AddServicesModal({ open, onOpenChange, branchId, onServicesUpdated }: AddServicesModalProps) {
   const [selectedServices, setSelectedServices] = useState<ServiceWithPrice[]>([]);
+  const [displayPrices, setDisplayPrices] = useState<Record<number, string>>({});
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { formatPriceFromCents, getCurrencySymbol } = useBranchCurrency(branchId);
@@ -54,6 +55,7 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
         description: `${selectedServices.length} service(s) added to branch successfully`,
       });
       setSelectedServices([]);
+      setDisplayPrices({});
       onOpenChange(false);
       if (onServicesUpdated) {
         onServicesUpdated();
@@ -72,17 +74,27 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
     setSelectedServices(prev => {
       const existingIndex = prev.findIndex(s => s.serviceId === service.id);
       if (existingIndex >= 0) {
+        // Remove service and its display price
+        setDisplayPrices(prevDisplay => {
+          const newDisplay = { ...prevDisplay };
+          delete newDisplay[service.id];
+          return newDisplay;
+        });
         return prev.filter(s => s.serviceId !== service.id);
       } else {
-        return [...prev, { serviceId: service.id, price: service.price / 100 }];
+        // Add service and set initial display price
+        const initialPrice = service.price / 100;
+        setDisplayPrices(prev => ({ ...prev, [service.id]: initialPrice.toString() }));
+        return [...prev, { serviceId: service.id, price: initialPrice }];
       }
     });
   };
 
-  const handlePriceChange = (serviceId: number, price: number) => {
+  const handlePriceChange = (serviceId: number, displayValue: string, numericValue: number) => {
+    setDisplayPrices(prev => ({ ...prev, [serviceId]: displayValue }));
     setSelectedServices(prev => 
       prev.map(s => 
-        s.serviceId === serviceId ? { ...s, price } : s
+        s.serviceId === serviceId ? { ...s, price: numericValue } : s
       )
     );
   };
@@ -94,6 +106,10 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
   const getServicePrice = (serviceId: number) => {
     const service = selectedServices.find(s => s.serviceId === serviceId);
     return service?.price || 0;
+  };
+
+  const getDisplayPrice = (serviceId: number) => {
+    return displayPrices[serviceId] || "0";
   };
 
 
@@ -136,7 +152,7 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
               ) : (
                 availableServices.map((service) => {
                   const isSelected = isServiceSelected(service.id);
-                  const currentPrice = getServicePrice(service.id);
+                  const currentDisplayPrice = getDisplayPrice(service.id);
                   
                   return (
                     <div key={service.id} className="flex flex-col space-y-3 p-3 border rounded-lg hover:bg-gray-50">
@@ -167,13 +183,20 @@ export default function AddServicesModal({ open, onOpenChange, branchId, onServi
                         <div className="ml-6 flex items-center space-x-2">
                           <Label className="text-sm font-medium text-gray-700">Custom Price ({getCurrencySymbol()}):</Label>
                           <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={currentPrice}
-                            onChange={(e) => handlePriceChange(service.id, parseFloat(e.target.value) || 0)}
+                            type="text"
+                            value={currentDisplayPrice}
+                            onChange={(e) => {
+                              // Allow leading zeros by preserving string format for display
+                              const value = e.target.value;
+                              // Only allow numbers and decimal points
+                              if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                // Keep display format and convert to number for API
+                                const numValue = value === '' ? 0 : parseFloat(value) || 0;
+                                handlePriceChange(service.id, value, numValue);
+                              }
+                            }}
                             className="w-24 text-sm"
-                            placeholder="0.00"
+                            placeholder="0500"
                           />
                         </div>
                       )}
