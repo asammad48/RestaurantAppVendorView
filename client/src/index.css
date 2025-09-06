@@ -141,7 +141,7 @@
 }
 
 .action-button-manage {
-  @apply text-green-500 hover:text-green-600;
+  @apply text-primary hover:text-green-600;
 }
 
 /* Fix for modal scrolling issues */
@@ -213,7 +213,7 @@
 
 /* Loading and error states */
 .loading-spinner {
-  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-green-500;
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary;
 }
 
 .error-message {
@@ -222,11 +222,11 @@
 
 /* Form styling */
 .form-input {
-  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent;
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
 }
 
 .form-button {
-  @apply w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium;
+  @apply w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium;
 }
 
 .form-button:disabled {
@@ -248,7 +248,7 @@
 }
 
 .search-input input {
-  @apply w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent;
+  @apply w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
 }
 
 .search-input .search-icon {
@@ -265,7 +265,7 @@
 }
 
 .pagination-button.active {
-  @apply bg-green-500 text-white border-green-500;
+  @apply bg-primary text-primary-foreground border-primary;
 }
 
 .pagination-button:disabled {

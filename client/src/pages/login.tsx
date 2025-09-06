@@ -91,7 +91,7 @@ export default function Login() {
             </div>
             <Button 
               type="submit" 
-              className="form-button" 
+              className="w-full" 
               disabled={isLoading}
               data-testid="button-login"
             >
@@ -140,7 +140,7 @@ export default function Login() {
             Don't have an account?{" "}
             <Link 
               href="/signup" 
-              className="text-green-500 hover:text-green-600"
+              className="text-primary hover:text-primary/80"
               data-testid="link-signup"
             >
               Sign up

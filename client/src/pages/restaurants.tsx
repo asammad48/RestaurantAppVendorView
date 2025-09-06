@@ -76,7 +76,6 @@ export default function Restaurants() {
         <h2 className="text-2xl font-semibold text-gray-800" data-testid="page-title">{pageTitle}</h2>
         <Button 
           onClick={() => setShowAddBranchModal(true)}
-          className="bg-green-500 hover:bg-green-600" 
           data-testid="button-add-branch"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -99,7 +98,7 @@ export default function Restaurants() {
       </div>
 
       {/* Restaurant Cards */}
-      <div className="restaurant-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedRestaurants.map((restaurant: any) => (
           <RestaurantCard
             key={restaurant.id}
@@ -148,7 +147,7 @@ export default function Restaurants() {
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   size="sm"
-                  className={currentPage === page ? "bg-green-500 hover:bg-green-600" : ""}
+                  className=""
                   onClick={() => setCurrentPage(page)}
                   data-testid={`button-page-${page}`}
                 >
