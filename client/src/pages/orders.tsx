@@ -27,6 +27,7 @@ import ViewDealsModal from "@/components/view-deals-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
+import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
 import type { MenuItem, MenuCategory, SubMenu, Deal, Discount, BranchService } from "@/types/schema";
@@ -181,6 +182,9 @@ export default function Orders() {
   // Extract branchId from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
   const branchId = parseInt(urlParams.get('branchId') || '1', 10); // Get branchId from URL, no hardcoded default
+  
+  // Use branch currency for proper formatting
+  const { formatPrice: formatBranchPrice, getCurrencySymbol } = useBranchCurrency(branchId);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [orderFilter, setOrderFilter] = useState("All Orders");
@@ -1382,7 +1386,7 @@ export default function Orders() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`deal-price-${deal.id}`}>
-                          ${(deal.price / 100).toFixed(2)}
+                          {formatBranchPrice(deal.price)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>

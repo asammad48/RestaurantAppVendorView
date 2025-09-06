@@ -73,7 +73,6 @@ export default function ViewDealsModal({ isOpen, onClose, dealId, branchId }: Vi
                     )}
                   </Badge>
                   <Badge variant="outline" className="text-blue-700 border-blue-200">
-                    <DollarSign className="w-3 h-3 mr-1" />
                     {formatPrice(dealData.price || 0)}
                   </Badge>
                 </div>
