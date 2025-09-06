@@ -140,6 +140,17 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
                   <p className="text-sm text-gray-900">{menuItemData.preparationTime || 15} minutes</p>
                 </div>
               </div>
+              {menuItemData.disountName && (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <Package className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Discount</p>
+                    <p className="text-sm text-gray-900">{menuItemData.disountName}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Variants */}
