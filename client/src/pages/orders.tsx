@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import AddServicesModal from "@/components/add-services-modal";
 import AddDiscountModal from "@/components/add-discount-modal";
 import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
+import ViewMenuModal from "@/components/view-menu-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
@@ -285,6 +286,8 @@ export default function Orders() {
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [selectedSubMenu, setSelectedSubMenu] = useState<SubMenu | null>(null);
   const [showEditMenuModal, setShowEditMenuModal] = useState(false);
+  const [showViewMenuModal, setShowViewMenuModal] = useState(false);
+  const [selectedMenuItemId, setSelectedMenuItemId] = useState<number | null>(null);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [showEditSubMenuModal, setShowEditSubMenuModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -916,6 +919,13 @@ export default function Orders() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedMenuItemId(item.id);
+                                setShowViewMenuModal(true);
+                              }}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Menu Item
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => {
                                 setSelectedMenuItem(item);
                                 setShowEditMenuModal(true);
@@ -1796,6 +1806,17 @@ export default function Orders() {
           editMenuItem={selectedMenuItem}
         />
       )}
+
+      {/* View Menu Modal */}
+      <ViewMenuModal
+        isOpen={showViewMenuModal}
+        onClose={() => {
+          setShowViewMenuModal(false);
+          setSelectedMenuItemId(null);
+        }}
+        menuItemId={selectedMenuItemId || undefined}
+        branchId={branchId}
+      />
 
 
       {/* Delete Confirmation Modal */}
