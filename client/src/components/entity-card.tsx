@@ -47,10 +47,10 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
       </div>
 
       {/* Content Section */}
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         {/* Title */}
         <div className="mb-4">
-          <h3 className="text-xl font-bold text-gray-900 mb-1" data-testid={`entity-name-${entity.id}`}>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1" data-testid={`entity-name-${entity.id}`}>
             {entity.name}
           </h3>
           <p className="text-sm text-gray-500 font-medium">
@@ -82,9 +82,9 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
-            className="flex-1 bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
+            className="w-full sm:flex-1 bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
             onClick={() => onManage(entity)}
             data-testid={`button-manage-${entity.id}`}
           >
@@ -94,7 +94,7 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
           
           <Button
             variant="outline"
-            className="flex-1 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-10"
+            className="w-full sm:flex-1 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-10"
             onClick={() => onEdit(entity)}
             data-testid={`button-edit-${entity.id}`}
           >
@@ -104,8 +104,7 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
           
           <Button
             variant="outline"
-            size="icon"
-            className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10 w-10"
+            className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10"
             onClick={() => onDelete(entity)}
             data-testid={`button-delete-${entity.id}`}
           >
