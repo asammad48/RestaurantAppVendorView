@@ -859,7 +859,6 @@ export default function Orders() {
                     <TableHead>Descriptions <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Category <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Discount <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                    <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead>Image <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -867,13 +866,13 @@ export default function Orders() {
                 <TableBody>
                   {isLoadingMenu ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         Loading menu items...
                       </TableCell>
                     </TableRow>
                   ) : filteredMenuItems.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         No menu items found
                       </TableCell>
                     </TableRow>
@@ -881,8 +880,6 @@ export default function Orders() {
                     paginatedMenuItems.map((item) => {
                       // Get category name from categories list
                       const categoryName = categories.find(cat => cat.id === item.menuCategoryId)?.name || 'Unknown Category';
-                      // Get price from first variant
-                      const price = item.variants && item.variants.length > 0 ? item.variants[0].price : 0;
                       
                       return (
                       <TableRow key={item.id.toString()} data-testid={`menu-item-row-${item.id}`}>
@@ -901,9 +898,6 @@ export default function Orders() {
                           <span className="text-sm text-gray-600">
                             {item.disountName || 'No Discount'}
                           </span>
-                        </TableCell>
-                        <TableCell className="font-medium" data-testid={`menu-item-price-${item.id}`}>
-                          {formatBranchPrice(price)}
                         </TableCell>
                         <TableCell data-testid={`menu-item-image-${item.id}`}>
                           <span className="text-gray-500">
@@ -1069,7 +1063,7 @@ export default function Orders() {
                           {subMenu.name}
                         </TableCell>
                         <TableCell className="font-medium" data-testid={`submenu-price-${subMenu.id}`}>
-                          ${subMenu.price.toFixed(2)}
+                          {formatBranchPrice(subMenu.price)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -1579,10 +1573,10 @@ export default function Orders() {
                           </Badge>
                         </TableCell>
                         <TableCell data-testid={`discount-value-${discount.id}`}>
-                          {discount.discountType === 2 ? `${discount.discountValue}%` : `$${discount.discountValue}`}
+                          {discount.discountType === 2 ? `${discount.discountValue}%` : `${formatBranchPrice(discount.discountValue)}`}
                         </TableCell>
                         <TableCell data-testid={`discount-max-amount-${discount.id}`}>
-                          {discount.maxDiscountAmount ? `$${discount.maxDiscountAmount}` : 'No limit'}
+                          {discount.maxDiscountAmount ? formatBranchPrice(discount.maxDiscountAmount) : 'No limit'}
                         </TableCell>
                         <TableCell data-testid={`discount-end-date-${discount.id}`}>
                           {discount.endDate ? new Date(discount.endDate).toLocaleDateString() : 'No expiry'}
