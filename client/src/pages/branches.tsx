@@ -140,7 +140,12 @@ export default function Branches() {
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={() => navigate("/appearance")}
+            onClick={() => {
+              // Preserve current URL query parameters when navigating to appearance
+              const currentParams = new URLSearchParams(window.location.search);
+              const appearanceUrl = currentParams.toString() ? `/appearance?${currentParams.toString()}` : '/appearance';
+              navigate(appearanceUrl);
+            }}
             variant="outline"
             className="w-full md:w-auto"
             data-testid="button-appearance"

@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { entityApi } from "@/lib/apiRepository";
 
 export default function Appearance() {
+  const [location, navigate] = useLocation();
   const [selectedColor, setSelectedColor] = useState("rgb(22, 163, 74)"); // Green default
   const [hexColor, setHexColor] = useState("#16A34A"); // Green default in hex
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
@@ -15,6 +16,10 @@ export default function Appearance() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  // Capture and preserve URL query parameters from the referring page
+  const urlParams = new URLSearchParams(window.location.search);
+  const previousPageParams = urlParams.toString();
 
   // Get entity ID from localStorage (assuming it's stored during login)
   const getEntityId = () => {
@@ -26,11 +31,14 @@ export default function Appearance() {
     return 14; // Default entity ID as per API example
   };
 
-  // Initialize Bearer token for API calls
+  // Initialize Bearer token for API calls (only if not already present)
   useEffect(() => {
-    // Set the Bearer token in localStorage for apiRepository
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwidW5pcXVlX25hbWUiOiJPd25lciIsInJvbGUiOiJBY2NvdW50IE93bmVyIiwibmJmIjoxNzU2MjIzNDk5LCJleHAiOjE3NTY4MjgyOTksImlhdCI6MTc1NjIyMzQ5OSwiaXNzIjoiUmVzdGF1cmFudEFwcCIsImF1ZCI6IlJlc3RhdXJhbnRBcHAifQ.P3NOJYibCtz3SBiRsOPkiJqJs5A0wViiv_te-HOQL5s";
-    localStorage.setItem('access_token', token);
+    // Only set default token if no token exists in localStorage
+    const existingToken = localStorage.getItem('access_token');
+    if (!existingToken) {
+      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwidW5pcXVlX25hbWUiOiJPd25lciIsInJvbGUiOiJBY2NvdW50IE93bmVyIiwibmJmIjoxNzU2MjIzNDk5LCJleHAiOjE3NTY4MjgyOTksImlhdCI6MTc1NjIyMzQ5OSwiaXNzIjoiUmVzdGF1cmFudEFwcCIsImF1ZCI6IlJlc3RhdXJhbnRBcHAifQ.P3NOJYibCtz3SBiRsOPkiJqJs5A0wViiv_te-HOQL5s";
+      localStorage.setItem('access_token', token);
+    }
   }, []);
 
   // Load primary color from API when component mounts
@@ -42,7 +50,9 @@ export default function Appearance() {
         const response = await entityApi.getEntityPrimaryColor(entityId);
         console.log("Fetched primary color:", response);
         
-        const primaryColor = response?.primaryColor || "#16A34A";
+        const primaryColor = (response && typeof response === 'object' && 'primaryColor' in response) 
+          ? (response as any).primaryColor || "#16A34A" 
+          : "#16A34A";
         setHexColor(primaryColor);
         
         // Convert hex to RGB for the color picker
@@ -201,11 +211,18 @@ export default function Appearance() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/branches">
-          <Button variant="ghost" size="icon" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          data-testid="button-back"
+          onClick={() => {
+            // Navigate back to branches page with preserved query parameters
+            const branchesUrl = previousPageParams ? `/branches?${previousPageParams}` : '/branches';
+            navigate(branchesUrl);
+          }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="text-page-title">
           Appearance
         </h1>
