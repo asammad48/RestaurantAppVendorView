@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { apiRepository } from "@/lib/apiRepository";
+import { createApiQuery } from "@/lib/errorHandling";
 import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 import { getFullImageUrl } from "@/lib/imageUtils";
 import type { MenuItem, MenuCategory } from "@/types/schema";
@@ -22,19 +23,16 @@ export default function ViewMenuModal({ isOpen, onClose, menuItemId, branchId }:
   // Fetch menu item details
   const { data: menuItemData, isLoading } = useQuery({
     queryKey: [`menu-item-${menuItemId}`],
-    queryFn: async () => {
-      if (!menuItemId) return null;
-      
-      const response = await apiRepository.call<MenuItem>(
+    queryFn: createApiQuery<MenuItem>(async () => {
+      return await apiRepository.call<MenuItem>(
         'getMenuItemById',
         'GET',
         undefined,
-        undefined,
+        {},
         true,
-        { menuItemId }
+        { id: menuItemId }
       );
-      return response.data;
-    },
+    }),
     enabled: !!menuItemId && isOpen,
   });
 
