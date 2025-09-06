@@ -17,6 +17,7 @@ import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHa
 import { useToast } from "@/hooks/use-toast";
 import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 import { convertToUTC } from "@/lib/currencyUtils";
+import { validateImage, getConstraintDescription } from "@/lib/imageValidation";
 
 interface AddDealsModalProps {
   open: boolean;
@@ -397,20 +398,43 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
     createDealMutation.mutate(dealData);
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
-      
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64String = e.target?.result as string;
-        // Remove the data:image/png;base64, prefix and keep only the base64 data
-        const base64Data = base64String.split(',')[1];
-        form.setValue("packagePicture", base64Data);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Validate the image before processing
+        const validation = await validateImage(file, 'deal');
+        
+        if (!validation.isValid) {
+          toast({
+            title: "Invalid Image",
+            description: validation.error,
+            variant: "destructive",
+          });
+          // Clear the input
+          event.target.value = '';
+          return;
+        }
+
+        setSelectedFile(file);
+        
+        // Convert file to base64
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64String = e.target?.result as string;
+          // Remove the data:image/png;base64, prefix and keep only the base64 data
+          const base64Data = base64String.split(',')[1];
+          form.setValue("packagePicture", base64Data);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to validate image. Please try again.",
+          variant: "destructive",
+        });
+        event.target.value = '';
+      }
     }
   };
 
@@ -638,7 +662,10 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
 
             <div>
               <Label className="text-sm font-medium text-gray-700">Deal Image</Label>
-              <div className="flex mt-1">
+              <p className="text-xs text-gray-500 mt-1">
+                Required: {getConstraintDescription('deal')}
+              </p>
+              <div className="flex mt-2">
                 <Input
                   type="file"
                   accept="image/*"
