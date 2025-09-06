@@ -112,25 +112,24 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
         <div className="space-y-3">
           {/* Primary Action */}
           <Button
-            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
+            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10 sm:h-11"
             onClick={() => onManage(branch)}
             data-testid={`button-manage-${branch.id}`}
           >
             <Settings className="w-4 h-4 mr-2" />
-            Manage Branch
+            <span className="text-sm sm:text-base">Manage Branch</span>
           </Button>
           
           {/* Secondary Actions */}
-          <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-3">
+          <div className="grid gap-2 sm:gap-3" style={{ gridTemplateColumns: `repeat(${[onConfigure, onEdit, onDelete].filter(Boolean).length}, 1fr)` }}>
             {onConfigure && (
               <Button
                 variant="outline"
-                size="sm"
-                className="border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 flex-1 sm:flex-none"
+                className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 sm:h-10"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
-                <Cog className="w-3 h-3 mr-1" />
+                <Cog className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span className="text-xs sm:text-sm">Config</span>
               </Button>
             )}
@@ -138,12 +137,11 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
             {onEdit && (
               <Button
                 variant="outline"
-                size="sm"
-                className="border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 flex-1 sm:flex-none"
+                className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 sm:h-10"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
-                <Edit className="w-3 h-3 mr-1" />
+                <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span className="text-xs sm:text-sm">Edit</span>
               </Button>
             )}
@@ -151,12 +149,11 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
             {onDelete && (
               <Button
                 variant="outline"
-                size="sm"
-                className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9 flex-1 sm:flex-none"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9 sm:h-10"
                 onClick={() => onDelete(branch)}
                 data-testid={`button-delete-${branch.id}`}
               >
-                <Trash2 className="w-3 h-3 mr-1" />
+                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span className="text-xs sm:text-sm">Delete</span>
               </Button>
             )}

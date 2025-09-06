@@ -82,34 +82,39 @@ export default function EntityCard({ entity, onEdit, onDelete, onManage }: Entit
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="space-y-3">
+          {/* Primary Action */}
           <Button
-            className="w-full sm:flex-1 bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
+            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10 sm:h-11"
             onClick={() => onManage(entity)}
             data-testid={`button-manage-${entity.id}`}
           >
             <Settings className="w-4 h-4 mr-2" />
-            Manage
+            <span className="text-sm sm:text-base">Manage</span>
           </Button>
           
-          <Button
-            variant="outline"
-            className="w-full sm:flex-1 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-10"
-            onClick={() => onEdit(entity)}
-            data-testid={`button-edit-${entity.id}`}
-          >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10"
-            onClick={() => onDelete(entity)}
-            data-testid={`button-delete-${entity.id}`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {/* Secondary Actions */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              className="w-full border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9 sm:h-10"
+              onClick={() => onEdit(entity)}
+              data-testid={`button-edit-${entity.id}`}
+            >
+              <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Edit</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9 sm:h-10"
+              onClick={() => onDelete(entity)}
+              data-testid={`button-delete-${entity.id}`}
+            >
+              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Delete</span>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
