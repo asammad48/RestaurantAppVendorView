@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, MapPin, Phone, Edit, Trash2, Store, Cog } from "lucide-react";
+import { Settings, MapPin, Phone, Edit, Trash2, Building, Cog, Clock, DollarSign } from "lucide-react";
 import type { Branch } from "@/types/schema";
 import { getBranchImageUrl } from "@/lib/imageUtils";
 
@@ -15,98 +15,123 @@ interface BranchCardProps {
 
 export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfigure }: BranchCardProps) {
   return (
-    <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-branch-${branch.id}`}>
-      <div className="relative">
+    <Card className="group bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden rounded-2xl" data-testid={`card-branch-${branch.id}`}>
+      {/* Header Image Section */}
+      <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         <img 
           src={getBranchImageUrl(branch.restaurantLogo)} 
           alt={`${branch.name} logo`} 
-          className="w-full h-48 object-cover bg-gray-100 transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover"
           data-testid={`branch-image-${branch.id}`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Status Badge */}
         <div className="absolute top-4 right-4">
-          <Badge 
-            className="bg-[#15803d] hover:bg-[#166534] text-white shadow-lg"
-            data-testid={`branch-status-${branch.id}`}
-          >
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-white" />
+          <Badge className="bg-[#15803d] text-white border-0 shadow-lg px-3 py-1" data-testid={`branch-status-${branch.id}`}>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
               Active
             </div>
           </Badge>
         </div>
+
+        {/* Type Badge */}
         <div className="absolute top-4 left-4">
-          <Badge 
-            variant="secondary"
-            className="bg-white/90 text-gray-800 font-medium shadow-lg"
-            data-testid={`branch-type-${branch.id}`}
-          >
-            <Store className="w-3 h-3 mr-1" />
-            BRANCH
+          <Badge className="bg-white/95 text-gray-800 border-0 shadow-lg px-3 py-1" data-testid={`branch-type-${branch.id}`}>
+            <div className="flex items-center gap-1.5">
+              <Building className="w-3 h-3 text-blue-600" />
+              BRANCH
+            </div>
           </Badge>
         </div>
-        <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg" data-testid={`branch-name-${branch.id}`}>
+      </div>
+
+      {/* Content Section */}
+      <CardContent className="p-6">
+        {/* Title */}
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-1" data-testid={`branch-name-${branch.id}`}>
             {branch.name}
           </h3>
+          <p className="text-sm text-gray-500 font-medium">Branch Location</p>
         </div>
-      </div>
-      
-      <CardContent className="p-6">
+
+        {/* Details */}
         <div className="space-y-3 mb-6">
-          <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <MapPin className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" />
-            <span className="line-clamp-2">{branch.address}</span>
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <MapPin className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700">Address</p>
+              <p className="text-sm text-gray-500 line-clamp-2">{branch.address}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <Phone className="w-4 h-4 text-[#15803d] flex-shrink-0" />
-            <span>{branch.contactNumber || 'Phone: N/A'}</span>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#15803d]/10 rounded-lg">
+              <Phone className="w-4 h-4 text-[#15803d]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700">Contact</p>
+              <p className="text-sm text-gray-500">{branch.contactNumber || 'Not available'}</p>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
-            {branch.timeZone && (
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Timezone:</span>
-                <span>{branch.timeZone}</span>
-              </div>
-            )}
-            {branch.currency && (
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Currency:</span>
-                <span>{branch.currency}</span>
-              </div>
-            )}
-          </div>
+
+          {/* Additional Info */}
+          {(branch.timeZone || branch.currency) && (
+            <div className="grid grid-cols-2 gap-3">
+              {branch.timeZone && (
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-purple-50 rounded-lg">
+                    <Clock className="w-3 h-3 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-700">Timezone</p>
+                    <p className="text-xs text-gray-500">{branch.timeZone}</p>
+                  </div>
+                </div>
+              )}
+              {branch.currency && (
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-amber-50 rounded-lg">
+                    <DollarSign className="w-3 h-3 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-700">Currency</p>
+                    <p className="text-xs text-gray-500">{branch.currency}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        
-        <div className="space-y-2">
-          {/* Primary Action - Full Width */}
+
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          {/* Primary Action */}
           <Button
-            variant="default"
-            size="sm"
-            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium"
+            className="w-full bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
             onClick={() => onManage(branch)}
             data-testid={`button-manage-${branch.id}`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <Settings className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium">Manage</span>
-            </div>
+            <Settings className="w-4 h-4 mr-2" />
+            Manage Branch
           </Button>
           
-          {/* Secondary Actions - Grid Layout */}
-          <div className="flex gap-1.5">
+          {/* Secondary Actions */}
+          <div className="grid grid-cols-3 gap-2">
             {onConfigure && (
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border border-[#15803d] text-[#15803d] hover:bg-[#15803d]/10"
+                className="border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
                 onClick={() => onConfigure(branch)}
                 data-testid={`button-configure-${branch.id}`}
               >
-                <div className="flex items-center justify-center gap-1">
-                  <Cog className="w-3 h-3 flex-shrink-0" />
-                  <span className="text-xs font-medium hidden sm:inline">Config</span>
-                </div>
+                <Cog className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Config</span>
               </Button>
             )}
             
@@ -114,14 +139,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border border-[#15803d] text-[#15803d] hover:bg-[#15803d]/10"
+                className="border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-9"
                 onClick={() => onEdit(branch)}
                 data-testid={`button-edit-${branch.id}`}
               >
-                <div className="flex items-center justify-center gap-1">
-                  <Edit className="w-3 h-3 flex-shrink-0" />
-                  <span className="text-xs font-medium hidden sm:inline">Edit</span>
-                </div>
+                <Edit className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Edit</span>
               </Button>
             )}
             
@@ -129,14 +152,12 @@ export default function BranchCard({ branch, onManage, onEdit, onDelete, onConfi
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 border border-red-500 text-red-600 hover:bg-red-50"
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium h-9"
                 onClick={() => onDelete(branch)}
                 data-testid={`button-delete-${branch.id}`}
               >
-                <div className="flex items-center justify-center gap-1">
-                  <Trash2 className="w-3 h-3" />
-                  <span className="text-xs font-medium hidden sm:inline">Delete</span>
-                </div>
+                <Trash2 className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Delete</span>
               </Button>
             )}
           </div>

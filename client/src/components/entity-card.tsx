@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, Edit, Trash2, MapPin, Phone, Mail, Building } from "lucide-react";
+import { Settings, Edit, Trash2, MapPin, Phone, Building2, Crown } from "lucide-react";
 import type { Entity } from "@/types/schema";
 import { getEntityImageUrl } from "@/lib/imageUtils";
 
@@ -14,91 +14,102 @@ interface EntityCardProps {
 
 export default function EntityCard({ entity, onEdit, onDelete, onManage }: EntityCardProps) {
   return (
-    <Card className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`card-entity-${entity.id}`}>
-      <div className="relative">
+    <Card className="group bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden rounded-2xl" data-testid={`card-entity-${entity.id}`}>
+      {/* Header Image Section */}
+      <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         <img 
           src={getEntityImageUrl(entity.profilePictureUrl)} 
           alt={`${entity.name} profile`} 
-          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover"
           data-testid={`entity-image-${entity.id}`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Status Badge */}
         <div className="absolute top-4 right-4">
-          <Badge 
-            className="bg-[#15803d] hover:bg-[#166534] text-white shadow-lg"
-            data-testid={`entity-status-${entity.id}`}
-          >
-            Active
+          <Badge className="bg-[#15803d] text-white border-0 shadow-lg px-3 py-1" data-testid={`entity-status-${entity.id}`}>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              Active
+            </div>
           </Badge>
         </div>
+
+        {/* Type Badge */}
         <div className="absolute top-4 left-4">
-          <Badge 
-            variant="secondary"
-            className="bg-white/90 text-gray-800 font-medium shadow-lg"
-            data-testid={`entity-type-${entity.id}`}
-          >
-            <Building className="w-3 h-3 mr-1" />
-            {(entity.entityType || (entity.type === 1 ? 'Hotel' : 'Restaurant')).toUpperCase()}
+          <Badge className="bg-white/95 text-gray-800 border-0 shadow-lg px-3 py-1" data-testid={`entity-type-${entity.id}`}>
+            <div className="flex items-center gap-1.5">
+              <Crown className="w-3 h-3 text-amber-500" />
+              {(entity.entityType || (entity.type === 1 ? 'Hotel' : 'Restaurant')).toUpperCase()}
+            </div>
           </Badge>
-        </div>
-        <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg" data-testid={`entity-name-${entity.id}`}>
-            {entity.name}
-          </h3>
         </div>
       </div>
-      
+
+      {/* Content Section */}
       <CardContent className="p-6">
+        {/* Title */}
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-1" data-testid={`entity-name-${entity.id}`}>
+            {entity.name}
+          </h3>
+          <p className="text-sm text-gray-500 font-medium">
+            {entity.entityType || (entity.type === 1 ? 'Hotel' : 'Restaurant')} Business
+          </p>
+        </div>
+
+        {/* Details */}
         <div className="space-y-3 mb-6">
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
-            <span className="line-clamp-1">{entity.address}</span>
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <MapPin className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700">Address</p>
+              <p className="text-sm text-gray-500 line-clamp-2">{entity.address}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <Phone className="w-4 h-4 text-[#15803d] flex-shrink-0" />
-            <span>{entity.phone}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <Building className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span className="line-clamp-1">{(entity.entityType || (entity.type === 1 ? 'Hotel' : 'Restaurant'))} Business</span>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#15803d]/10 rounded-lg">
+              <Phone className="w-4 h-4 text-[#15803d]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700">Phone</p>
+              <p className="text-sm text-gray-500">{entity.phone}</p>
+            </div>
           </div>
         </div>
-        
-        <div className="flex gap-2">
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
           <Button
-            variant="default"
-            size="sm"
-            className="flex-1 min-w-0 bg-[#15803d] hover:bg-[#166534] text-white font-medium px-3 py-2"
+            className="flex-1 bg-[#15803d] hover:bg-[#166534] text-white font-medium h-10"
             onClick={() => onManage(entity)}
             data-testid={`button-manage-${entity.id}`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <Settings className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium truncate">Manage</span>
-            </div>
+            <Settings className="w-4 h-4 mr-2" />
+            Manage
           </Button>
           
           <Button
             variant="outline"
-            size="sm"
-            className="flex-1 min-w-0 border border-[#15803d] text-[#15803d] hover:bg-[#15803d]/10 px-3 py-2"
+            className="flex-1 border-[#15803d] text-[#15803d] hover:bg-[#15803d]/5 font-medium h-10"
             onClick={() => onEdit(entity)}
             data-testid={`button-edit-${entity.id}`}
           >
-            <div className="flex items-center justify-center gap-2">
-              <Edit className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium truncate">Edit</span>
-            </div>
+            <Edit className="w-4 h-4 mr-2" />
+            Edit
           </Button>
           
           <Button
             variant="outline"
-            size="sm"
-            className="w-10 h-8 p-0 border border-red-500 text-red-600 hover:bg-red-50"
+            size="icon"
+            className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10 w-10"
             onClick={() => onDelete(entity)}
             data-testid={`button-delete-${entity.id}`}
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </CardContent>
