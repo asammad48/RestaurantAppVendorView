@@ -2,13 +2,15 @@ import { useState, useRef } from "react";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X, Upload } from "lucide-react";
+import { X, Upload, Check, ChevronsUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertBranchSchema, type InsertBranch, type Branch } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -33,6 +35,8 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string>("");
+  const [timezoneOpen, setTimezoneOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -137,6 +141,12 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
       setBannerPreview("");
       setLogoFile(null);
       setBannerFile(null);
+    }
+    
+    // Reset popover states when modal closes
+    if (!open) {
+      setTimezoneOpen(false);
+      setCurrencyOpen(false);
     }
   }, [isEdit, branchData, form, entityId, open]);
 
@@ -301,20 +311,54 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Time Zone</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full" data-testid="select-timezone">
-                          <SelectValue placeholder={timezonesLoading ? "Loading timezones..." : "Select timezone"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.isArray(timezones) && timezones.map((timezone: any) => (
-                          <SelectItem key={timezone.timeZoneValue} value={timezone.timeZoneValue} data-testid={`option-timezone-${timezone.timeZoneValue}`}>
-                            {timezone.timeZoneName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={timezoneOpen} onOpenChange={setTimezoneOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={timezoneOpen}
+                            className="w-full justify-between"
+                            data-testid="select-timezone"
+                          >
+                            {field.value
+                              ? Array.isArray(timezones) && timezones.find((timezone: any) => timezone.timeZoneValue === field.value)?.timeZoneName
+                              : timezonesLoading ? "Loading timezones..." : "Select timezone"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search timezone..." />
+                          <CommandList>
+                            <CommandEmpty>No timezone found.</CommandEmpty>
+                            <CommandGroup>
+                              {Array.isArray(timezones) && timezones.map((timezone: any) => (
+                                <CommandItem
+                                  key={timezone.timeZoneValue}
+                                  value={timezone.timeZoneName}
+                                  onSelect={() => {
+                                    field.onChange(timezone.timeZoneValue);
+                                    setTimezoneOpen(false);
+                                  }}
+                                  data-testid={`option-timezone-${timezone.timeZoneValue}`}
+                                >
+                                  <Check
+                                    className={
+                                      field.value === timezone.timeZoneValue
+                                        ? "mr-2 h-4 w-4 opacity-100"
+                                        : "mr-2 h-4 w-4 opacity-0"
+                                    }
+                                  />
+                                  {timezone.timeZoneName}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -326,20 +370,54 @@ export default function AddBranchModal({ open, onClose, entityId, branchToEdit, 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">Currency</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full" data-testid="select-currency">
-                          <SelectValue placeholder={currenciesLoading ? "Loading currencies..." : "Select currency"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.isArray(currencies) && currencies.map((currency: any) => (
-                          <SelectItem key={currency.currencyValue} value={currency.currencyValue} data-testid={`option-currency-${currency.currencyValue}`}>
-                            {currency.currencyName} ({currency.currencyValue})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={currencyOpen}
+                            className="w-full justify-between"
+                            data-testid="select-currency"
+                          >
+                            {field.value
+                              ? Array.isArray(currencies) && currencies.find((currency: any) => currency.currencyValue === field.value)?.currencyName + ` (${field.value})`
+                              : currenciesLoading ? "Loading currencies..." : "Select currency"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search currency..." />
+                          <CommandList>
+                            <CommandEmpty>No currency found.</CommandEmpty>
+                            <CommandGroup>
+                              {Array.isArray(currencies) && currencies.map((currency: any) => (
+                                <CommandItem
+                                  key={currency.currencyValue}
+                                  value={`${currency.currencyName} ${currency.currencyValue}`}
+                                  onSelect={() => {
+                                    field.onChange(currency.currencyValue);
+                                    setCurrencyOpen(false);
+                                  }}
+                                  data-testid={`option-currency-${currency.currencyValue}`}
+                                >
+                                  <Check
+                                    className={
+                                      field.value === currency.currencyValue
+                                        ? "mr-2 h-4 w-4 opacity-100"
+                                        : "mr-2 h-4 w-4 opacity-0"
+                                    }
+                                  />
+                                  {currency.currencyName} ({currency.currencyValue})
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
