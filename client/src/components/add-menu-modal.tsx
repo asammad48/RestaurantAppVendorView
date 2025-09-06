@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRepository, subMenuItemApi } from "@/lib/apiRepository";
 import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useBranchCurrency } from "@/hooks/useBranchCurrency";
+import { validateImage, getConstraintDescription } from "@/lib/imageValidation";
 import type { InsertMenuItem, MenuCategory, MenuItem } from "@/types/schema";
 
 const addMenuSchema = z.object({
@@ -278,35 +279,38 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
     },
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
+      try {
+        // Validate the image before processing
+        const validation = await validateImage(file, 'menuItem');
+        
+        if (!validation.isValid) {
+          toast({
+            title: "Invalid Image",
+            description: validation.error,
+            variant: "destructive",
+          });
+          // Clear the input
+          e.target.value = '';
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          // Store as base64 for API submission
+          setImage(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
         toast({
-          title: "Invalid file type",
-          description: "Please select an image file",
+          title: "Error",
+          description: "Failed to validate image. Please try again.",
           variant: "destructive",
         });
-        return;
+        e.target.value = '';
       }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Store as base64 for API submission
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -557,6 +561,9 @@ export default function AddMenuModal({ isOpen, onClose, restaurantId, branchId, 
 
             <div className="space-y-2">
               <Label htmlFor="image">Image Upload</Label>
+              <p className="text-xs text-gray-500">
+                Required: {getConstraintDescription('menuItem')}
+              </p>
               <div className="flex items-center gap-2">
                 <Input
                   type="file"
