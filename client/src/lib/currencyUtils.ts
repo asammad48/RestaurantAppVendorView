@@ -106,10 +106,11 @@ export const convertToUTC = (localTime: string, timezone: string = 'UTC'): strin
  */
 export const convertLocalDateToUTC = (localDate: string): string => {
   try {
-    // Create date object from local date string (YYYY-MM-DD)
-    // Adding 'T00:00:00' to make it a full datetime in local timezone
-    const localDateTime = new Date(localDate + 'T00:00:00');
-    return localDateTime.toISOString();
+    // For date-only values, treat them as UTC dates to avoid timezone issues
+    // Create date directly as UTC to maintain the same date across all timezones
+    const [year, month, day] = localDate.split('-').map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    return utcDate.toISOString();
   } catch (error) {
     console.error('Error converting local date to UTC:', error);
     return new Date().toISOString();
@@ -124,18 +125,19 @@ export const convertLocalDateToUTC = (localDate: string): string => {
 export const convertUTCToLocalDate = (utcDate: string): string => {
   try {
     const date = new Date(utcDate);
-    // Format as YYYY-MM-DD for date input fields
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    // For date-only values, use UTC methods to avoid timezone conversion
+    // This ensures the same date is displayed regardless of user's timezone
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   } catch (error) {
     console.error('Error converting UTC date to local:', error);
     // Return today's date as fallback
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const year = today.getUTCFullYear();
+    const month = String(today.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(today.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 };
