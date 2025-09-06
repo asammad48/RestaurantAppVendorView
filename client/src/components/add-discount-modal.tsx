@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { insertDiscountSchema, type InsertDiscount, type Discount, DISCOUNT_TYPES, getDiscountTypeLabel } from "@/types/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { discountsApi } from "@/lib/apiRepository";
+import { convertLocalDateToUTC, convertUTCToLocalDate } from "@/lib/currencyUtils";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddDiscountModalProps {
@@ -63,8 +64,8 @@ export default function AddDiscountModal({
         discountType: discountData.discountType || DISCOUNT_TYPES.FLAT,
         discountValue: discountData.discountValue || 0,
         maxDiscountAmount: discountData.maxDiscountAmount || 0,
-        startDate: discountData.startDate ? discountData.startDate.split('T')[0] : "", // Format date for input
-        endDate: discountData.endDate ? discountData.endDate.split('T')[0] : "", // Format date for input
+        startDate: discountData.startDate ? convertUTCToLocalDate(discountData.startDate) : "", // Convert UTC to local date for input
+        endDate: discountData.endDate ? convertUTCToLocalDate(discountData.endDate) : "", // Convert UTC to local date for input
       });
     } else if (!isEditMode) {
       // Reset form for new discount
@@ -88,8 +89,8 @@ export default function AddDiscountModal({
           discountType: data.discountType,
           discountValue: data.discountValue,
           maxDiscountAmount: data.maxDiscountAmount || 0,
-          startDate: new Date(data.startDate).toISOString(),
-          endDate: new Date(data.endDate).toISOString(),
+          startDate: convertLocalDateToUTC(data.startDate),
+          endDate: convertLocalDateToUTC(data.endDate),
           isActive: true // Required field as per API
         };
         const response = await discountsApi.updateDiscount(editDiscountId, discountData);
@@ -102,8 +103,8 @@ export default function AddDiscountModal({
           discountType: data.discountType,
           discountValue: data.discountValue,
           maxDiscountAmount: data.maxDiscountAmount || 0,
-          startDate: new Date(data.startDate).toISOString(),
-          endDate: new Date(data.endDate).toISOString(),
+          startDate: convertLocalDateToUTC(data.startDate),
+          endDate: convertLocalDateToUTC(data.endDate),
           isActive: true // Required field as per API
         };
         const response = await discountsApi.createDiscount(discountData);

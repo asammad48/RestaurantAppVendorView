@@ -16,7 +16,7 @@ import { menuItemApi, dealsApi, subMenuItemApi } from "@/lib/apiRepository";
 import { createApiQuery, createApiMutation, formatApiError } from "@/lib/errorHandling";
 import { useToast } from "@/hooks/use-toast";
 import { useBranchCurrency } from "@/hooks/useBranchCurrency";
-import { convertToUTC } from "@/lib/currencyUtils";
+import { convertToUTC, convertLocalDateToUTC, convertUTCToLocalDate } from "@/lib/currencyUtils";
 import { validateImage, getConstraintDescription } from "@/lib/imageValidation";
 
 interface AddDealsModalProps {
@@ -115,7 +115,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
         description: dealData.description || "",
         price: dealData.price ? dealData.price / 100 : 0, // Convert cents to rupees
         packagePicture: dealData.packagePicture || "",
-        expiryDate: dealData.expiryDate ? dealData.expiryDate.split('T')[0] : "", // Format date for input
+        expiryDate: dealData.expiryDate ? convertUTCToLocalDate(dealData.expiryDate) : "", // Convert UTC to local date for input
         menuItems: dealData.menuItems?.map(item => ({
           menuItemId: item.menuItemId,
           variants: item.variants || []
@@ -374,7 +374,7 @@ export default function AddDealsModal({ open, onOpenChange, restaurantId, branch
       description: data.description,
       price: data.price, // API expects price as is (not in cents based on curl example)
       packagePicture: packagePicture,
-      expiryDate: data.expiryDate ? convertToUTC(data.expiryDate) : convertToUTC(new Date().toISOString()),
+      expiryDate: data.expiryDate ? convertLocalDateToUTC(data.expiryDate) : new Date().toISOString(),
       isActive: true,
       menuItems: selectedItems
         .filter(item => item.variants.some(variant => variant.quantity > 0))

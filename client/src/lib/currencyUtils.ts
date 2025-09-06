@@ -98,3 +98,44 @@ export const convertToUTC = (localTime: string, timezone: string = 'UTC'): strin
     return new Date().toISOString();
   }
 };
+
+/**
+ * Convert local date to UTC for API submission
+ * @param localDate - Local date string in YYYY-MM-DD format
+ * @returns UTC ISO string
+ */
+export const convertLocalDateToUTC = (localDate: string): string => {
+  try {
+    // Create date object from local date string (YYYY-MM-DD)
+    // Adding 'T00:00:00' to make it a full datetime in local timezone
+    const localDateTime = new Date(localDate + 'T00:00:00');
+    return localDateTime.toISOString();
+  } catch (error) {
+    console.error('Error converting local date to UTC:', error);
+    return new Date().toISOString();
+  }
+};
+
+/**
+ * Convert UTC date back to local date for display
+ * @param utcDate - UTC date string
+ * @returns Local date string in YYYY-MM-DD format
+ */
+export const convertUTCToLocalDate = (utcDate: string): string => {
+  try {
+    const date = new Date(utcDate);
+    // Format as YYYY-MM-DD for date input fields
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error('Error converting UTC date to local:', error);
+    // Return today's date as fallback
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+};
