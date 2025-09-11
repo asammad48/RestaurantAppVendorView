@@ -1,4 +1,5 @@
-import { Deal, Service, BranchService } from '../types/schema';
+import { Deal, Service, BranchService, DetailedOrder } from '../types/schema';
+import { PaginationResponse } from '../types/pagination';
 
 // Generic API Repository with error handling and token management
 export interface ApiResponse<T> {
@@ -382,6 +383,8 @@ export const API_ENDPOINTS = {
   // Order endpoints
   ORDERS: '/api/orders',
   ORDER_BY_ID: '/api/orders/{id}',
+  ORDERS_BY_BRANCH: '/api/Order/ByBranch',
+  ordersByBranch: '/api/Order/ByBranch',
   
   // MenuCategory endpoints
   MENU_CATEGORIES: '/api/MenuCategory',
@@ -491,6 +494,7 @@ export const defaultApiConfig: ApiConfig = {
     createOrder: API_ENDPOINTS.ORDERS,
     updateOrder: API_ENDPOINTS.ORDER_BY_ID,
     deleteOrder: API_ENDPOINTS.ORDER_BY_ID,
+    getOrdersByBranch: API_ENDPOINTS.ORDERS_BY_BRANCH,
     
     // MenuCategory endpoints
     getMenuCategories: API_ENDPOINTS.MENU_CATEGORIES,
@@ -1073,6 +1077,52 @@ export const discountsApi = {
     }
     
     return response;
+  },
+};
+
+// Orders API Helper Functions
+export const ordersApi = {
+  // Get orders by branch with pagination using Generic API repository
+  getOrdersByBranch: async (
+    branchId: number,
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    sortBy: string = 'createdAt',
+    isAscending: boolean = false,
+    searchTerm: string = ''
+  ) => {
+    const params = new URLSearchParams({
+      BranchId: branchId.toString(),
+      PageNumber: pageNumber.toString(),
+      PageSize: pageSize.toString(),
+      SortBy: sortBy,
+      IsAscending: isAscending.toString(),
+    });
+
+    if (searchTerm) {
+      params.append('SearchTerm', searchTerm);
+    }
+
+    // For query parameters, modify the endpoint temporarily
+    const originalEndpoint = apiRepository.getConfig().endpoints['ordersByBranch'];
+    apiRepository.updateEndpoint('ordersByBranch', `${originalEndpoint}?${params.toString()}`);
+    
+    const response = await apiRepository.call<PaginationResponse<DetailedOrder>>(
+      'ordersByBranch',
+      'GET',
+      undefined,
+      {},
+      true
+    );
+    
+    // Restore original endpoint
+    apiRepository.updateEndpoint('ordersByBranch', originalEndpoint);
+    
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    
+    return response.data;
   },
 };
 

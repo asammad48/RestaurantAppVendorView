@@ -26,11 +26,11 @@ import ViewMenuModal from "@/components/view-menu-modal";
 import ViewDealsModal from "@/components/view-deals-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
-import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi } from "@/lib/apiRepository";
+import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi, ordersApi } from "@/lib/apiRepository";
 import { useBranchCurrency } from "@/hooks/useBranchCurrency";
 import type { Branch } from "@/types/schema";
 // Use MenuItem and MenuCategory from schema
-import type { MenuItem, MenuCategory, SubMenu, Deal, Discount, BranchService } from "@/types/schema";
+import type { MenuItem, MenuCategory, SubMenu, Deal, Discount, BranchService, DetailedOrder } from "@/types/schema";
 import { PaginationRequest, PaginationResponse, DEFAULT_PAGINATION_CONFIG, buildPaginationQuery } from "@/types/pagination";
 
 // Deal interface is now imported from schema
@@ -71,58 +71,6 @@ interface TableWithBranchData extends TableData {
   branchName: string;
 }
 
-const mockOrders: Order[] = [
-  {
-    id: "1",
-    items: 2,
-    orderNumber: "#ID238976",
-    date: "Apr 24, 2022",
-    tableNo: "Table No 3",
-    payment: "Paid",
-    status: "Preparing",
-    price: 10.62
-  },
-  {
-    id: "2",
-    items: 2,
-    orderNumber: "#ID238976",
-    date: "Apr 24, 2022",
-    tableNo: "Chieko Chute",
-    payment: "Paid",
-    status: "Preparing",
-    price: 10.62
-  },
-  {
-    id: "3",
-    items: 2,
-    orderNumber: "#ID238974",
-    date: "Apr 24, 2022",
-    tableNo: "Table No 5",
-    payment: "Paid",
-    status: "Delivered",
-    price: 42.85
-  },
-  {
-    id: "4",
-    items: 2,
-    orderNumber: "#ID238976",
-    date: "Apr 23, 2022",
-    tableNo: "Table No 6",
-    payment: "Unpaid",
-    status: "Cancelled",
-    price: 64.23
-  },
-  {
-    id: "5",
-    items: 2,
-    orderNumber: "#ID238976",
-    date: "Apr 24, 2022",
-    tableNo: "Chieko Chute",
-    payment: "Paid",
-    status: "Preparing",
-    price: 10.62
-  }
-];
 
 const mockTables: TableData[] = [
   {
@@ -190,6 +138,11 @@ export default function Orders() {
   const [orderFilter, setOrderFilter] = useState("All Orders");
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, orderFilter, itemsPerPage]);
   
   // Pagination states for different tables
   const [menuCurrentPage, setMenuCurrentPage] = useState(1);
@@ -300,22 +253,53 @@ export default function Orders() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteItem, setDeleteItem] = useState<{type: 'menu' | 'category' | 'submenu' | 'deal' | 'table' | 'discount', id: string, name: string} | null>(null);
 
-  const filteredOrders = mockOrders.filter(order => {
-    const matchesSearch = 
-      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.tableNo.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = orderFilter === "All Orders" || 
-      (orderFilter === "Preparing" && order.status === "Preparing") ||
-      (orderFilter === "Delivered" && order.status === "Delivered") ||
-      (orderFilter === "Cancelled" && order.status === "Cancelled");
-    
-    return matchesSearch && matchesFilter;
+  // Query for orders using real API with pagination (following template pattern)
+  const { data: ordersResponse, isLoading: isLoadingOrders, refetch: refetchOrders } = useQuery({
+    queryKey: [`/api/orders/branch/${branchId}`, currentPage, itemsPerPage, searchTerm, orderFilter],
+    queryFn: async (): Promise<PaginationResponse<DetailedOrder>> => {
+      // Build search term that includes status filter
+      const effectiveSearchTerm = orderFilter === "All Orders" ? searchTerm : 
+        searchTerm ? `${searchTerm} ${orderFilter}` : orderFilter;
+      
+      const result = await ordersApi.getOrdersByBranch(
+        branchId,
+        currentPage,
+        itemsPerPage,
+        'createdAt', // Sort by creation date
+        false, // Descending order (newest first)
+        effectiveSearchTerm
+      );
+      
+      if (!result) {
+        throw new Error('No data returned from orders API');
+      }
+      
+      return result;
+    },
+    enabled: activeMainTab === "orders", // Only fetch when orders tab is active
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  // Transform API orders to match UI format with proper typing
+  const apiOrders = (ordersResponse as PaginationResponse<DetailedOrder>)?.items || [];
+  const transformedOrders: Order[] = apiOrders.map((apiOrder: DetailedOrder) => ({
+    id: apiOrder.id.toString(),
+    items: apiOrder.orderItems.length + apiOrder.orderPackages.length,
+    orderNumber: apiOrder.orderNumber,
+    date: new Date(apiOrder.createdAt).toLocaleDateString(),
+    tableNo: apiOrder.orderPickupDetails?.name || apiOrder.orderDeliveryDetails?.fullName || `Location ${apiOrder.locationId}`,
+    payment: "Paid" as const, // Assuming all orders are paid, adjust based on API data if available
+    status: apiOrder.orderStatus as "Preparing" | "Delivered" | "Cancelled",
+    price: apiOrder.totalAmount
+  }));
+
+  // Use pagination data from API response with proper typing
+  const paginationData = ordersResponse as PaginationResponse<DetailedOrder>;
+  const totalPages = paginationData?.totalPages || 0;
+  const totalCount = paginationData?.totalCount || 0;
+  const hasNext = paginationData?.hasNext || false;
+  const hasPrevious = paginationData?.hasPrevious || false;
+  const paginatedOrders = transformedOrders; // API already handles pagination
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -701,21 +685,40 @@ export default function Orders() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedOrders.map((order) => (
-                  <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{order.items} Items</div>
-                        <div className="text-sm text-gray-500">{order.orderNumber}</div>
-                      </div>
+                {isLoadingOrders ? (
+                  Array.from({ length: itemsPerPage }, (_, i) => (
+                    <TableRow key={`loading-${i}`}>
+                      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse"></div></TableCell>
+                    </TableRow>
+                  ))
+                ) : paginatedOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      No orders found for this branch.
                     </TableCell>
-                    <TableCell>{order.date}</TableCell>
-                    <TableCell>{order.tableNo}</TableCell>
-                    <TableCell>{getPaymentBadge(order.payment)}</TableCell>
-                    <TableCell>{getStatusBadge(order.status)}</TableCell>
-                    <TableCell className="font-medium">${order.price}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  paginatedOrders.map((order) => (
+                    <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.items} Items</div>
+                          <div className="text-sm text-gray-500">{order.orderNumber}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{order.date}</TableCell>
+                      <TableCell>{order.tableNo}</TableCell>
+                      <TableCell>{getPaymentBadge(order.payment)}</TableCell>
+                      <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell className="font-medium">{formatBranchPrice(order.price)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

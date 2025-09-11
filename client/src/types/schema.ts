@@ -372,7 +372,125 @@ export interface Table {
   restaurantId?: string;
 }
 
-// Order types
+// Order types based on API response
+export interface OrderDeliveryDetails {
+  id: number;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  deliveryAddress: string;
+  streetAddress: string;
+  apartment: string;
+  deliveryInstruction: string;
+  prefferedDeliveryTime: string;
+  longitude: number;
+  latitude: number;
+}
+
+export interface OrderPickupDetails {
+  id: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  pickupInstruction: string;
+  prefferedPickupTime: string;
+}
+
+export interface OrderItemModifier {
+  id: number;
+  modifierId: number;
+  modifierName: string;
+  price: number;
+  quantity: number;
+}
+
+export interface OrderItemCustomization {
+  id: number;
+  customizationName: string;
+  optionName: string;
+}
+
+export interface OrderItem {
+  id: number;
+  menuItemId: number;
+  variantId: number;
+  itemName: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+  variantName: string;
+  personServing: string;
+  orderItemModifiers: OrderItemModifier[];
+  orderItemCustomizations: OrderItemCustomization[];
+}
+
+export interface OrderPackageItem {
+  id: number;
+  menuPackageItemId: number;
+  menuPackageItemVariantId: number;
+  itemName: string;
+  variantName: string;
+  quantity: number;
+}
+
+export interface OrderPackageSubItem {
+  id: number;
+  menuPackageSubItemId: number;
+  subItemName: string;
+  price: number;
+  quantity: number;
+}
+
+export interface OrderPackage {
+  id: number;
+  menuPackageId: number;
+  packageName: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+  expiryDate: string;
+  orderPackageItems: OrderPackageItem[];
+  orderPackageSubItems: OrderPackageSubItem[];
+}
+
+export interface SplitBill {
+  id: number;
+  splitType: string;
+  price: number;
+  mobileNumber: string;
+  itemName: string;
+}
+
+export interface DetailedOrder {
+  id: number;
+  orderNumber: string;
+  branchId: number;
+  locationId: number;
+  userId: number;
+  username: string;
+  deviceInfo: string;
+  serviceCharges: number;
+  deliveryCharges: number;
+  orderAmount: number;
+  taxAmount: number;
+  tipAmount: number;
+  totalAmount: number;
+  orderStatus: string;
+  orderType: string;
+  createdAt: string;
+  subTotal: number;
+  discountAmount: number;
+  completionTimeMinutes: number;
+  branchName: string;
+  orderDeliveryDetails?: OrderDeliveryDetails;
+  orderPickupDetails?: OrderPickupDetails;
+  allergens: string[];
+  orderItems: OrderItem[];
+  orderPackages: OrderPackage[];
+  splitBills: SplitBill[];
+}
+
+// Simple Order interface for display in tables (existing)
 export interface Order {
   id: string;
   orderNumber: string;
