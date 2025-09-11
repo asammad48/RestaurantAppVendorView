@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +129,7 @@ const mockTables: TableData[] = [
 export default function Orders() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Extract branchId from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -191,6 +193,8 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<DetailedOrder | null>(null);
   const [showViewOrderModal, setShowViewOrderModal] = useState(false);
   const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
+  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Check URL params for pricing modal trigger
   useEffect(() => {
@@ -283,6 +287,15 @@ export default function Orders() {
     },
     enabled: activeMainTab === "orders", // Only fetch when orders tab is active
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Query for order status types from API
+  const { data: orderStatusTypes = [], isLoading: isLoadingStatusTypes, error: statusTypesError } = useQuery({
+    queryKey: ['order-status-types'],
+    queryFn: async (): Promise<Array<{id: number, name: string}>> => {
+      return await ordersApi.getOrderStatusTypes();
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes since this rarely changes
   });
 
   // Helper functions for date formatting
@@ -784,6 +797,11 @@ export default function Orders() {
                         <ContextMenuItem
                           onClick={() => {
                             setSelectedOrder(order);
+                            // Find the current status ID from orderStatusTypes
+                            const currentStatus = orderStatusTypes.find(status => 
+                              status.name.toLowerCase() === order.orderStatus.toLowerCase()
+                            );
+                            setSelectedStatusId(currentStatus?.id || null);
                             setShowUpdateStatusModal(true);
                           }}
                           data-testid={`context-update-status-${order.id}`}
@@ -2277,28 +2295,31 @@ export default function Orders() {
 
               <div>
                 <label className="text-sm font-medium text-gray-500">Select New Status</label>
-                <Select defaultValue={getOrderStatus(selectedOrder)}>
-                  <SelectTrigger className="mt-1" data-testid="status-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Preparing">
-                      <div className="flex items-center space-x-2">
-                        <Badge className="bg-orange-100 text-orange-800">Preparing</Badge>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Delivered">
-                      <div className="flex items-center space-x-2">
-                        <Badge className="bg-green-100 text-green-800">Delivered</Badge>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Cancelled">
-                      <div className="flex items-center space-x-2">
-                        <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                {isLoadingStatusTypes ? (
+                  <div className="mt-1 p-2 border rounded">Loading status types...</div>
+                ) : statusTypesError ? (
+                  <div className="mt-1 p-2 border rounded bg-red-50 text-red-600" data-testid="status-error">
+                    Failed to load status options. Please try again.
+                  </div>
+                ) : (
+                  <Select 
+                    value={selectedStatusId?.toString() || ""} 
+                    onValueChange={(value) => setSelectedStatusId(Number(value))}
+                  >
+                    <SelectTrigger className="mt-1" data-testid="status-select">
+                      <SelectValue placeholder="Select a status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {orderStatusTypes.map((status) => (
+                        <SelectItem key={status.id} value={status.id.toString()}>
+                          <div className="flex items-center space-x-2">
+                            <span>{status.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div className="flex items-center space-x-2 pt-4">
@@ -2312,16 +2333,41 @@ export default function Orders() {
                 </Button>
                 <Button 
                   className="flex-1 bg-green-500 hover:bg-green-600"
-                  onClick={() => {
-                    // TODO: Implement status update API call
-                    console.log('Update order status for order:', selectedOrder.id);
-                    setShowUpdateStatusModal(false);
-                    // For now, just close the modal
-                    // In a real implementation, you would call an API to update the status
+                  disabled={!selectedStatusId || isUpdatingStatus}
+                  onClick={async () => {
+                    if (!selectedStatusId || !selectedOrder) return;
+                    
+                    setIsUpdatingStatus(true);
+                    try {
+                      await ordersApi.updateOrderStatus(selectedOrder.id, selectedStatusId, 'Status updated via management system');
+                      
+                      // Refresh the orders list to show the updated status
+                      refetchOrders();
+                      
+                      // Close the modal and reset state
+                      setShowUpdateStatusModal(false);
+                      setSelectedStatusId(null);
+                      setSelectedOrder(null);
+                      
+                      // Show success message
+                      toast({
+                        title: "Status Updated",
+                        description: `Order ${selectedOrder.orderNumber} status has been updated successfully.`,
+                      });
+                    } catch (error) {
+                      console.error('Failed to update order status:', error);
+                      toast({
+                        title: "Update Failed",
+                        description: "Failed to update order status. Please try again.",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsUpdatingStatus(false);
+                    }
                   }}
                   data-testid="button-update-status"
                 >
-                  Update Status
+                  {isUpdatingStatus ? 'Updating...' : 'Update Status'}
                 </Button>
               </div>
             </div>

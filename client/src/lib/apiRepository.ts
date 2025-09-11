@@ -357,6 +357,7 @@ export const API_ENDPOINTS = {
   ENTITIES_AND_BRANCHES: '/api/Generic/entities-and-branches',
   CURRENCIES: '/api/Generic/currencies',
   TIMEZONES: '/api/Generic/timezones',
+  ORDER_STATUS_TYPES: '/api/Generic/orderstatustype',
   
   // Entity endpoints
   ENTITIES: '/api/Entity',
@@ -385,6 +386,7 @@ export const API_ENDPOINTS = {
   ORDER_BY_ID: '/api/orders/{id}',
   ORDERS_BY_BRANCH: '/api/Order/ByBranch',
   ordersByBranch: '/api/Order/ByBranch',
+  UPDATE_ORDER_STATUS: '/api/Order',
   
   // MenuCategory endpoints
   MENU_CATEGORIES: '/api/MenuCategory',
@@ -453,6 +455,7 @@ export const defaultApiConfig: ApiConfig = {
     getEntitiesAndBranches: API_ENDPOINTS.ENTITIES_AND_BRANCHES,
     getCurrencies: API_ENDPOINTS.CURRENCIES,
     getTimezones: API_ENDPOINTS.TIMEZONES,
+    getOrderStatusTypes: API_ENDPOINTS.ORDER_STATUS_TYPES,
     getServicesByType: API_ENDPOINTS.SERVICES_BY_TYPE,
     getBranchServices: API_ENDPOINTS.BRANCH_SERVICES,
     updateBranchServices: API_ENDPOINTS.BRANCH_SERVICES,
@@ -493,6 +496,7 @@ export const defaultApiConfig: ApiConfig = {
     getOrders: API_ENDPOINTS.ORDERS,
     createOrder: API_ENDPOINTS.ORDERS,
     updateOrder: API_ENDPOINTS.ORDER_BY_ID,
+    updateOrderStatus: API_ENDPOINTS.UPDATE_ORDER_STATUS,
     deleteOrder: API_ENDPOINTS.ORDER_BY_ID,
     getOrdersByBranch: API_ENDPOINTS.ORDERS_BY_BRANCH,
     
@@ -1122,6 +1126,39 @@ export const ordersApi = {
       throw new Error(response.error);
     }
     
+    return response.data;
+  },
+
+  // Get order status types from API
+  getOrderStatusTypes: async () => {
+    const response = await apiRepository.call<Array<{id: number, name: string}>>(
+      'getOrderStatusTypes',
+      'GET'
+    );
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data || [];
+  },
+
+  // Update order status
+  updateOrderStatus: async (orderId: number, statusId: number, comments: string = 'No') => {
+    const response = await apiRepository.call<{orderId: number, orderStatus: string}>(
+      'updateOrderStatus',
+      'PUT',
+      {
+        orderId: orderId,
+        status: statusId,
+        comments: comments
+      }
+    );
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
     return response.data;
   },
 };
