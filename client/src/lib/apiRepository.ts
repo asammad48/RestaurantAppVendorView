@@ -1104,11 +1104,11 @@ export const ordersApi = {
     }
 
     // For query parameters, modify the endpoint temporarily
-    const originalEndpoint = apiRepository.getConfig().endpoints['ordersByBranch'];
-    apiRepository.updateEndpoint('ordersByBranch', `${originalEndpoint}?${params.toString()}`);
+    const originalEndpoint = apiRepository.getConfig().endpoints['getOrdersByBranch'];
+    apiRepository.updateEndpoint('getOrdersByBranch', `${originalEndpoint}?${params.toString()}`);
     
     const response = await apiRepository.call<PaginationResponse<DetailedOrder>>(
-      'ordersByBranch',
+      'getOrdersByBranch',
       'GET',
       undefined,
       {},
@@ -1116,7 +1116,7 @@ export const ordersApi = {
     );
     
     // Restore original endpoint
-    apiRepository.updateEndpoint('ordersByBranch', originalEndpoint);
+    apiRepository.updateEndpoint('getOrdersByBranch', originalEndpoint);
     
     if (response.error) {
       throw new Error(response.error);
