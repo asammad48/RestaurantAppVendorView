@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import QRCodeModal from "@/components/qr-code-modal";
@@ -186,6 +188,9 @@ export default function Orders() {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showEditTableModal, setShowEditTableModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableWithBranchData | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<DetailedOrder | null>(null);
+  const [showViewOrderModal, setShowViewOrderModal] = useState(false);
+  const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
 
   // Check URL params for pricing modal trigger
   useEffect(() => {
@@ -280,18 +285,27 @@ export default function Orders() {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Transform API orders to match UI format with proper typing
+  // Helper functions for date formatting
+  const formatOrderDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatOrderTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Use DetailedOrders directly for the table to access createdAt
   const apiOrders = (ordersResponse as PaginationResponse<DetailedOrder>)?.items || [];
-  const transformedOrders: Order[] = apiOrders.map((apiOrder: DetailedOrder) => ({
-    id: apiOrder.id.toString(),
-    items: apiOrder.orderItems.length + apiOrder.orderPackages.length,
-    orderNumber: apiOrder.orderNumber,
-    date: new Date(apiOrder.createdAt).toLocaleDateString(),
-    tableNo: apiOrder.orderPickupDetails?.name || apiOrder.orderDeliveryDetails?.fullName || `Location ${apiOrder.locationId}`,
-    payment: "Paid" as const, // Assuming all orders are paid, adjust based on API data if available
-    status: apiOrder.orderStatus as "Preparing" | "Delivered" | "Cancelled",
-    price: apiOrder.totalAmount
-  }));
+  const paginatedOrders = apiOrders; // Use DetailedOrder directly
 
   // Use pagination data from API response with proper typing
   const paginationData = ordersResponse as PaginationResponse<DetailedOrder>;
@@ -299,7 +313,25 @@ export default function Orders() {
   const totalCount = paginationData?.totalCount || 0;
   const hasNext = paginationData?.hasNext || false;
   const hasPrevious = paginationData?.hasPrevious || false;
-  const paginatedOrders = transformedOrders; // API already handles pagination
+
+  // Helper functions for getting payment and status from DetailedOrder
+  const getPaymentStatus = (order: DetailedOrder) => {
+    // Assuming paid if total amount is greater than 0, adjust based on actual API structure
+    return order.totalAmount > 0 ? "Paid" : "Unpaid";
+  };
+
+  const getOrderStatus = (order: DetailedOrder) => {
+    // Map API orderStatus to UI status format
+    const status = order.orderStatus?.toLowerCase();
+    if (status?.includes('prepar')) return 'Preparing';
+    if (status?.includes('deliver') || status?.includes('complet') || status?.includes('served')) return 'Delivered';
+    if (status?.includes('cancel')) return 'Cancelled';
+    return order.orderStatus || 'Preparing';
+  };
+
+  const getOrderItems = (order: DetailedOrder) => {
+    return (order.orderItems?.length || 0) + (order.orderPackages?.length || 0);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -677,11 +709,11 @@ export default function Orders() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead>Date <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
-                  <TableHead>Table No <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>Date & Time <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Payment <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Status <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
                   <TableHead>Price <ChevronDown className="w-4 h-4 inline ml-1" /></TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -704,19 +736,63 @@ export default function Orders() {
                   </TableRow>
                 ) : (
                   paginatedOrders.map((order) => (
-                    <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{order.items} Items</div>
-                          <div className="text-sm text-gray-500">{order.orderNumber}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell>{order.tableNo}</TableCell>
-                      <TableCell>{getPaymentBadge(order.payment)}</TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell className="font-medium">{formatBranchPrice(order.price)}</TableCell>
-                    </TableRow>
+                    <ContextMenu key={order.id}>
+                      <ContextMenuTrigger asChild>
+                        <TableRow data-testid={`order-row-${order.id}`} className="cursor-pointer hover:bg-gray-50">
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{getOrderItems(order)} Items</div>
+                              <div className="text-sm text-gray-500">{order.orderNumber}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="text-sm font-medium">{formatOrderDate(order.createdAt)}</div>
+                              <div className="text-xs text-gray-500">{formatOrderTime(order.createdAt)}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getPaymentBadge(getPaymentStatus(order))}</TableCell>
+                          <TableCell>{getStatusBadge(getOrderStatus(order))}</TableCell>
+                          <TableCell className="font-medium">{formatBranchPrice(order.totalAmount)}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOrder(order);
+                                setShowViewOrderModal(true);
+                              }}
+                              data-testid={`button-view-order-${order.id}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setShowViewOrderModal(true);
+                          }}
+                          data-testid={`context-view-order-${order.id}`}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Order
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setShowUpdateStatusModal(true);
+                          }}
+                          data-testid={`context-update-status-${order.id}`}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Update Order Status
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   ))
                 )}
               </TableBody>
@@ -1991,6 +2067,233 @@ export default function Orders() {
             setDeleteItem(null);
           }}
         />
+      )}
+
+      {/* View Order Modal */}
+      {selectedOrder && (
+        <Dialog open={showViewOrderModal} onOpenChange={setShowViewOrderModal}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Details</DialogTitle>
+              <DialogDescription>
+                Complete information for order #{selectedOrder.orderNumber}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Basic Order Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Order Number</label>
+                  <p className="text-sm font-medium" data-testid="view-order-number">{selectedOrder.orderNumber}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Date & Time</label>
+                  <p className="text-sm" data-testid="view-order-datetime">
+                    {formatOrderDate(selectedOrder.createdAt)} at {formatOrderTime(selectedOrder.createdAt)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Status</label>
+                  <div data-testid="view-order-status">{getStatusBadge(getOrderStatus(selectedOrder))}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Payment</label>
+                  <div data-testid="view-order-payment">{getPaymentBadge(getPaymentStatus(selectedOrder))}</div>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              {selectedOrder.username && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Customer Name</label>
+                  <p className="text-sm" data-testid="view-order-customer">{selectedOrder.username}</p>
+                </div>
+              )}
+
+              {/* Order Type */}
+              {selectedOrder.orderType && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Order Type</label>
+                  <p className="text-sm capitalize" data-testid="view-order-type">{selectedOrder.orderType.toLowerCase()}</p>
+                </div>
+              )}
+
+              {/* Branch Details */}
+              {selectedOrder.branchName && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Branch</label>
+                  <p className="text-sm" data-testid="view-order-branch">{selectedOrder.branchName}</p>
+                </div>
+              )}
+
+              {/* Delivery Charges */}
+              {selectedOrder.deliveryCharges > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Delivery Charges</label>
+                  <p className="text-sm" data-testid="view-order-delivery-charges">{formatBranchPrice(selectedOrder.deliveryCharges)}</p>
+                </div>
+              )}
+
+              {/* Order Items */}
+              {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 mb-3 block">Order Items</label>
+                  <div className="space-y-2">
+                    {selectedOrder.orderItems.map((item, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded" data-testid={`view-order-item-${index}`}>
+                        <div>
+                          <p className="font-medium">{item.itemName || 'Menu Item'}</p>
+                          {item.variantName && (
+                            <p className="text-sm text-gray-600">Variant: {item.variantName}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">Qty: {item.quantity}</p>
+                          <p className="text-sm text-gray-600">{formatBranchPrice(item.totalPrice)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Order Packages */}
+              {selectedOrder.orderPackages && selectedOrder.orderPackages.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 mb-3 block">Deal Packages</label>
+                  <div className="space-y-2">
+                    {selectedOrder.orderPackages.map((pkg, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded" data-testid={`view-order-package-${index}`}>
+                        <div>
+                          <p className="font-medium">{pkg.packageName || 'Deal Package'}</p>
+                          {pkg.expiryDate && (
+                            <p className="text-sm text-gray-600">Expires: {new Date(pkg.expiryDate).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">Qty: {pkg.quantity}</p>
+                          <p className="text-sm text-gray-600">{formatBranchPrice(pkg.totalPrice)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Order Details */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedOrder.serviceCharges > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Service Charges</label>
+                    <p className="text-sm" data-testid="view-order-service-charges">{formatBranchPrice(selectedOrder.serviceCharges)}</p>
+                  </div>
+                )}
+                {selectedOrder.taxAmount > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Tax Amount</label>
+                    <p className="text-sm" data-testid="view-order-tax">{formatBranchPrice(selectedOrder.taxAmount)}</p>
+                  </div>
+                )}
+                {selectedOrder.tipAmount > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Tip Amount</label>
+                    <p className="text-sm" data-testid="view-order-tip">{formatBranchPrice(selectedOrder.tipAmount)}</p>
+                  </div>
+                )}
+                {selectedOrder.discountAmount > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Discount</label>
+                    <p className="text-sm text-green-600" data-testid="view-order-discount">-{formatBranchPrice(selectedOrder.discountAmount)}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Totals */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold">Total Amount</span>
+                  <span className="text-lg font-bold text-green-600" data-testid="view-order-total">
+                    {formatBranchPrice(selectedOrder.totalAmount)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Update Status Modal */}
+      {selectedOrder && (
+        <Dialog open={showUpdateStatusModal} onOpenChange={setShowUpdateStatusModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Update Order Status</DialogTitle>
+              <DialogDescription>
+                Change the status for order #{selectedOrder.orderNumber}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Current Status</label>
+                <div className="mt-1">
+                  {getStatusBadge(getOrderStatus(selectedOrder))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Select New Status</label>
+                <Select defaultValue={getOrderStatus(selectedOrder)}>
+                  <SelectTrigger className="mt-1" data-testid="status-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Preparing">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-orange-100 text-orange-800">Preparing</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Delivered">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-green-100 text-green-800">Delivered</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Cancelled">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setShowUpdateStatusModal(false)}
+                  data-testid="button-cancel-status"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-green-500 hover:bg-green-600"
+                  onClick={() => {
+                    // TODO: Implement status update API call
+                    console.log('Update order status for order:', selectedOrder.id);
+                    setShowUpdateStatusModal(false);
+                    // For now, just close the modal
+                    // In a real implementation, you would call an API to update the status
+                  }}
+                  data-testid="button-update-status"
+                >
+                  Update Status
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
