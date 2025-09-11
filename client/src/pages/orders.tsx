@@ -2072,148 +2072,181 @@ export default function Orders() {
       {/* View Order Modal */}
       {selectedOrder && (
         <Dialog open={showViewOrderModal} onOpenChange={setShowViewOrderModal}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Order Details</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="view-order-modal">
+            <DialogHeader className="pb-4">
+              <DialogTitle className="text-xl font-semibold text-gray-900">Order Details</DialogTitle>
+              <DialogDescription className="text-gray-600 mt-1">
                 Complete information for order #{selectedOrder.orderNumber}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-6">
-              {/* Basic Order Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              {/* Order Details Grid - 2x2 layout matching screenshot */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-500">Order Number</label>
-                  <p className="text-sm font-medium" data-testid="view-order-number">{selectedOrder.orderNumber}</p>
+                  <p className="text-base font-semibold text-gray-900" data-testid="view-order-number">
+                    {selectedOrder.orderNumber}
+                  </p>
                 </div>
-                <div>
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-500">Date & Time</label>
-                  <p className="text-sm" data-testid="view-order-datetime">
+                  <p className="text-base text-gray-900" data-testid="view-order-datetime">
                     {formatOrderDate(selectedOrder.createdAt)} at {formatOrderTime(selectedOrder.createdAt)}
                   </p>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-500">Status</label>
                   <div data-testid="view-order-status">{getStatusBadge(getOrderStatus(selectedOrder))}</div>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-500">Payment</label>
                   <div data-testid="view-order-payment">{getPaymentBadge(getPaymentStatus(selectedOrder))}</div>
                 </div>
               </div>
 
-              {/* Customer Info */}
-              {selectedOrder.username && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Customer Name</label>
-                  <p className="text-sm" data-testid="view-order-customer">{selectedOrder.username}</p>
-                </div>
-              )}
-
-              {/* Order Type */}
-              {selectedOrder.orderType && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Order Type</label>
-                  <p className="text-sm capitalize" data-testid="view-order-type">{selectedOrder.orderType.toLowerCase()}</p>
-                </div>
-              )}
-
-              {/* Branch Details */}
-              {selectedOrder.branchName && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Branch</label>
-                  <p className="text-sm" data-testid="view-order-branch">{selectedOrder.branchName}</p>
-                </div>
-              )}
-
-              {/* Delivery Charges */}
-              {selectedOrder.deliveryCharges > 0 && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Delivery Charges</label>
-                  <p className="text-sm" data-testid="view-order-delivery-charges">{formatBranchPrice(selectedOrder.deliveryCharges)}</p>
-                </div>
-              )}
-
-              {/* Order Items */}
-              {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500 mb-3 block">Order Items</label>
-                  <div className="space-y-2">
-                    {selectedOrder.orderItems.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded" data-testid={`view-order-item-${index}`}>
-                        <div>
-                          <p className="font-medium">{item.itemName || 'Menu Item'}</p>
-                          {item.variantName && (
-                            <p className="text-sm text-gray-600">Variant: {item.variantName}</p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">Qty: {item.quantity}</p>
-                          <p className="text-sm text-gray-600">{formatBranchPrice(item.totalPrice)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Order Packages */}
-              {selectedOrder.orderPackages && selectedOrder.orderPackages.length > 0 && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500 mb-3 block">Deal Packages</label>
-                  <div className="space-y-2">
-                    {selectedOrder.orderPackages.map((pkg, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded" data-testid={`view-order-package-${index}`}>
-                        <div>
-                          <p className="font-medium">{pkg.packageName || 'Deal Package'}</p>
-                          {pkg.expiryDate && (
-                            <p className="text-sm text-gray-600">Expires: {new Date(pkg.expiryDate).toLocaleDateString()}</p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">Qty: {pkg.quantity}</p>
-                          <p className="text-sm text-gray-600">{formatBranchPrice(pkg.totalPrice)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Order Details */}
-              <div className="grid grid-cols-2 gap-4">
-                {selectedOrder.serviceCharges > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Service Charges</label>
-                    <p className="text-sm" data-testid="view-order-service-charges">{formatBranchPrice(selectedOrder.serviceCharges)}</p>
+              {/* Customer Information Section */}
+              <div className="space-y-4">
+                {selectedOrder.username && (
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-500">Customer Name</label>
+                    <p className="text-base text-gray-900" data-testid="view-order-customer">{selectedOrder.username}</p>
                   </div>
                 )}
-                {selectedOrder.taxAmount > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Tax Amount</label>
-                    <p className="text-sm" data-testid="view-order-tax">{formatBranchPrice(selectedOrder.taxAmount)}</p>
+
+                {selectedOrder.orderType && (
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-500">Order Type</label>
+                    <p className="text-base text-gray-900 capitalize" data-testid="view-order-type">
+                      {selectedOrder.orderType.toLowerCase()}
+                    </p>
                   </div>
                 )}
-                {selectedOrder.tipAmount > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Tip Amount</label>
-                    <p className="text-sm" data-testid="view-order-tip">{formatBranchPrice(selectedOrder.tipAmount)}</p>
+
+                {selectedOrder.branchName && (
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-500">Branch</label>
+                    <p className="text-base text-gray-900" data-testid="view-order-branch">{selectedOrder.branchName}</p>
                   </div>
                 )}
-                {selectedOrder.discountAmount > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Discount</label>
-                    <p className="text-sm text-green-600" data-testid="view-order-discount">-{formatBranchPrice(selectedOrder.discountAmount)}</p>
+
+                {selectedOrder.deliveryCharges && selectedOrder.deliveryCharges > 0 && (
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-500">Delivery Charges</label>
+                    <p className="text-base font-semibold text-gray-900" data-testid="view-order-delivery-charges">
+                      {formatBranchPrice(selectedOrder.deliveryCharges)}
+                    </p>
                   </div>
                 )}
               </div>
 
-              {/* Totals */}
-              <div className="border-t pt-4">
+              {/* Order Items Section */}
+              {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-500">Order Items</h3>
+                  <div className="space-y-2">
+                    {selectedOrder.orderItems.map((item, index) => (
+                      <div 
+                        key={index} 
+                        className="flex justify-between items-start p-3 bg-gray-50 rounded-lg border"
+                        data-testid={`view-order-item-${index}`}
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 text-base">{item.itemName || 'Menu Item'}</h4>
+                          {item.variantName && (
+                            <p className="text-sm text-gray-600 mt-1">Variant: {item.variantName}</p>
+                          )}
+                        </div>
+                        <div className="text-right ml-4">
+                          <p className="font-semibold text-gray-900">Qty: {item.quantity}</p>
+                          <p className="text-base font-bold text-gray-900 mt-1">
+                            {formatBranchPrice(item.totalPrice)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Deal Packages Section */}
+              {selectedOrder.orderPackages && selectedOrder.orderPackages.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-500">Deal Packages</h3>
+                  <div className="space-y-2">
+                    {selectedOrder.orderPackages.map((pkg, index) => (
+                      <div 
+                        key={index} 
+                        className="flex justify-between items-start p-3 bg-blue-50 rounded-lg border border-blue-200"
+                        data-testid={`view-order-package-${index}`}
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 text-base">{pkg.packageName || 'Deal Package'}</h4>
+                          {pkg.expiryDate && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Expires: {new Date(pkg.expiryDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right ml-4">
+                          <p className="font-semibold text-gray-900">Qty: {pkg.quantity}</p>
+                          <p className="text-base font-bold text-gray-900 mt-1">
+                            {formatBranchPrice(pkg.totalPrice)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Charges (only if they exist) */}
+              {(selectedOrder.serviceCharges > 0 || selectedOrder.taxAmount > 0 || 
+                selectedOrder.tipAmount > 0 || selectedOrder.discountAmount > 0) && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-500">Additional Charges</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedOrder.serviceCharges > 0 && (
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-500">Service Charges</label>
+                        <p className="text-base text-gray-900" data-testid="view-order-service-charges">
+                          {formatBranchPrice(selectedOrder.serviceCharges)}
+                        </p>
+                      </div>
+                    )}
+                    {selectedOrder.taxAmount > 0 && (
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-500">Tax Amount</label>
+                        <p className="text-base text-gray-900" data-testid="view-order-tax">
+                          {formatBranchPrice(selectedOrder.taxAmount)}
+                        </p>
+                      </div>
+                    )}
+                    {selectedOrder.tipAmount > 0 && (
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-500">Tip Amount</label>
+                        <p className="text-base text-gray-900" data-testid="view-order-tip">
+                          {formatBranchPrice(selectedOrder.tipAmount)}
+                        </p>
+                      </div>
+                    )}
+                    {selectedOrder.discountAmount > 0 && (
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-500">Discount</label>
+                        <p className="text-base font-bold text-green-600" data-testid="view-order-discount">
+                          -{formatBranchPrice(selectedOrder.discountAmount)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Final Total */}
+              <div className="border-t pt-4 mt-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">Total Amount</span>
-                  <span className="text-lg font-bold text-green-600" data-testid="view-order-total">
+                  <span className="text-lg font-semibold text-gray-900">Total Amount</span>
+                  <span className="text-xl font-bold text-gray-900" data-testid="view-order-total">
                     {formatBranchPrice(selectedOrder.totalAmount)}
                   </span>
                 </div>
