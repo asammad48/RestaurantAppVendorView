@@ -158,7 +158,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           }
         };
 
-        // Reset form with fetched data
+        // Reset form with fetched data - preserve any fields user is currently editing
         form.reset({
           isTakeaway: configData.isTakeaway || false,
           isReservation: configData.isReservation || false,
@@ -169,15 +169,15 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           taxPercentage: configData.taxPercentage?.toString() ?? "",
           taxAppliedType: configData.taxAppliedType ?? 1,
           maxDiscountAmount: configData.maxDiscountAmount ?? undefined,
-          deliveryTime: configData.deliveryTime ?? 30,
-          deliveryMinimumOrder: configData.deliveryMinimumOrder ?? 25.00,
-          deliveryFee: configData.deliveryFee ?? 3.99,
-          maxDeliveryDistance: configData.maxDeliveryDistance ?? 10,
-          maxAdvanceDays: configData.maxAdvanceDays ?? 30,
-          minNoticeMinutes: configData.minNoticeMinutes ?? 120,
-          maxGuestsPerReservation: configData.maxGuestsPerReservation ?? 8,
-          holdTimeMinutes: configData.holdTimeMinutes ?? 15,
-        });
+          deliveryTime: configData.deliveryTime ?? undefined,
+          deliveryMinimumOrder: configData.deliveryMinimumOrder ?? undefined,
+          deliveryFee: configData.deliveryFee ?? undefined,
+          maxDeliveryDistance: configData.maxDeliveryDistance ?? undefined,
+          maxAdvanceDays: configData.maxAdvanceDays ?? undefined,
+          minNoticeMinutes: configData.minNoticeMinutes ?? undefined,
+          maxGuestsPerReservation: configData.maxGuestsPerReservation ?? undefined,
+          holdTimeMinutes: configData.holdTimeMinutes ?? undefined,
+        }, { keepDirtyValues: true });
       } catch (error: any) {
         console.error("Failed to fetch configuration:", error);
         toast({
@@ -191,7 +191,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
     };
 
     fetchConfiguration();
-  }, [open, branch.id, form, toast]);
+  }, [open, branch.id]);
 
   const onSubmit = async (data: BranchConfigData) => {
     setIsSaving(true);
