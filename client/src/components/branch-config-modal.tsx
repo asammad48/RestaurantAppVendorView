@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -81,9 +81,12 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { getCurrencySymbol: getBranchCurrencySymbol } = useBranchCurrency(branch?.id);
+  const hasLoadedRef = useRef(false);
   
   const form = useForm<BranchConfigData>({
     resolver: zodResolver(branchConfigSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onBlur',
     defaultValues: {
       isTakeaway: true,
       isReservation: false,
@@ -119,7 +122,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
   // Fetch configuration data when modal opens
   useEffect(() => {
     const fetchConfiguration = async () => {
-      if (!open || !branch.id) return;
+      if (!open || !branch.id) {
+        hasLoadedRef.current = false;
+        return;
+      }
       
       setIsLoading(true);
       try {
@@ -158,6 +164,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           }
         };
 
+        // Only reset form once per modal open to prevent overwriting user input
+        if (hasLoadedRef.current) return;
+
         // Reset form with fetched data - preserve any fields user is currently editing
         form.reset({
           isTakeaway: configData.isTakeaway || false,
@@ -178,6 +187,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           maxGuestsPerReservation: configData.maxGuestsPerReservation ?? undefined,
           holdTimeMinutes: configData.holdTimeMinutes ?? undefined,
         }, { keepDirtyValues: true });
+
+        hasLoadedRef.current = true;
       } catch (error: any) {
         console.error("Failed to fetch configuration:", error);
         toast({
