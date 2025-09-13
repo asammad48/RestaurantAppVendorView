@@ -31,6 +31,7 @@ const branchConfigSchema = z.object({
   serviceCharges: z.string().optional(),
   taxPercentage: z.string().optional(),
   taxAppliedType: z.number().optional(),
+  maxDiscountAmount: z.number().optional(),
   
   // Delivery Configuration
   deliveryTime: z.number().min(0).optional(),
@@ -66,6 +67,7 @@ interface BranchConfigResponse {
   serviceCharges: number;
   taxPercentage: number;
   taxAppliedType: number;
+  maxDiscountAmount: number;
 }
 
 interface BranchConfigModalProps {
@@ -91,10 +93,11 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       openTime: "09:00",
       closeTime: "22:00",
       
-      // Financial defaults - Keep as strings to preserve leading zeros
-      serviceCharges: "0",
-      taxPercentage: "0",
+      // Financial defaults - Allow empty values
+      serviceCharges: "",
+      taxPercentage: "",
       taxAppliedType: 1,
+      maxDiscountAmount: undefined,
       
       // Delivery defaults
       deliveryTime: 30,
@@ -162,17 +165,18 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
           isDelivery: configData.isDelivery || false,
           openTime: formatTimeFromUTC(configData.openTime),
           closeTime: formatTimeFromUTC(configData.closeTime),
-          serviceCharges: configData.serviceCharges?.toString() || "0",
-          taxPercentage: configData.taxPercentage?.toString() || "0",
-          taxAppliedType: configData.taxAppliedType || 1,
-          deliveryTime: configData.deliveryTime || 30,
-          deliveryMinimumOrder: configData.deliveryMinimumOrder || 25.00,
-          deliveryFee: configData.deliveryFee || 3.99,
-          maxDeliveryDistance: configData.maxDeliveryDistance || 10,
-          maxAdvanceDays: configData.maxAdvanceDays || 30,
-          minNoticeMinutes: configData.minNoticeMinutes || 120,
-          maxGuestsPerReservation: configData.maxGuestsPerReservation || 8,
-          holdTimeMinutes: configData.holdTimeMinutes || 15,
+          serviceCharges: configData.serviceCharges?.toString() ?? "",
+          taxPercentage: configData.taxPercentage?.toString() ?? "",
+          taxAppliedType: configData.taxAppliedType ?? 1,
+          maxDiscountAmount: configData.maxDiscountAmount ?? undefined,
+          deliveryTime: configData.deliveryTime ?? 30,
+          deliveryMinimumOrder: configData.deliveryMinimumOrder ?? 25.00,
+          deliveryFee: configData.deliveryFee ?? 3.99,
+          maxDeliveryDistance: configData.maxDeliveryDistance ?? 10,
+          maxAdvanceDays: configData.maxAdvanceDays ?? 30,
+          minNoticeMinutes: configData.minNoticeMinutes ?? 120,
+          maxGuestsPerReservation: configData.maxGuestsPerReservation ?? 8,
+          holdTimeMinutes: configData.holdTimeMinutes ?? 15,
         });
       } catch (error: any) {
         console.error("Failed to fetch configuration:", error);
@@ -228,9 +232,13 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
         ...data,
         openTime: formatTimeForApi(data.openTime || ""),
         closeTime: formatTimeForApi(data.closeTime || ""),
-        // Convert string values back to numbers for API (preserving the original value format)
-        serviceCharges: parseFloat(data.serviceCharges || "0"),
-        taxPercentage: parseFloat(data.taxPercentage || "0"),
+        // Convert string values back to numbers for API - preserve empty as undefined
+        serviceCharges: data.serviceCharges?.trim() === '' || data.serviceCharges == null ? undefined : parseFloat(data.serviceCharges),
+        taxPercentage: data.taxPercentage?.trim() === '' || data.taxPercentage == null ? undefined : parseFloat(data.taxPercentage),
+        // Map to API field name
+        MaxDiscountAmount: data.maxDiscountAmount,
+        // Remove the camelCase version to avoid duplication
+        maxDiscountAmount: undefined,
       };
 
       await branchApi.updateBranchConfiguration(branch.id, apiData);
@@ -429,7 +437,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="taxAppliedType"
@@ -450,6 +458,28 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <SelectItem value="2">Discount Amount</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxDiscountAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Discount Amount ({getBranchCurrencySymbol()})</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                            placeholder="Enter max discount amount"
+                            data-testid="input-max-discount-amount"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -476,7 +506,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="30"
                             />
                           </FormControl>
@@ -496,7 +526,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               step="0.01"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                               placeholder="3.99"
                             />
                           </FormControl>
@@ -516,7 +546,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               step="0.01"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                               placeholder="25.00"
                             />
                           </FormControl>
@@ -535,7 +565,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="10"
                             />
                           </FormControl>
@@ -566,7 +596,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="30"
                             />
                           </FormControl>
@@ -585,7 +615,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="120"
                             />
                           </FormControl>
@@ -604,7 +634,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="8"
                             />
                           </FormControl>
@@ -623,7 +653,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="15"
                             />
                           </FormControl>
