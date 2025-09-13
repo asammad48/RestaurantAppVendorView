@@ -30,20 +30,20 @@ const branchConfigSchema = z.object({
   // Financial Configuration - Keep as strings to preserve leading zeros
   serviceCharges: z.string().optional(),
   taxPercentage: z.string().optional(),
-  taxAppliedType: z.number().optional(),
-  maxDiscountAmount: z.number().optional(),
+  taxAppliedType: z.coerce.number().min(0).optional(),
+  maxDiscountAmount: z.coerce.number().min(0).optional(),
   
   // Delivery Configuration
-  deliveryTime: z.number().min(0).optional(),
-  deliveryMinimumOrder: z.number().min(0).optional(),
-  deliveryFee: z.number().min(0).optional(),
-  maxDeliveryDistance: z.number().min(0).optional(),
+  deliveryTime: z.coerce.number().min(0).optional(),
+  deliveryMinimumOrder: z.coerce.number().min(0).optional(),
+  deliveryFee: z.coerce.number().min(0).optional(),
+  maxDeliveryDistance: z.coerce.number().min(0).optional(),
   
   // Reservation Configuration  
-  maxAdvanceDays: z.number().min(0).optional(),
-  minNoticeMinutes: z.number().min(0).optional(),
-  maxGuestsPerReservation: z.number().min(1).optional(),
-  holdTimeMinutes: z.number().min(0).optional(),
+  maxAdvanceDays: z.coerce.number().min(0).optional(),
+  minNoticeMinutes: z.coerce.number().min(0).optional(),
+  maxGuestsPerReservation: z.coerce.number().min(1).optional(),
+  holdTimeMinutes: z.coerce.number().min(0).optional(),
 });
 
 type BranchConfigData = z.infer<typeof branchConfigSchema>;
@@ -494,7 +494,30 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             step="0.01"
                             {...field}
                             value={field.value ?? ''}
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Allow immediate update for better editing experience
+                              if (value === '') {
+                                field.onChange(undefined);
+                              } else {
+                                // Allow any numeric input during typing
+                                field.onChange(value);
+                              }
+                            }}
+                            onBlur={(e) => {
+                              // Parse and validate only on blur
+                              const value = e.target.value;
+                              if (value === '') {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = parseFloat(value);
+                                if (!isNaN(numValue) && numValue >= 0) {
+                                  field.onChange(numValue);
+                                } else {
+                                  field.onChange(undefined);
+                                }
+                              }
+                            }}
                             placeholder="Enter max discount amount"
                             data-testid="input-max-discount-amount"
                           />
@@ -528,12 +551,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseInt(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -560,12 +596,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseFloat(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -592,12 +641,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseFloat(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -623,12 +685,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseInt(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -666,12 +741,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseInt(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -697,12 +785,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseInt(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -728,12 +829,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseInt(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 1) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
@@ -759,12 +873,25 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               value={field.value ?? ''}
                               onChange={(e) => {
                                 const value = e.target.value;
+                                // Allow immediate update for better editing experience
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  // Allow any numeric input during typing
+                                  field.onChange(value);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                // Parse and validate only on blur
+                                const value = e.target.value;
                                 if (value === '') {
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = parseInt(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
+                                  } else {
+                                    field.onChange(undefined);
                                   }
                                 }
                               }}
