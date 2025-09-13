@@ -515,7 +515,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter delivery time in minutes (e.g., 30)"
                               data-testid="input-delivery-time"
                             />
@@ -537,7 +547,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               step="0.01"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseFloat(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter delivery fee (e.g., 3.99)"
                               data-testid="input-delivery-fee"
                             />
@@ -559,7 +579,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               step="0.01"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseFloat(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter minimum order amount (e.g., 25.00)"
                               data-testid="input-delivery-minimum-order"
                             />
@@ -580,7 +610,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter max delivery distance in km (e.g., 10)"
                               data-testid="input-max-delivery-distance"
                             />
@@ -613,7 +653,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter max advance booking days (e.g., 30)"
                               data-testid="input-max-advance-days"
                             />
@@ -634,7 +684,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter minimum notice time in minutes (e.g., 120)"
                               data-testid="input-min-notice-minutes"
                             />
@@ -655,7 +715,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter max guests per reservation (e.g., 8)"
                               data-testid="input-max-guests-per-reservation"
                             />
@@ -676,7 +746,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               {...field}
                               value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
+                              }}
                               placeholder="Enter hold time in minutes (e.g., 15)"
                               data-testid="input-hold-time-minutes"
                             />
