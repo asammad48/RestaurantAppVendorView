@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
-import { spawn } from 'child_process';
+import { createServer } from 'vite';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import react from '@vitejs/plugin-react';
+import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,33 +13,56 @@ console.log("Starting React-only Restaurant Management System...");
 console.log("Removed all Node.js/Express server code");
 console.log("Using external APIs via generic repository pattern");
 
-// Start Vite development server for React frontend only
-const projectRoot = join(__dirname, '..');
-const clientDir = join(projectRoot, 'client');
+async function startServer() {
+  try {
+    const projectRoot = join(__dirname, '..');
+    const clientDir = join(projectRoot, 'client');
 
-const viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0', '--port', '5000'], {
-  cwd: clientDir,
-  stdio: 'inherit',
-  shell: true
-});
+    // Create Vite development server with specified configuration
+    const viteServer = await createServer({
+      configFile: false, // Don't use config file, define inline
+      root: clientDir,
+      plugins: [
+        react(),
+        runtimeErrorOverlay(),
+      ],
+      resolve: {
+        alias: {
+          "@": join(clientDir, "./src"),
+          "@assets": join(projectRoot, "./attached_assets"),
+        },
+      },
+      server: {
+        host: '0.0.0.0',
+        port: 5000,
+        strictPort: true
+      }
+    });
 
-viteProcess.on('error', (error: any) => {
-  console.error('Failed to start Vite server:', error);
-  process.exit(1);
-});
+    // Start the server
+    await viteServer.listen();
+    
+    console.log('\n✅ Vite server started successfully');
+    viteServer.printUrls();
 
-viteProcess.on('close', (code: any) => {
-  console.log(`Vite server exited with code ${code}`);
-  process.exit(code || 0);
-});
+    // Graceful shutdown handlers
+    const shutdownHandler = async (signal: string) => {
+      console.log(`\n🔄 Received ${signal}, shutting down gracefully...`);
+      await viteServer.close();
+      console.log('✅ Server closed successfully');
+    };
 
-// Handle process termination
-process.on('SIGINT', () => {
-  console.log('Shutting down...');
-  viteProcess.kill('SIGINT');
-});
+    process.on('SIGINT', () => shutdownHandler('SIGINT'));
+    process.on('SIGTERM', () => shutdownHandler('SIGTERM'));
 
-process.on('SIGTERM', () => {
-  console.log('Shutting down...');
-  viteProcess.kill('SIGTERM');
-});
+    // Keep the process alive indefinitely
+    await new Promise(() => {});
+
+  } catch (error) {
+    console.error('❌ Failed to start Vite server:', error);
+    // Don't call process.exit - let the process handle the error gracefully
+  }
+}
+
+// Start the server
+startServer();
