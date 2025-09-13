@@ -27,6 +27,7 @@ import PricingPlansModal from "@/components/pricing-plans-modal";
 import SimpleDeleteModal from "@/components/simple-delete-modal";
 import ViewMenuModal from "@/components/view-menu-modal";
 import ViewDealsModal from "@/components/view-deals-modal";
+import OrderDetailModal from "@/components/order-detail-modal";
 import { SearchTooltip } from "@/components/SearchTooltip";
 import { useLocation } from "wouter";
 import { locationApi, branchApi, dealsApi, discountsApi, apiRepository, servicesApi, ordersApi } from "@/lib/apiRepository";
@@ -2175,8 +2176,15 @@ export default function Orders() {
         />
       )}
 
-      {/* View Order Modal */}
-      {selectedOrder && (
+      {/* View Order Modal - Receipt Style */}
+      <OrderDetailModal
+        isOpen={showViewOrderModal}
+        onClose={() => setShowViewOrderModal(false)}
+        order={selectedOrder}
+      />
+
+      {/* Legacy Modal - Backup (Remove after testing) */}
+      {false && selectedOrder && (
         <Dialog open={showViewOrderModal} onOpenChange={setShowViewOrderModal}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="view-order-modal">
             <DialogHeader className="pb-4">
