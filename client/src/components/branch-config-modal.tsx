@@ -30,20 +30,20 @@ const branchConfigSchema = z.object({
   // Financial Configuration - Keep as strings to preserve leading zeros
   serviceCharges: z.string().optional(),
   taxPercentage: z.string().optional(),
-  taxAppliedType: z.coerce.number().min(0).optional(),
-  maxDiscountAmount: z.coerce.number().min(0).optional(),
+  taxAppliedType: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
+  maxDiscountAmount: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
   
   // Delivery Configuration
-  deliveryTime: z.coerce.number().min(0).optional(),
-  deliveryMinimumOrder: z.coerce.number().min(0).optional(),
-  deliveryFee: z.coerce.number().min(0).optional(),
-  maxDeliveryDistance: z.coerce.number().min(0).optional(),
+  deliveryTime: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
+  deliveryMinimumOrder: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
+  deliveryFee: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
+  maxDeliveryDistance: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
   
   // Reservation Configuration  
-  maxAdvanceDays: z.coerce.number().min(0).optional(),
-  minNoticeMinutes: z.coerce.number().min(0).optional(),
-  maxGuestsPerReservation: z.coerce.number().min(1).optional(),
-  holdTimeMinutes: z.coerce.number().min(0).optional(),
+  maxAdvanceDays: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
+  minNoticeMinutes: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
+  maxGuestsPerReservation: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(1).optional()),
+  holdTimeMinutes: z.preprocess(v => v === '' || v == null ? undefined : Number(v), z.number().min(0).optional()),
 });
 
 type BranchConfigData = z.infer<typeof branchConfigSchema>;
@@ -167,8 +167,12 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
         // Only reset form once per modal open to prevent overwriting user input
         if (hasLoadedRef.current) return;
         
-        // Don't reset if user has already started editing (touched any fields)
-        if (form.formState.isDirty || form.formState.isTouched) return;
+        // Don't reset if user has already started editing (check individual field states)
+        const hasUserInteraction = Object.keys(form.getValues()).some(fieldName => {
+          const fieldState = form.getFieldState(fieldName as any);
+          return fieldState.isTouched || fieldState.isDirty;
+        });
+        if (hasUserInteraction) return;
 
         // Reset form with fetched data - preserve any fields user is currently editing
         form.reset({
@@ -600,7 +604,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -610,7 +614,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseInt(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
@@ -645,7 +649,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -655,7 +659,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseFloat(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
@@ -690,7 +694,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -700,7 +704,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseFloat(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
@@ -734,7 +738,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -744,7 +748,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseInt(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
@@ -790,7 +794,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -800,7 +804,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseInt(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
@@ -834,7 +838,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -844,7 +848,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseInt(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
@@ -878,7 +882,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -888,7 +892,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseInt(value);
                                   if (!isNaN(numValue) && numValue >= 1) {
@@ -922,7 +926,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 const value = e.target.value;
                                 // Allow immediate update for better editing experience
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string to mark as dirty
                                 } else {
                                   // Allow any numeric input during typing
                                   field.onChange(value);
@@ -932,7 +936,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 // Parse and validate only on blur
                                 const value = e.target.value;
                                 if (value === '') {
-                                  field.onChange(undefined);
+                                  field.onChange(''); // Keep empty string for clearing
                                 } else {
                                   const numValue = parseInt(value);
                                   if (!isNaN(numValue) && numValue >= 0) {
