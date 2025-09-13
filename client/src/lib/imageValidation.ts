@@ -1,6 +1,8 @@
 export interface ImageConstraints {
   width: number;
-  height: number;
+  height?: number;
+  minHeight?: number;
+  maxHeight?: number;
   maxSizeInMB: number;
   allowedTypes?: string[];
 }
@@ -34,8 +36,9 @@ export const IMAGE_CONSTRAINTS: Record<ImageType, ImageConstraints> = {
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   },
   branchBanner: {
-    width: 1920,
-    height: 192,
+    width: 1440,
+    minHeight: 160,
+    maxHeight: 190,
     maxSizeInMB: 7,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   }
@@ -91,11 +94,32 @@ export async function validateImage(
   if (options.checkDimensions) {
     try {
       const dimensions = await getImageDimensions(file);
-      if (dimensions.width !== constraints.width || dimensions.height !== constraints.height) {
+      
+      // Check width
+      if (dimensions.width !== constraints.width) {
         return {
           isValid: false,
-          error: `Image dimensions must be exactly ${constraints.width}x${constraints.height} pixels. Current image is ${dimensions.width}x${dimensions.height} pixels.`
+          error: `Image width must be exactly ${constraints.width} pixels. Current image is ${dimensions.width} pixels wide.`
         };
+      }
+      
+      // Check height (exact or range)
+      if (constraints.height !== undefined) {
+        // Exact height requirement
+        if (dimensions.height !== constraints.height) {
+          return {
+            isValid: false,
+            error: `Image dimensions must be exactly ${constraints.width}x${constraints.height} pixels. Current image is ${dimensions.width}x${dimensions.height} pixels.`
+          };
+        }
+      } else if (constraints.minHeight !== undefined && constraints.maxHeight !== undefined) {
+        // Height range requirement
+        if (dimensions.height < constraints.minHeight || dimensions.height > constraints.maxHeight) {
+          return {
+            isValid: false,
+            error: `Image height must be between ${constraints.minHeight} and ${constraints.maxHeight} pixels. Current image is ${dimensions.height} pixels tall.`
+          };
+        }
       }
     } catch (error) {
       return {
@@ -138,7 +162,20 @@ export function getImageDimensions(file: File): Promise<{ width: number; height:
  */
 export function getConstraintDescription(imageType: ImageType): string {
   const constraints = IMAGE_CONSTRAINTS[imageType];
-  return `${constraints.width}x${constraints.height} pixels, max ${constraints.maxSizeInMB}MB`;
+  
+  let dimensionText: string;
+  if (constraints.height !== undefined) {
+    // Exact height
+    dimensionText = `${constraints.width}x${constraints.height} pixels`;
+  } else if (constraints.minHeight !== undefined && constraints.maxHeight !== undefined) {
+    // Height range
+    dimensionText = `${constraints.width}x${constraints.minHeight}–${constraints.maxHeight} pixels`;
+  } else {
+    // Fallback (should not happen with current constraints)
+    dimensionText = `${constraints.width} pixels wide`;
+  }
+  
+  return `${dimensionText}, max ${constraints.maxSizeInMB}MB`;
 }
 
 /**
