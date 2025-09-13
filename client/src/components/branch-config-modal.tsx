@@ -166,6 +166,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
 
         // Only reset form once per modal open to prevent overwriting user input
         if (hasLoadedRef.current) return;
+        
+        // Don't reset if user has already started editing (touched any fields)
+        if (form.formState.isDirty || form.formState.isTouched) return;
 
         // Reset form with fetched data - preserve any fields user is currently editing
         form.reset({
