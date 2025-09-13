@@ -99,17 +99,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       taxAppliedType: 1,
       maxDiscountAmount: undefined,
       
-      // Delivery defaults - Start with 0, show placeholder when cleared
-      deliveryTime: 0,
-      deliveryMinimumOrder: 0,
-      deliveryFee: 0,
-      maxDeliveryDistance: 0,
+      // Delivery defaults - Exact same as Max Discount Amount
+      deliveryTime: undefined,
+      deliveryMinimumOrder: undefined,
+      deliveryFee: undefined,
+      maxDeliveryDistance: undefined,
       
-      // Reservation defaults - Start with 0, show placeholder when cleared  
-      maxAdvanceDays: 0,
-      minNoticeMinutes: 0,
-      maxGuestsPerReservation: 0,
-      holdTimeMinutes: 0,
+      // Reservation defaults - Exact same as Max Discount Amount
+      maxAdvanceDays: undefined,
+      minNoticeMinutes: undefined,
+      maxGuestsPerReservation: undefined,
+      holdTimeMinutes: undefined,
     },
   });
 
@@ -512,8 +512,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Delivery Time (minutes)</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter delivery time in minutes (e.g., 30)"
@@ -533,9 +533,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Delivery Fee ({getBranchCurrencySymbol()})</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
                               step="0.01"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                               placeholder="Enter delivery fee (e.g., 3.99)"
@@ -555,9 +555,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Minimum Order ({getBranchCurrencySymbol()})</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
                               step="0.01"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                               placeholder="Enter minimum order amount (e.g., 25.00)"
@@ -577,8 +577,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Max Distance (km)</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter max delivery distance in km (e.g., 10)"
@@ -610,8 +610,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Max Advance Days</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter max advance booking days (e.g., 30)"
@@ -631,8 +631,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Min Notice (minutes)</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter minimum notice time in minutes (e.g., 120)"
@@ -652,8 +652,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Max Guests per Reservation</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter max guests per reservation (e.g., 8)"
@@ -673,8 +673,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Hold Time (minutes)</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="number"
+                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter hold time in minutes (e.g., 15)"
