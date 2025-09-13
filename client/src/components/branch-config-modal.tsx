@@ -355,6 +355,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             type="time"
                             {...field}
                             className="w-full"
+                            placeholder="09:00"
+                            data-testid="input-open-time"
                           />
                         </FormControl>
                         <FormMessage />
@@ -373,6 +375,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             type="time"
                             {...field}
                             className="w-full"
+                            placeholder="22:00"
+                            data-testid="input-close-time"
                           />
                         </FormControl>
                         <FormMessage />
@@ -394,6 +398,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <Input
                             type="text"
                             {...field}
+                            value={field.value ?? ''}
                             onChange={(e) => {
                               // Allow leading zeros by keeping as string
                               const value = e.target.value;
@@ -402,7 +407,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 field.onChange(value);
                               }
                             }}
-                            placeholder="0500"
+                            placeholder="Enter service charges (e.g., 5.00)"
+                            data-testid="input-service-charges"
                           />
                         </FormControl>
                         <FormMessage />
@@ -420,6 +426,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <Input
                             type="text"
                             {...field}
+                            value={field.value ?? ''}
                             onChange={(e) => {
                               // Allow leading zeros by keeping as string
                               const value = e.target.value;
@@ -428,7 +435,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                                 field.onChange(value);
                               }
                             }}
-                            placeholder="0500"
+                            placeholder="Enter tax percentage (e.g., 15.5)"
+                            data-testid="input-tax-percentage"
                           />
                         </FormControl>
                         <FormMessage />
@@ -506,8 +514,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
-                              placeholder="30"
+                              placeholder="Enter delivery time in minutes (e.g., 30)"
+                              data-testid="input-delivery-time"
                             />
                           </FormControl>
                           <FormMessage />
@@ -526,8 +536,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               step="0.01"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
-                              placeholder="3.99"
+                              placeholder="Enter delivery fee (e.g., 3.99)"
+                              data-testid="input-delivery-fee"
                             />
                           </FormControl>
                           <FormMessage />
@@ -546,8 +558,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                               type="number"
                               step="0.01"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
-                              placeholder="25.00"
+                              placeholder="Enter minimum order amount (e.g., 25.00)"
+                              data-testid="input-delivery-minimum-order"
                             />
                           </FormControl>
                           <FormMessage />
@@ -565,8 +579,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
-                              placeholder="10"
+                              placeholder="Enter max delivery distance in km (e.g., 10)"
+                              data-testid="input-max-delivery-distance"
                             />
                           </FormControl>
                           <FormMessage />
@@ -596,8 +612,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
-                              placeholder="30"
+                              placeholder="Enter max advance booking days (e.g., 30)"
+                              data-testid="input-max-advance-days"
                             />
                           </FormControl>
                           <FormMessage />
@@ -615,8 +633,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
-                              placeholder="120"
+                              placeholder="Enter minimum notice time in minutes (e.g., 120)"
+                              data-testid="input-min-notice-minutes"
                             />
                           </FormControl>
                           <FormMessage />
@@ -634,8 +654,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
-                              placeholder="8"
+                              placeholder="Enter max guests per reservation (e.g., 8)"
+                              data-testid="input-max-guests-per-reservation"
                             />
                           </FormControl>
                           <FormMessage />
@@ -653,8 +675,10 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
-                              placeholder="15"
+                              placeholder="Enter hold time in minutes (e.g., 15)"
+                              data-testid="input-hold-time-minutes"
                             />
                           </FormControl>
                           <FormMessage />
