@@ -144,6 +144,7 @@ export interface MenuItem {
   preparationTime: number;
   menuItemPicture: string;
   disountName?: string;  // Note: API has typo in field name
+  isOutOfStock?: boolean;  // Root level stock status for entire menu item
   variants: MenuItemVariant[];
   modifiers: MenuItemModifier[];
   customizations: MenuItemCustomization[];

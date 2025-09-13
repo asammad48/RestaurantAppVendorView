@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal, Eye } from "lucide-react";
+import { ArrowLeft, Search, ChevronDown, Edit, Trash2, Plus, MoreHorizontal, Eye, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -492,6 +492,51 @@ export default function Orders() {
     allSubMenuItems.map(item => [item.id, item.name])
   );
 
+  // Stock status update mutation
+  const updateStockStatusMutation = useMutation({
+    mutationFn: async ({ itemId, isOutOfStock }: { itemId: number; isOutOfStock: boolean }) => {
+      const response = await apiRepository.call(
+        'updateMenuItemStockStatus',
+        'PUT',
+        { isOutOfStock: !isOutOfStock }, // Toggle the current status
+        undefined,
+        true,
+        { id: itemId }
+      );
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Invalidate menu items query to refresh data and show updated stock status
+      queryClient.invalidateQueries({ queryKey: [`menu-items-branch-${branchId}`] });
+      
+      // Show success message
+      toast({
+        title: "Stock Status Updated",
+        description: `Menu item stock status has been updated successfully.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update stock status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handler function for updating stock status
+  const handleUpdateStockStatus = (itemId: number, currentStockStatus: boolean) => {
+    updateStockStatusMutation.mutate({ 
+      itemId, 
+      isOutOfStock: currentStockStatus 
+    });
+  };
+
   // Query for categories with real API and pagination support using generic API repository
   // LAZY LOADING: Only fetch when menu tab is active
   const { data: categoriesResponse, isLoading: isLoadingCategories, refetch: refetchCategories } = useQuery({
@@ -981,7 +1026,16 @@ export default function Orders() {
                       return (
                       <TableRow key={item.id.toString()} data-testid={`menu-item-row-${item.id}`}>
                         <TableCell className="font-medium" data-testid={`menu-item-name-${item.id}`}>
-                          {item.name}
+                          <div className="flex items-center space-x-2">
+                            <span className={item.isOutOfStock ? "text-gray-400 line-through" : ""}>
+                              {item.name}
+                            </span>
+                            {item.isOutOfStock && (
+                              <Badge className="bg-red-100 text-red-800 hover:bg-red-200" data-testid={`out-of-stock-badge-${item.id}`}>
+                                Out of Stock
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm text-gray-600 max-w-xs truncate" data-testid={`menu-item-description-${item.id}`}>
                           {item.description || "No description"}
@@ -1027,6 +1081,13 @@ export default function Orders() {
                               }}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Menu Item
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleUpdateStockStatus(item.id, item.isOutOfStock || false)}
+                                data-testid={`update-stock-status-${item.id}`}
+                              >
+                                <Package className="w-4 h-4 mr-2" />
+                                {item.isOutOfStock ? 'Mark as In Stock' : 'Mark as Out of Stock'}
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 className="text-red-600"

@@ -405,6 +405,7 @@ export const API_ENDPOINTS = {
   MENU_ITEMS_BY_BRANCH: '/api/MenuItem/branch/{branchId}',
   MENU_ITEMS_SIMPLE_BY_BRANCH: '/api/MenuItem/branch/{branchId}/simple',
   MENU_ITEM_BY_ID: '/api/MenuItem/{id}',
+  UPDATE_MENU_ITEM_STOCK_STATUS: '/api/MenuItem/{id}/stock-status',
 
   // Deals endpoints
   DEALS: '/api/Deals',
@@ -523,6 +524,7 @@ export const defaultApiConfig: ApiConfig = {
     getMenuItemById: API_ENDPOINTS.MENU_ITEM_BY_ID,
     updateMenuItem: API_ENDPOINTS.UPDATE_MENU_ITEM,
     deleteMenuItem: API_ENDPOINTS.DELETE_MENU_ITEM,
+    updateMenuItemStockStatus: API_ENDPOINTS.UPDATE_MENU_ITEM_STOCK_STATUS,
 
     // Deals endpoints
     getDeals: API_ENDPOINTS.DEALS,
