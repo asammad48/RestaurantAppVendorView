@@ -99,17 +99,17 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
       taxAppliedType: 1,
       maxDiscountAmount: undefined,
       
-      // Delivery defaults
-      deliveryTime: 30,
-      deliveryMinimumOrder: 25.00,
-      deliveryFee: 3.99,
-      maxDeliveryDistance: 10,
+      // Delivery defaults - Allow empty values like Max Discount Amount
+      deliveryTime: undefined,
+      deliveryMinimumOrder: undefined,
+      deliveryFee: undefined,
+      maxDeliveryDistance: undefined,
       
-      // Reservation defaults
-      maxAdvanceDays: 30,
-      minNoticeMinutes: 120,
-      maxGuestsPerReservation: 8,
-      holdTimeMinutes: 15,
+      // Reservation defaults - Allow empty values like Max Discount Amount  
+      maxAdvanceDays: undefined,
+      minNoticeMinutes: undefined,
+      maxGuestsPerReservation: undefined,
+      holdTimeMinutes: undefined,
     },
   });
 
