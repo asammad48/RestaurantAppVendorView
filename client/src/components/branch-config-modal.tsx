@@ -512,8 +512,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Delivery Time (minutes)</FormLabel>
                           <FormControl>
                             <Input
-                              type="number"
                               {...field}
+                              type="number"
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter delivery time in minutes (e.g., 30)"
@@ -533,9 +533,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Delivery Fee ({getBranchCurrencySymbol()})</FormLabel>
                           <FormControl>
                             <Input
+                              {...field}
                               type="number"
                               step="0.01"
-                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                               placeholder="Enter delivery fee (e.g., 3.99)"
@@ -555,9 +555,9 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Minimum Order ({getBranchCurrencySymbol()})</FormLabel>
                           <FormControl>
                             <Input
+                              {...field}
                               type="number"
                               step="0.01"
-                              {...field}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                               placeholder="Enter minimum order amount (e.g., 25.00)"
@@ -577,8 +577,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Max Distance (km)</FormLabel>
                           <FormControl>
                             <Input
-                              type="number"
                               {...field}
+                              type="number"
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter max delivery distance in km (e.g., 10)"
@@ -610,8 +610,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Max Advance Days</FormLabel>
                           <FormControl>
                             <Input
-                              type="number"
                               {...field}
+                              type="number"
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter max advance booking days (e.g., 30)"
@@ -631,8 +631,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Min Notice (minutes)</FormLabel>
                           <FormControl>
                             <Input
-                              type="number"
                               {...field}
+                              type="number"
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter minimum notice time in minutes (e.g., 120)"
@@ -652,8 +652,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Max Guests per Reservation</FormLabel>
                           <FormControl>
                             <Input
-                              type="number"
                               {...field}
+                              type="number"
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter max guests per reservation (e.g., 8)"
@@ -673,8 +673,8 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                           <FormLabel>Hold Time (minutes)</FormLabel>
                           <FormControl>
                             <Input
-                              type="number"
                               {...field}
+                              type="number"
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                               placeholder="Enter hold time in minutes (e.g., 15)"
