@@ -298,22 +298,49 @@ export default function Orders() {
     staleTime: 30 * 60 * 1000, // Cache for 30 minutes since this rarely changes
   });
 
-  // Helper functions for date formatting
+  // Helper functions for date formatting - properly convert UTC to local time
   const formatOrderDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      // Use formatBranchTime to convert UTC to local time, then extract date part
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const date = new Date(dateString);
+      return date.toLocaleDateString(undefined, {
+        timeZone: userTimeZone,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting order date:', error);
+      // Fallback to basic date formatting
+      const date = new Date(dateString);
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
   };
 
   const formatOrderTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      // Use user's timezone to display time correctly
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const date = new Date(dateString);
+      return date.toLocaleTimeString(undefined, {
+        timeZone: userTimeZone,
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting order time:', error);
+      // Fallback to basic time formatting
+      const date = new Date(dateString);
+      return date.toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
   };
 
   // Use DetailedOrders directly for the table to access createdAt
