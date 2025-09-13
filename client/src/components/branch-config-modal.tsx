@@ -134,7 +134,7 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
         
         // Convert UTC time back to local time for display
         const formatTimeFromUTC = (utcTimeString: string) => {
-          if (!utcTimeString || utcTimeString === "00:00:00") return "09:00";
+          if (!utcTimeString || utcTimeString === "00:00:00") return "";
           try {
             // If it's just HH:mm:ss format, create a proper UTC date object
             if (utcTimeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
@@ -362,13 +362,35 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                       <FormItem>
                         <FormLabel>Opening Time (Local Time)</FormLabel>
                         <FormControl>
-                          <Input
-                            type="time"
-                            {...field}
-                            className="w-full"
-                            placeholder="09:00"
-                            data-testid="input-open-time"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              type="time"
+                              {...field}
+                              value={field.value || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow clearing by setting to undefined
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  field.onChange(value);
+                                }
+                              }}
+                              className="w-full"
+                              placeholder="09:00"
+                              data-testid="input-open-time"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => field.onChange(undefined)}
+                              className="px-2"
+                              title="Clear opening time"
+                            >
+                              ✕
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -382,13 +404,35 @@ export default function BranchConfigModal({ open, onClose, branch }: BranchConfi
                       <FormItem>
                         <FormLabel>Closing Time (Local Time)</FormLabel>
                         <FormControl>
-                          <Input
-                            type="time"
-                            {...field}
-                            className="w-full"
-                            placeholder="22:00"
-                            data-testid="input-close-time"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              type="time"
+                              {...field}
+                              value={field.value || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow clearing by setting to undefined
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  field.onChange(value);
+                                }
+                              }}
+                              className="w-full"
+                              placeholder="22:00"
+                              data-testid="input-close-time"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => field.onChange(undefined)}
+                              className="px-2"
+                              title="Clear closing time"
+                            >
+                              ✕
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
